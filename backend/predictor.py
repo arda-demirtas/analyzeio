@@ -214,11 +214,24 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
     last_close = float(last_row["Close"])
     
     # Calculate prediction date (next trading day)
-    # Simple weekday logic
     last_date = last_row.name
     pred_date = last_date + datetime.timedelta(days=1)
-    if pred_date.weekday() >= 5: # Sat or Sun
-        pred_date += datetime.timedelta(days=2)
+    
+    # Cryptocurrencies trade 24/7. Other assets (stocks, commodities) skip weekends.
+    is_crypto = symbol.endswith("-USD")
+    try:
+        ticker = yf.Ticker(symbol)
+        if ticker.info.get("quoteType") == "CRYPTOCURRENCY":
+            is_crypto = True
+    except Exception:
+        pass
+        
+    if not is_crypto:
+        if pred_date.weekday() == 5:    # Saturday -> Monday
+            pred_date += datetime.timedelta(days=2)
+        elif pred_date.weekday() == 6:  # Sunday -> Monday
+            pred_date += datetime.timedelta(days=1)
+            
     pred_date_str = pred_date.strftime("%Y-%m-%d")
     
     # Percent change between predicted close and last close
