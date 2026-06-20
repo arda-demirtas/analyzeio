@@ -10,13 +10,25 @@ from backend.predictor import get_prediction
 
 router = APIRouter(prefix="/api", tags=["Predictions & Watchlist"])
 
+def normalize_symbol(symbol: str) -> str:
+    """Normalizes symbol to match Yahoo Finance patterns, e.g., mapping USDT -> USD for crypto."""
+    sym = symbol.upper().strip()
+    if sym.endswith("-USDT"):
+        sym = sym[:-5] + "-USD"
+    elif sym.endswith("USDT"):
+        sym = sym[:-4] + "-USD"
+    elif sym.endswith("USD") and not sym.endswith("-USD") and not sym.endswith(".X"):
+        if len(sym) > 3 and not "=" in sym:
+            sym = sym[:-3] + "-USD"
+    return sym
+
 @router.get("/predict", response_model=PredictionResponse)
 def predict_asset(symbol: str, current_user: User = Depends(get_current_user)):
     """
     Triggers historical data loading, computes technical indicators,
     and runs LSTM model inference to predict the next day's close price.
     """
-    symbol_upper = symbol.upper().strip()
+    symbol_upper = normalize_symbol(symbol)
     try:
         prediction_result = get_prediction(symbol_upper)
         return prediction_result
@@ -39,7 +51,7 @@ def get_watchlist(current_user: User = Depends(get_current_user), db: Session = 
 @router.post("/watchlist", response_model=WatchlistResponse, status_code=status.HTTP_201_CREATED)
 def add_to_watchlist(data: WatchlistAdd, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Adds a ticker symbol to the user's watchlist."""
-    symbol_upper = data.symbol.upper().strip()
+    symbol_upper = normalize_symbol(data.symbol)
     
     # Check if already in watchlist
     existing = db.query(Watchlist).filter(
@@ -62,7 +74,7 @@ def add_to_watchlist(data: WatchlistAdd, current_user: User = Depends(get_curren
 @router.delete("/watchlist/{symbol}", status_code=status.HTTP_200_OK)
 def remove_from_watchlist(symbol: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Remains a ticker symbol from the user's watchlist."""
-    symbol_upper = symbol.upper().strip()
+    symbol_upper = normalize_symbol(symbol)
     
     item = db.query(Watchlist).filter(
         Watchlist.user_id == current_user.id,
