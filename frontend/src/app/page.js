@@ -682,12 +682,25 @@ export default function Home() {
         <div className="glass-panel header-panel">
           <div>
             <h2 className="asset-title">{predictionData ? predictionData.name : activeSymbol}</h2>
-            <div style={{ display: "flex", gap: "10px", marginTop: "10px", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>Ticker: {activeSymbol}</span>
-              {predictionData && getRsiBadge(predictionData.history[predictionData.history.length - 1]?.rsi)}
-              {predictionData && getMacdBadge(
-                predictionData.history[predictionData.history.length - 1]?.macd,
-                predictionData.history[predictionData.history.length - 1]?.macd_hist
+            <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap", alignItems: "center" }}>
+              <span style={{ fontSize: "14px", color: "var(--text-muted)", marginRight: "5px" }}>Ticker: {activeSymbol}</span>
+              {predictionData && (
+                <>
+                  {getRsiBadge(predictionData.history[predictionData.history.length - 1]?.rsi)}
+                  {getMacdBadge(
+                    predictionData.history[predictionData.history.length - 1]?.macd,
+                    predictionData.history[predictionData.history.length - 1]?.macd_hist
+                  )}
+                  <span className="badge badge-info">Open: ${predictionData.history[predictionData.history.length - 1]?.open?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="badge badge-info">Close: ${predictionData.history[predictionData.history.length - 1]?.close?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="badge badge-info">High: ${predictionData.history[predictionData.history.length - 1]?.high?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="badge badge-info">Low: ${predictionData.history[predictionData.history.length - 1]?.low?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="badge badge-info">Vol: {predictionData.history[predictionData.history.length - 1]?.volume?.toLocaleString("en-US")}</span>
+                  <span className="badge badge-info">EMA 20: ${predictionData.history[predictionData.history.length - 1]?.ema_20?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="badge badge-info">EMA 50: ${predictionData.history[predictionData.history.length - 1]?.ema_50?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="badge badge-info">BB Upper: ${predictionData.history[predictionData.history.length - 1]?.bb_upper?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="badge badge-info">BB Lower: ${predictionData.history[predictionData.history.length - 1]?.bb_lower?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </>
               )}
             </div>
           </div>
