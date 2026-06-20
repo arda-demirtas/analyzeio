@@ -234,6 +234,18 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
             
     pred_date_str = pred_date.strftime("%Y-%m-%d")
     
+    # Calculate exact expected close time in Turkey Local Time (TRT / UTC+3)
+    if is_crypto:
+        # Cryptocurrencies close at 00:00 UTC, which is 03:00 TRT next day
+        close_time = pred_date + datetime.timedelta(days=1)
+        expected_close_time = f"{close_time.strftime('%Y-%m-%d')} 03:00 (TRT)"
+    elif symbol.endswith(".IS"):
+        # Borsa Istanbul closes at 18:00 TRT
+        expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} 18:00 (TRT)"
+    else:
+        # US Stock markets close at 16:00 EDT/EST, which is 23:00 TRT (or 00:00 TRT winter time)
+        expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} 23:00 (TRT)"
+        
     # Percent change between predicted close and last close
     change_percent = ((predicted_close - last_close) / last_close) * 100
     
@@ -259,6 +271,7 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
         "last_close": last_close,
         "predicted_close": predicted_close,
         "prediction_date": pred_date_str,
+        "expected_close_time": expected_close_time,
         "price_change_percent": change_percent,
         "metrics": metrics,
         "history": history_list
