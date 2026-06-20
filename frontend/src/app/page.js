@@ -747,9 +747,12 @@ export default function Home() {
           <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
             {/* Prediction Highlight Card */}
             <div className="glass-panel prediction-card">
-              <span className="prediction-label">Next Trading Day Predicted Close ({predictionData ? predictionData.prediction_date : "---"})</span>
+              <span className="prediction-label">Next Trading Day Predicted Close</span>
               <div className="prediction-value">
                 ${predictionData ? predictionData.predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"}
+              </div>
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "-5px" }}>
+                Expected Close: {predictionData ? predictionData.expected_close_time : "---"}
               </div>
               
               {predictionData && (
