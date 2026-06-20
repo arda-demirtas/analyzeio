@@ -730,13 +730,25 @@ export default function Home() {
                 <div>
                   <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>Relative Strength Index (RSI)</h4>
                   <div className="indicator-wrapper">
-                    {predictLoading ? null : <canvas ref={rsiChartRef} />}
+                    {predictLoading ? (
+                      <div style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center" }}>
+                        <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "24px", height: "24px" }} />
+                      </div>
+                    ) : (
+                      <canvas ref={rsiChartRef} />
+                    )}
                   </div>
                 </div>
                 <div>
                   <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>MACD Divergence</h4>
                   <div className="indicator-wrapper">
-                    {predictLoading ? null : <canvas ref={macdChartRef} />}
+                    {predictLoading ? (
+                      <div style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center" }}>
+                        <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "24px", height: "24px" }} />
+                      </div>
+                    ) : (
+                      <canvas ref={macdChartRef} />
+                    )}
                   </div>
                 </div>
               </div>
@@ -746,33 +758,43 @@ export default function Home() {
           {/* Column 2: LSTM Prediction Summary */}
           <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
             {/* Prediction Highlight Card */}
-            <div className="glass-panel prediction-card">
-              <span className="prediction-label">Next Trading Day Predicted Close</span>
-              <div className="prediction-value">
-                ${predictionData ? predictionData.predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"}
-              </div>
-              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "-5px" }}>
-                Expected Close: {predictionData ? predictionData.expected_close_time : "---"}
-              </div>
-              
-              {predictionData && (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "16px", fontWeight: "700" }}>
-                  {predictionData.price_change_percent >= 0 ? (
-                    <>
-                      <TrendingUp style={{ color: "var(--accent-success)" }} />
-                      <span style={{ color: "var(--accent-success)" }}>
-                        +{predictionData.price_change_percent.toFixed(2)}% (Bullish)
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <TrendingDown style={{ color: "var(--accent-danger)" }} />
-                      <span style={{ color: "var(--accent-danger)" }}>
-                        {predictionData.price_change_percent.toFixed(2)}% (Bearish)
-                      </span>
-                    </>
-                  )}
+            <div className="glass-panel prediction-card" style={{ minHeight: "220px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+              {predictLoading ? (
+                <div className="animate-pulse" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "15px" }}>
+                  <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "36px", height: "36px" }} />
+                  <span className="prediction-label" style={{ color: "var(--accent-primary)" }}>Training LSTM Model...</span>
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Optimizing parameters for 11 indicators</span>
                 </div>
+              ) : (
+                <>
+                  <span className="prediction-label">Next Trading Day Predicted Close</span>
+                  <div className="prediction-value">
+                    ${predictionData ? predictionData.predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "-5px" }}>
+                    Expected Close: {predictionData ? predictionData.expected_close_time : "---"}
+                  </div>
+                  
+                  {predictionData && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "16px", fontWeight: "700", marginTop: "15px" }}>
+                      {predictionData.price_change_percent >= 0 ? (
+                        <>
+                          <TrendingUp style={{ color: "var(--accent-success)" }} />
+                          <span style={{ color: "var(--accent-success)" }}>
+                            +{predictionData.price_change_percent.toFixed(2)}% (Bullish)
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <TrendingDown style={{ color: "var(--accent-danger)" }} />
+                          <span style={{ color: "var(--accent-danger)" }}>
+                            {predictionData.price_change_percent.toFixed(2)}% (Bearish)
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -780,28 +802,28 @@ export default function Home() {
             <div className="glass-panel">
               <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>LSTM Model Analytics</h3>
               
-              <div className="stats-list">
+              <div className="stats-list" style={{ opacity: predictLoading ? 0.6 : 1, transition: "var(--transition-smooth)" }}>
                 <div className="stats-row">
                   <span>Cache Status</span>
-                  <span>{predictionData ? predictionData.metrics.training_status : "---"}</span>
+                  <span>{predictLoading ? "Training..." : (predictionData ? predictionData.metrics.training_status : "---")}</span>
                 </div>
                 <div className="stats-row">
                   <span>Backtest Root MSE (RMSE)</span>
-                  <span>{predictionData ? `$${predictionData.metrics.rmse.toFixed(2)}` : "---"}</span>
+                  <span>{predictLoading ? "Calculating..." : (predictionData ? `$${predictionData.metrics.rmse.toFixed(2)}` : "---")}</span>
                 </div>
                 <div className="stats-row">
                   <span>Mean Absolute Error (MAPE)</span>
-                  <span>{predictionData ? `${predictionData.metrics.mape.toFixed(2)}%` : "---"}</span>
+                  <span>{predictLoading ? "Calculating..." : (predictionData ? `${predictionData.metrics.mape.toFixed(2)}%` : "---")}</span>
                 </div>
                 <div className="stats-row">
                   <span>Directional Accuracy</span>
-                  <span style={{ color: predictionData && predictionData.metrics.directional_accuracy >= 55 ? "var(--accent-success)" : "inherit" }}>
-                    {predictionData ? `${predictionData.metrics.directional_accuracy.toFixed(1)}%` : "---"}
+                  <span style={{ color: !predictLoading && predictionData && predictionData.metrics.directional_accuracy >= 55 ? "var(--accent-success)" : "inherit" }}>
+                    {predictLoading ? "Evaluating..." : (predictionData ? `${predictionData.metrics.directional_accuracy.toFixed(1)}%` : "---")}
                   </span>
                 </div>
                 <div className="stats-row">
                   <span>Features Used</span>
-                  <span>RSI, MACD, Open, Close, Volume</span>
+                  <span>RSI, MACD, Open, Close, Volume, High, Low, Bollinger Bands, EMA 20/50</span>
                 </div>
                 <div className="stats-row">
                   <span>Time Step (Sequence)</span>
