@@ -52,6 +52,20 @@ def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str]:
     if df.empty:
         raise ValueError(f"No historical data found for symbol: {symbol}")
         
+    # Drop incomplete today's daily bar if it is in progress
+    is_crypto = symbol.endswith("-USD") or (info.get("quoteType") == "CRYPTOCURRENCY")
+    last_row_date_str = df.index[-1].strftime("%Y-%m-%d")
+    
+    if is_crypto:
+        today_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    else:
+        today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+        
+    if last_row_date_str == today_str:
+        current_hour = datetime.datetime.now().hour
+        if is_crypto or current_hour < 23:
+            df = df.iloc[:-1]
+        
     # Calculate indicators
     df["RSI"] = calculate_rsi(df["Close"])
     macd_line, signal_line, macd_hist = calculate_macd(df["Close"])
@@ -213,10 +227,6 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
     last_date_str = last_row.name.strftime("%Y-%m-%d")
     last_close = float(last_row["Close"])
     
-    # Calculate prediction date (next trading day)
-    last_date = last_row.name
-    pred_date = last_date + datetime.timedelta(days=1)
-    
     # Cryptocurrencies trade 24/7. Other assets (stocks, commodities) skip weekends.
     is_crypto = symbol.endswith("-USD")
     try:
@@ -225,26 +235,45 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
             is_crypto = True
     except Exception:
         pass
-        
-    if not is_crypto:
-        if pred_date.weekday() == 5:    # Saturday -> Monday
-            pred_date += datetime.timedelta(days=2)
-        elif pred_date.weekday() == 6:  # Sunday -> Monday
-            pred_date += datetime.timedelta(days=1)
-            
-    pred_date_str = pred_date.strftime("%Y-%m-%d")
+
+    # Calculate prediction date based on the current local time in Turkey (TRT / UTC+3)
+    now = datetime.datetime.now()
     
-    # Calculate exact expected close time in Turkey Local Time (TRT / UTC+3)
     if is_crypto:
-        # Cryptocurrencies close at 00:00 UTC, which is 03:00 TRT next day
+        # Cryptocurrencies close at 00:00 UTC, which is 03:00 TRT next day.
+        # If current local time is before 03:00 AM, the active candle is yesterday's.
+        # If after 03:00 AM, the active candle is today's.
+        if now.hour < 3:
+            pred_date = now - datetime.timedelta(days=1)
+        else:
+            pred_date = now
+            
         close_time = pred_date + datetime.timedelta(days=1)
         expected_close_time = f"{close_time.strftime('%Y-%m-%d')} 03:00 (TRT)"
-    elif symbol.endswith(".IS"):
-        # Borsa Istanbul closes at 18:00 TRT
-        expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} 18:00 (TRT)"
     else:
-        # US Stock markets close at 16:00 EDT/EST, which is 23:00 TRT (or 00:00 TRT winter time)
-        expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} 23:00 (TRT)"
+        # Stock markets / Commodities
+        # Standard US market closes at 23:00 TRT.
+        # If now is Saturday or Sunday, the next session is Monday.
+        if now.weekday() == 5:    # Saturday -> Monday
+            pred_date = now + datetime.timedelta(days=2)
+        elif now.weekday() == 6:  # Sunday -> Monday
+            pred_date = now + datetime.timedelta(days=1)
+        else:
+            if now.hour >= 23:
+                # Today's session is closed. Next session is tomorrow (or Monday if it's Friday night)
+                pred_date = now + datetime.timedelta(days=1)
+                if pred_date.weekday() == 5:    # Friday night -> Monday
+                    pred_date += datetime.timedelta(days=2)
+            else:
+                # Today's session is active/upcoming
+                pred_date = now
+                
+        if symbol.endswith(".IS"):
+            expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} 18:00 (TRT)"
+        else:
+            expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} 23:00 (TRT)"
+            
+    pred_date_str = pred_date.strftime("%Y-%m-%d")
         
     # Percent change between predicted close and last close
     change_percent = ((predicted_close - last_close) / last_close) * 100
