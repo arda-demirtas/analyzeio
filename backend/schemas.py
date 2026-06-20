@@ -55,10 +55,16 @@ class IndicatorPoint(BaseModel):
     open: float
     close: float
     volume: float
+    high: Optional[float] = None
+    low: Optional[float] = None
     rsi: Optional[float] = None
     macd: Optional[float] = None
     macd_signal: Optional[float] = None
     macd_hist: Optional[float] = None
+    bb_upper: Optional[float] = None
+    bb_lower: Optional[float] = None
+    ema_20: Optional[float] = None
+    ema_50: Optional[float] = None
 
 class PredictionMetrics(BaseModel):
     rmse: float
