@@ -73,6 +73,7 @@ class PredictionResponse(BaseModel):
     last_close: float
     predicted_close: float
     prediction_date: str
+    expected_close_time: str
     price_change_percent: float
     metrics: PredictionMetrics
     history: List[IndicatorPoint]
