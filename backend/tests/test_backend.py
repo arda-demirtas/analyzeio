@@ -59,7 +59,7 @@ class TestAnalyzeioBackend(unittest.TestCase):
         self.db.commit()
         
         deleted_user = self.db.query(User).filter(User.username == "testuser").first()
-        self.assertIsNull = self.assertIsNone(deleted_user)
+        self.assertIsNone(deleted_user)
         watchlist_count = self.db.query(Watchlist).filter(Watchlist.symbol == "AAPL").count()
         self.assertEqual(watchlist_count, 0) # Cascaded delete test
 
