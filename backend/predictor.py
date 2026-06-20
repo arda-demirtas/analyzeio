@@ -9,6 +9,8 @@ from typing import Tuple, Dict, Any, List
 
 from backend.config import MODEL_CACHE_DIR, DEFAULT_SEQUENCE_LENGTH
 
+FEATURES = ["RSI", "MACD", "Open", "Close", "Volume", "High", "Low", "BB_Upper", "BB_Lower", "EMA_20", "EMA_50"]
+
 def calculate_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
     """Calculates the Relative Strength Index (RSI) for a price series."""
     delta = prices.diff()
@@ -73,18 +75,31 @@ def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str]:
     df["MACD_Signal"] = signal_line
     df["MACD_Hist"] = macd_hist
     
-    # Drop rows with NaN values resulting from indicators (first ~26 rows)
-    df = df.dropna(subset=["RSI", "MACD", "MACD_Signal", "MACD_Hist"])
+    # Bollinger Bands
+    sma_20 = df["Close"].rolling(window=20).mean()
+    std_20 = df["Close"].rolling(window=20).std()
+    df["BB_Upper"] = sma_20 + 2 * std_20
+    df["BB_Lower"] = sma_20 - 2 * std_20
+    
+    # EMAs
+    df["EMA_20"] = df["Close"].ewm(span=20, adjust=False).mean()
+    df["EMA_50"] = df["Close"].ewm(span=50, adjust=False).mean()
+    
+    # Drop rows with NaN values resulting from indicators (first ~50 rows due to EMA 50)
+    df = df.dropna(subset=[
+        "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
+        "BB_Upper", "BB_Lower", "EMA_20", "EMA_50"
+    ])
     
     return df, asset_name
 
 def prepare_lstm_data(df: pd.DataFrame, seq_length: int) -> Tuple[np.ndarray, np.ndarray, MinMaxScaler, MinMaxScaler]:
     """
     Scales the data and creates sequences for LSTM training.
-    Features: RSI, MACD, Open, Close, Volume
+    Features: RSI, MACD, Open, Close, Volume, High, Low, BB_Upper, BB_Lower, EMA_20, EMA_50
     Target: Close
     """
-    features = ["RSI", "MACD", "Open", "Close", "Volume"]
+    features = FEATURES
     feature_data = df[features].values
     target_data = df[["Close"]].values
     
@@ -105,7 +120,7 @@ def prepare_lstm_data(df: pd.DataFrame, seq_length: int) -> Tuple[np.ndarray, np
 def train_lstm_model(x_train: np.ndarray, y_train: np.ndarray, seq_length: int) -> tf.keras.Model:
     """Creates and trains an LSTM model."""
     model = tf.keras.Sequential([
-        tf.keras.layers.Input(shape=(seq_length, 5)),
+        tf.keras.layers.Input(shape=(seq_length, len(FEATURES))),
         tf.keras.layers.LSTM(units=50, return_sequences=False),
         tf.keras.layers.Dense(units=25, activation="relu"),
         tf.keras.layers.Dense(units=1)
@@ -214,10 +229,10 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
     
     # 5. Predict the next day's price
     # Extract the last sequence (most recent X days) from the full dataset
-    last_features = df[["RSI", "MACD", "Open", "Close", "Volume"]].iloc[-seq_length:].values
+    last_features = df[FEATURES].iloc[-seq_length:].values
     scaled_last_features = scaler_x.transform(last_features)
     
-    # Shape for prediction: (1, seq_length, 5)
+    # Shape for prediction: (1, seq_length, 11)
     input_seq = np.array([scaled_last_features])
     scaled_pred = model.predict(input_seq, verbose=0)
     predicted_close = float(scaler_y.inverse_transform(scaled_pred)[0][0])
