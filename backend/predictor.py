@@ -302,10 +302,16 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
             "open": float(row["Open"]),
             "close": float(row["Close"]),
             "volume": float(row["Volume"]),
+            "high": float(row["High"]),
+            "low": float(row["Low"]),
             "rsi": float(row["RSI"]),
             "macd": float(row["MACD"]),
             "macd_signal": float(row["MACD_Signal"]),
             "macd_hist": float(row["MACD_Hist"]),
+            "bb_upper": float(row["BB_Upper"]),
+            "bb_lower": float(row["BB_Lower"]),
+            "ema_20": float(row["EMA_20"]),
+            "ema_50": float(row["EMA_50"]),
         })
         
     return {
