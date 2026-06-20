@@ -322,6 +322,12 @@ body {
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
+.badge-info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
 /* Prediction Grid */
 .dashboard-grid {
   display: grid;
