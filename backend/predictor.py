@@ -50,7 +50,7 @@ TICKER_NAMES = {
     "ETH-USDT": "Ethereum USD"
 }
 
-def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str, bool]:
+def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str, bool, Optional[float]]:
     """
     Downloads historical market data directly from Yahoo Finance API using requests with a browser User-Agent
     to bypass datacenter IP blocks, calculates technical indicators, and returns a cleaned DataFrame.
@@ -66,6 +66,7 @@ def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str, b
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
     
+    current_price = None
     try:
         r = requests.get(url, headers=headers, timeout=15)
         if r.status_code != 200:
@@ -76,6 +77,7 @@ def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str, b
         timestamps = result["timestamp"]
         quote = result["indicators"]["quote"][0]
         meta = result.get("meta", {})
+        current_price = meta.get("regularMarketPrice")
         
         # Parse lists
         dates = [datetime.datetime.fromtimestamp(ts) for ts in timestamps]
@@ -137,7 +139,7 @@ def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str, b
         "BB_Upper", "BB_Lower", "EMA_20", "EMA_50"
     ])
     
-    return df, asset_name, is_crypto
+    return df, asset_name, is_crypto, current_price
 
 def prepare_lstm_data(df: pd.DataFrame, seq_length: int) -> Tuple[np.ndarray, np.ndarray, MinMaxScaler, MinMaxScaler]:
     """
@@ -233,7 +235,9 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
     and predicting the next close price.
     """
     # 1. Download and clean data
-    df, asset_name, is_crypto = fetch_market_data(symbol, years=3)
+    df, asset_name, is_crypto, current_price = fetch_market_data(symbol, years=3)
+    if current_price is None and not df.empty:
+        current_price = float(df["Close"].iloc[-1])
     
     # Ensure there is enough data
     if len(df) < seq_length + 50:
@@ -362,6 +366,7 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
         "prediction_date": pred_date_str,
         "expected_close_time": expected_close_time,
         "price_change_percent": change_percent,
+        "current_price": current_price,
         "metrics": metrics,
         "history": history_list
     }
