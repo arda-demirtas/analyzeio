@@ -622,6 +622,23 @@ export default function Home() {
         />
       )}
       
+      {/* Mobile Top Navbar */}
+      <header className="mobile-navbar">
+        <button 
+          type="button"
+          className="mobile-navbar-toggle" 
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open Menu"
+        >
+          <Menu style={{ width: "22px", height: "22px" }} />
+        </button>
+        <div className="mobile-navbar-logo">
+          <Briefcase style={{ color: "var(--accent-primary)", width: "20px", height: "20px" }} />
+          <span className="logo-text" style={{ fontSize: "18px" }}>analyzeio</span>
+        </div>
+        <div style={{ width: "40px" }} /> {/* Spacer to center the logo */}
+      </header>
+      
       {/* Sidebar Panel */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="logo-container" style={{ justifyContent: "space-between", width: "100%" }}>
@@ -707,17 +724,8 @@ export default function Home() {
       <main className="main-content">
         {/* Main Content Header */}
         <div className="glass-panel header-panel">
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <button 
-              type="button"
-              className="mobile-menu-btn" 
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open Menu"
-            >
-              <Menu style={{ width: "24px", height: "24px" }} />
-            </button>
-            <div>
-              <h2 className="asset-title">{predictionData ? predictionData.name : activeSymbol}</h2>
+          <div>
+            <h2 className="asset-title">{predictionData ? predictionData.name : activeSymbol}</h2>
             <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap", alignItems: "center" }}>
               <span style={{ fontSize: "14px", color: "var(--text-muted)", marginRight: "5px" }}>Ticker: {activeSymbol}</span>
               {predictionData && (
@@ -739,7 +747,6 @@ export default function Home() {
                 </>
               )}
             </div>
-          </div>
           </div>
           <div style={{ textAlign: "right" }}>
             <div className="asset-price">
