@@ -17,7 +17,9 @@ import {
   Mail,
   PieChart,
   Shield,
-  Briefcase
+  Briefcase,
+  Menu,
+  X
 } from "lucide-react";
 import { Chart, registerables } from "chart.js";
 
@@ -39,6 +41,7 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // App State
   const [activeSymbol, setActiveSymbol] = useState("BTC-USD");
@@ -612,11 +615,28 @@ export default function Home() {
   // Render Dashboard if logged in
   return (
     <div className="app-container">
+      {sidebarOpen && (
+        <div 
+          className="sidebar-backdrop" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar Panel */}
-      <aside className="sidebar">
-        <div className="logo-container">
-          <Briefcase style={{ color: "var(--accent-primary)", width: "28px", height: "28px" }} />
-          <span className="logo-text">analyzeio</span>
+      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
+        <div className="logo-container" style={{ justifyContent: "space-between", width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <Briefcase style={{ color: "var(--accent-primary)", width: "28px", height: "28px" }} />
+            <span className="logo-text">analyzeio</span>
+          </div>
+          <button 
+            type="button"
+            className="mobile-close-btn"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close Menu"
+          >
+            <X style={{ width: "20px", height: "20px" }} />
+          </button>
         </div>
 
         {/* Search Input */}
@@ -643,7 +663,10 @@ export default function Home() {
           {watchlist.map(item => (
             <div 
               key={item.id}
-              onClick={() => setActiveSymbol(item.symbol)}
+              onClick={() => {
+                setActiveSymbol(item.symbol);
+                setSidebarOpen(false);
+              }}
               className={`watchlist-item ${activeSymbol === item.symbol ? "active" : ""}`}
             >
               <span className="watchlist-item-symbol">{item.symbol}</span>
@@ -684,8 +707,17 @@ export default function Home() {
       <main className="main-content">
         {/* Main Content Header */}
         <div className="glass-panel header-panel">
-          <div>
-            <h2 className="asset-title">{predictionData ? predictionData.name : activeSymbol}</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <button 
+              type="button"
+              className="mobile-menu-btn" 
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open Menu"
+            >
+              <Menu style={{ width: "24px", height: "24px" }} />
+            </button>
+            <div>
+              <h2 className="asset-title">{predictionData ? predictionData.name : activeSymbol}</h2>
             <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap", alignItems: "center" }}>
               <span style={{ fontSize: "14px", color: "var(--text-muted)", marginRight: "5px" }}>Ticker: {activeSymbol}</span>
               {predictionData && (
@@ -707,6 +739,7 @@ export default function Home() {
                 </>
               )}
             </div>
+          </div>
           </div>
           <div style={{ textAlign: "right" }}>
             <div className="asset-price">
