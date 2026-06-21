@@ -710,9 +710,18 @@ export default function Home() {
           </div>
           <div style={{ textAlign: "right" }}>
             <div className="asset-price">
-              ${predictionData ? predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"}
+              ${predictionData && predictionData.current_price !== undefined && predictionData.current_price !== null 
+                ? predictionData.current_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+                : (predictionData ? predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---")}
             </div>
-            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Last close price ({predictionData ? predictionData.last_date : "---"})</span>
+            <span style={{ fontSize: "12px", color: "var(--accent-primary)", fontWeight: "600", display: "block" }}>
+              ● Live Market Price
+            </span>
+            {predictionData && (
+              <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginTop: "2px" }}>
+                Last Close: ${predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({predictionData.last_date})
+              </span>
+            )}
           </div>
         </div>
 
