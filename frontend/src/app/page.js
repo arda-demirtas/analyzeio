@@ -24,7 +24,11 @@ import { Chart, registerables } from "chart.js";
 // Register all Chart.js components
 Chart.register(...registerables);
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = typeof window !== "undefined" 
+  ? (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+      ? "http://127.0.0.1:8000" 
+      : window.location.origin) 
+  : "http://127.0.0.1:8000";
 
 export default function Home() {
   const [token, setToken] = useState(null);
