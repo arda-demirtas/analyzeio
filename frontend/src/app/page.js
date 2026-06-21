@@ -726,7 +726,7 @@ export default function Home() {
         <div className="glass-panel header-panel">
           <div>
             <h2 className="asset-title">{predictionData ? predictionData.name : activeSymbol}</h2>
-            <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap", alignItems: "center" }}>
+            <div className="header-badges-container">
               <span style={{ fontSize: "14px", color: "var(--text-muted)", marginRight: "5px" }}>Ticker: {activeSymbol}</span>
               {predictionData && (
                 <>
@@ -748,7 +748,7 @@ export default function Home() {
               )}
             </div>
           </div>
-          <div style={{ textAlign: "right" }}>
+          <div className="header-price-panel">
             <div className="asset-price">
               ${predictionData && predictionData.current_price !== undefined && predictionData.current_price !== null 
                 ? predictionData.current_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
