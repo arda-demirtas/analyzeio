@@ -1,5 +1,7 @@
 import os
+import sys
 import datetime
+import requests
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -34,28 +36,72 @@ def calculate_macd(prices: pd.Series, fast: int = 12, slow: int = 26, signal: in
     macd_hist = macd_line - signal_line
     return macd_line, signal_line, macd_hist
 
+# Dictionary of popular symbols to their readable names
+TICKER_NAMES = {
+    "BTC-USD": "Bitcoin USD",
+    "ETH-USD": "Ethereum USD",
+    "AAPL": "Apple Inc.",
+    "TSLA": "Tesla Inc.",
+    "GC=F": "Gold Futures",
+    "MSFT": "Microsoft Corporation",
+    "AMZN": "Amazon.com Inc.",
+    "NVDA": "NVIDIA Corporation",
+    "BTC-USDT": "Bitcoin USD",
+    "ETH-USDT": "Ethereum USD"
+}
+
 def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str]:
     """
-    Downloads historical market data using yfinance, calculates RSI/MACD,
-    and returns a cleaned DataFrame and the asset long name.
+    Downloads historical market data directly from Yahoo Finance API using requests with a browser User-Agent
+    to bypass datacenter IP blocks, calculates technical indicators, and returns a cleaned DataFrame.
     """
-    ticker = yf.Ticker(symbol)
-    
-    # Fetch details
-    info = ticker.info
-    asset_name = info.get("longName") or info.get("shortName") or symbol
-    
-    # Download daily historical data
     end_date = datetime.datetime.now()
     start_date = end_date - datetime.timedelta(days=years * 365)
     
-    df = ticker.history(start=start_date, end=end_date, interval="1d")
+    period1 = int(start_date.timestamp())
+    period2 = int(end_date.timestamp())
     
+    url = f"https://query2.finance.yahoo.com/v8/finance/chart/{symbol}?period1={period1}&period2={period2}&interval=1d"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    
+    try:
+        r = requests.get(url, headers=headers, timeout=15)
+        if r.status_code != 200:
+            raise ValueError(f"Failed to fetch data from Yahoo Finance: {r.status_code}")
+            
+        data = r.json()
+        result = data["chart"]["result"][0]
+        timestamps = result["timestamp"]
+        quote = result["indicators"]["quote"][0]
+        meta = result.get("meta", {})
+        
+        # Parse lists
+        dates = [datetime.datetime.fromtimestamp(ts) for ts in timestamps]
+        df = pd.DataFrame({
+            "Open": quote["open"],
+            "High": quote["high"],
+            "Low": quote["low"],
+            "Close": quote["close"],
+            "Volume": quote["volume"]
+        }, index=dates)
+        df.index.name = "Date"
+        df = df.dropna()
+        
+    except Exception as e:
+        raise ValueError(f"No historical data found or failed to parse for symbol: {symbol}. Error: {e}")
+        
     if df.empty:
         raise ValueError(f"No historical data found for symbol: {symbol}")
         
-    # Drop incomplete today's daily bar if it is in progress
-    is_crypto = symbol.endswith("-USD") or (info.get("quoteType") == "CRYPTOCURRENCY")
+    # Get asset name from dictionary, fallback to meta or symbol
+    asset_name = TICKER_NAMES.get(symbol)
+    if not asset_name:
+        asset_name = symbol
+        
+    # Check if cryptocurrency
+    is_crypto = symbol.endswith("-USD") or meta.get("instrumentType") == "CRYPTOCURRENCY"
     last_row_date_str = df.index[-1].strftime("%Y-%m-%d")
     
     if is_crypto:
@@ -85,7 +131,7 @@ def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str]:
     df["EMA_20"] = df["Close"].ewm(span=20, adjust=False).mean()
     df["EMA_50"] = df["Close"].ewm(span=50, adjust=False).mean()
     
-    # Drop rows with NaN values resulting from indicators (first ~50 rows due to EMA 50)
+    # Drop rows with NaN values resulting from indicators
     df = df.dropna(subset=[
         "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
         "BB_Upper", "BB_Lower", "EMA_20", "EMA_50"
