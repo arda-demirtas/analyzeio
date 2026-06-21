@@ -50,7 +50,7 @@ TICKER_NAMES = {
     "ETH-USDT": "Ethereum USD"
 }
 
-def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str]:
+def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str, bool]:
     """
     Downloads historical market data directly from Yahoo Finance API using requests with a browser User-Agent
     to bypass datacenter IP blocks, calculates technical indicators, and returns a cleaned DataFrame.
@@ -137,7 +137,7 @@ def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str]:
         "BB_Upper", "BB_Lower", "EMA_20", "EMA_50"
     ])
     
-    return df, asset_name
+    return df, asset_name, is_crypto
 
 def prepare_lstm_data(df: pd.DataFrame, seq_length: int) -> Tuple[np.ndarray, np.ndarray, MinMaxScaler, MinMaxScaler]:
     """
@@ -233,7 +233,7 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
     and predicting the next close price.
     """
     # 1. Download and clean data
-    df, asset_name = fetch_market_data(symbol, years=3)
+    df, asset_name, is_crypto = fetch_market_data(symbol, years=3)
     
     # Ensure there is enough data
     if len(df) < seq_length + 50:
@@ -289,13 +289,6 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
     last_close = float(last_row["Close"])
     
     # Cryptocurrencies trade 24/7. Other assets (stocks, commodities) skip weekends.
-    is_crypto = symbol.endswith("-USD")
-    try:
-        ticker = yf.Ticker(symbol)
-        if ticker.info.get("quoteType") == "CRYPTOCURRENCY":
-            is_crypto = True
-    except Exception:
-        pass
 
     # Calculate prediction date based on the current local time in Turkey (TRT / UTC+3)
     now = datetime.datetime.now()
