@@ -81,5 +81,6 @@ class PredictionResponse(BaseModel):
     prediction_date: str
     expected_close_time: str
     price_change_percent: float
+    current_price: Optional[float] = None
     metrics: PredictionMetrics
     history: List[IndicatorPoint]
