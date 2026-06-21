@@ -7,7 +7,7 @@ import pandas as pd
 import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
-from typing import Tuple, Dict, Any, List
+from typing import Tuple, Dict, Any, List, Optional
 
 from backend.config import MODEL_CACHE_DIR, DEFAULT_SEQUENCE_LENGTH
 
