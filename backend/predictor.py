@@ -240,6 +240,126 @@ def evaluate_model_performance(
         "directional_accuracy": float(dir_acc)
     }
 
+def get_fundamental_analysis(symbol: str, name: str) -> Dict[str, Any]:
+    """
+    Searches the web for recent news regarding the asset, computes headline sentiment,
+    and returns a recommendation and list of articles.
+    """
+    # Use name (e.g. Bitcoin) for search, fallback to symbol
+    search_query = name if name else symbol
+    
+    # Clean up generic suffixes to make the search query more relevant
+    search_query = search_query.replace(" USD", "").replace(" Inc.", "").replace(" Corporation", "").replace(" Futures", "")
+    
+    url = f"https://query2.finance.yahoo.com/v1/finance/search?q={search_query}&newsCount=6"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    
+    articles = []
+    sentiment_score = 0.0
+    sentiment_class = "Neutral"
+    recommendation = "No recent fundamental news articles could be analyzed for this asset."
+    
+    try:
+        r = requests.get(url, headers=headers, timeout=10)
+        if r.status_code == 200:
+            data = r.json()
+            raw_news = data.get("news", [])
+            
+            # Simple financial sentiment dictionary
+            pos_words = {
+                "surge", "bullish", "growth", "rise", "gain", "profit", "upbeat", "upgrade", 
+                "outperform", "soar", "rally", "boost", "positive", "high", "buy", "jump", 
+                "climb", "higher", "strong", "recovery", "success", "optimistic", "green", 
+                "breakout", "alliance", "partner", "acquire", "expanded", "soaring"
+            }
+            neg_words = {
+                "plunge", "bearish", "decline", "fall", "loss", "drop", "downbeat", "downgrade", 
+                "underperform", "plummet", "crash", "slump", "negative", "low", "sell", "sink", 
+                "slide", "lower", "weak", "panic", "failure", "pessimistic", "red", "breakdown", 
+                "worry", "concern", "fear", "lawsuit", "dispute", "investigation", "chilling"
+            }
+            
+            total_score = 0.0
+            valid_articles = 0
+            
+            for item in raw_news:
+                title = item.get("title")
+                publisher = item.get("publisher")
+                link = item.get("link")
+                if not title or not link:
+                    continue
+                    
+                # Clean title for sentiment check
+                clean_title = title.lower()
+                # Remove common punctuation
+                for char in [".", ",", "!", "?", "'", "\"", ":", ";", "(", ")", "-", "_", "$", "%"]:
+                    clean_title = clean_title.replace(char, " ")
+                
+                words = clean_title.split()
+                pos_count = sum(1 for w in words if w in pos_words)
+                neg_count = sum(1 for w in words if w in neg_words)
+                
+                # Single headline score
+                denom = pos_count + neg_count
+                art_score = (pos_count - neg_count) / denom if denom > 0 else 0.0
+                
+                # Determine article sentiment
+                if art_score > 0.0:
+                    art_sentiment = "Bullish"
+                elif art_score < 0.0:
+                    art_sentiment = "Bearish"
+                else:
+                    art_sentiment = "Neutral"
+                    
+                articles.append({
+                    "title": title,
+                    "publisher": publisher if publisher else "Web News",
+                    "link": link,
+                    "sentiment": art_sentiment
+                })
+                
+                total_score += art_score
+                valid_articles += 1
+                
+            if valid_articles > 0:
+                sentiment_score = total_score / valid_articles
+                
+            # Classify overall sentiment
+            if sentiment_score > 0.12:
+                sentiment_class = "Bullish"
+                recommendation = (
+                    f"Fundamental analysis reveals positive market sentiment for {search_query} "
+                    f"based on recent news coverage. Positive drivers, earnings reports, or market "
+                    f"alliances suggest a favorable short-term outlook. Buying or holding positions "
+                    f"is generally recommended."
+                )
+            elif sentiment_score < -0.12:
+                sentiment_class = "Bearish"
+                recommendation = (
+                    f"Fundamental analysis indicates negative sentiment for {search_query} "
+                    f"due to recent adverse news headlines. Potential regulatory concerns, selloffs, "
+                    f"or downtrends in the sector advise caution. Accumulating is not recommended; "
+                    f"consider tightening stop-losses or reducing exposure."
+                )
+            else:
+                sentiment_class = "Neutral"
+                recommendation = (
+                    f"Fundamental news indicators are currently balanced or neutral for {search_query}. "
+                    f"The news headlines present a mix of positive and cautious metrics. A 'Hold' "
+                    f"strategy or combining this with technical indicators is advised for trading decisions."
+                )
+    except Exception as e:
+        print(f"Error fetching news for fundamental analysis: {e}")
+        
+    return {
+        "sentiment_score": sentiment_score,
+        "sentiment_class": sentiment_class,
+        "recommendation": recommendation,
+        "articles": articles
+    }
+
 def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Dict[str, Any]:
     """
     Main function to coordinate market data retrieval, model loading/training,
@@ -378,6 +498,9 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
             "ema_50": float(row["EMA_50"]),
         })
         
+    # 7. Fetch fundamental analysis
+    fundamental_result = get_fundamental_analysis(symbol, asset_name)
+        
     return {
         "symbol": symbol,
         "name": asset_name,
@@ -389,5 +512,6 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
         "price_change_percent": change_percent,
         "current_price": current_price,
         "metrics": metrics,
-        "history": history_list
+        "history": history_list,
+        "fundamental_analysis": fundamental_result
     }
