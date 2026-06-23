@@ -51,6 +51,10 @@ export default function Home() {
   const [predictLoading, setPredictLoading] = useState(false);
   const [predictError, setPredictError] = useState("");
 
+  const [chartInterval, setChartInterval] = useState("1d");
+  const [chartHistory, setChartHistory] = useState([]);
+  const [chartLoading, setChartLoading] = useState(false);
+
   // Helper to switch active symbol and reset states synchronously
   const selectSymbol = (symbol) => {
     if (symbol === activeSymbol) return;
@@ -91,16 +95,23 @@ export default function Home() {
     }
   }, [activeSymbol, token]);
 
-  // 3. Render charts when predictionData updates
+  // Fetch custom chart history when interval or active symbol changes
   useEffect(() => {
-    if (!predictionData) return;
+    if (token && activeSymbol) {
+      loadChartHistory(activeSymbol, chartInterval);
+    }
+  }, [chartInterval, activeSymbol, token, predictionData]);
+
+  // 3. Render charts when predictionData or chartHistory updates
+  useEffect(() => {
+    if (!predictionData || !chartHistory || chartHistory.length === 0) return;
     renderCharts();
     
     // Cleanup on unmount or update
     return () => {
       destroyCharts();
     };
-  }, [predictionData]);
+  }, [predictionData, chartHistory]);
 
   // Helper: Destroy existing charts
   const destroyCharts = () => {
@@ -121,13 +132,13 @@ export default function Home() {
   // Helper: Render price, RSI, and MACD charts
   const renderCharts = () => {
     destroyCharts();
-    if (!predictionData) return;
+    if (!predictionData || !chartHistory || chartHistory.length === 0) return;
 
     const ctxPrice = priceChartRef.current?.getContext("2d");
     const ctxRsi = rsiChartRef.current?.getContext("2d");
     const ctxMacd = macdChartRef.current?.getContext("2d");
 
-    const history = predictionData.history;
+    const history = chartHistory;
     const labels = history.map(item => item.date);
     const closePrices = history.map(item => item.close);
     const ema20Prices = history.map(item => item.ema_20);
@@ -135,12 +146,79 @@ export default function Home() {
     const bbUpperPrices = history.map(item => item.bb_upper);
     const bbLowerPrices = history.map(item => item.bb_lower);
     
-    // Add prediction point
-    const extendedLabels = [...labels, predictionData.prediction_date];
-    const predictedPrices = Array(labels.length).fill(null);
-    // Link last actual price to prediction price for continuous chart line
-    predictedPrices[labels.length - 1] = closePrices[closePrices.length - 1];
-    predictedPrices.push(predictionData.predicted_close);
+    // Include prediction point only for daily (1d) interval
+    let extendedLabels = [...labels];
+    let datasets = [
+      {
+        label: "Historical Close",
+        data: closePrices,
+        borderColor: "#8b5cf6",
+        backgroundColor: "rgba(139, 92, 246, 0.05)",
+        borderWidth: 2.5,
+        pointRadius: 0,
+        tension: 0.15,
+        fill: true,
+      }
+    ];
+
+    if (chartInterval === "1d") {
+      extendedLabels = [...labels, predictionData.prediction_date];
+      const predictedPrices = Array(labels.length).fill(null);
+      predictedPrices[labels.length - 1] = closePrices[closePrices.length - 1];
+      predictedPrices.push(predictionData.predicted_close);
+      
+      datasets.push({
+        label: "LSTM Prediction",
+        data: predictedPrices,
+        borderColor: "#10b981",
+        backgroundColor: "rgba(16, 185, 129, 0.05)",
+        borderWidth: 2.5,
+        borderDash: [5, 5],
+        pointRadius: 6,
+        pointBackgroundColor: "#10b981",
+        pointBorderColor: "#fff",
+        tension: 0.15,
+      });
+    }
+
+    datasets.push(
+      {
+        label: "EMA 20",
+        data: ema20Prices,
+        borderColor: "rgba(59, 130, 246, 0.65)",
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        tension: 0.15,
+      },
+      {
+        label: "EMA 50",
+        data: ema50Prices,
+        borderColor: "rgba(236, 72, 153, 0.65)",
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        tension: 0.15,
+      },
+      {
+        label: "BB Upper",
+        data: bbUpperPrices,
+        borderColor: "rgba(245, 158, 11, 0.35)",
+        borderWidth: 1,
+        borderDash: [3, 3],
+        pointRadius: 0,
+        fill: false,
+      },
+      {
+        label: "BB Lower",
+        data: bbLowerPrices,
+        borderColor: "rgba(245, 158, 11, 0.35)",
+        borderWidth: 1,
+        borderDash: [3, 3],
+        pointRadius: 0,
+        fill: false,
+      }
+    );
 
     // Price Chart
     if (ctxPrice) {
@@ -148,66 +226,7 @@ export default function Home() {
         type: "line",
         data: {
           labels: extendedLabels,
-          datasets: [
-            {
-              label: "Historical Close",
-              data: closePrices,
-              borderColor: "#8b5cf6",
-              backgroundColor: "rgba(139, 92, 246, 0.05)",
-              borderWidth: 2.5,
-              pointRadius: 0,
-              tension: 0.15,
-              fill: true,
-            },
-            {
-              label: "LSTM Prediction",
-              data: predictedPrices,
-              borderColor: "#10b981",
-              backgroundColor: "rgba(16, 185, 129, 0.05)",
-              borderWidth: 2.5,
-              borderDash: [5, 5],
-              pointRadius: 6,
-              pointBackgroundColor: "#10b981",
-              pointBorderColor: "#fff",
-              tension: 0.15,
-            },
-            {
-              label: "EMA 20",
-              data: ema20Prices,
-              borderColor: "rgba(59, 130, 246, 0.65)",
-              borderWidth: 1.5,
-              pointRadius: 0,
-              fill: false,
-              tension: 0.15,
-            },
-            {
-              label: "EMA 50",
-              data: ema50Prices,
-              borderColor: "rgba(236, 72, 153, 0.65)",
-              borderWidth: 1.5,
-              pointRadius: 0,
-              fill: false,
-              tension: 0.15,
-            },
-            {
-              label: "BB Upper",
-              data: bbUpperPrices,
-              borderColor: "rgba(245, 158, 11, 0.35)",
-              borderWidth: 1,
-              borderDash: [3, 3],
-              pointRadius: 0,
-              fill: false,
-            },
-            {
-              label: "BB Lower",
-              data: bbLowerPrices,
-              borderColor: "rgba(245, 158, 11, 0.35)",
-              borderWidth: 1,
-              borderDash: [3, 3],
-              pointRadius: 0,
-              fill: false,
-            }
-          ]
+          datasets: datasets
         },
         options: {
           responsive: true,
@@ -397,6 +416,9 @@ export default function Home() {
       const data = await res.json();
       if (res.ok) {
         setPredictionData(data);
+        if (chartInterval === "1d") {
+          setChartHistory(data.history);
+        }
       } else {
         setPredictError(data.detail || "Failed to load prediction model.");
       }
@@ -404,6 +426,32 @@ export default function Home() {
       setPredictError("Connection failed to Python FastAPI server.");
     } finally {
       setPredictLoading(false);
+    }
+  };
+
+  // API Call: Fetch custom chart history for alternate intervals (15m, 1h)
+  const loadChartHistory = async (symbol, interval) => {
+    if (interval === "1d") {
+      if (predictionData && predictionData.symbol === symbol) {
+        setChartHistory(predictionData.history);
+      }
+      return;
+    }
+    setChartLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/history?symbol=${symbol}&interval=${interval}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setChartHistory(data);
+      } else {
+        console.error("Failed to load chart history:", data.detail);
+      }
+    } catch (err) {
+      console.error("Error loading chart history:", err);
+    } finally {
+      setChartLoading(false);
     }
   };
 
@@ -663,6 +711,8 @@ export default function Home() {
   }
 
   // Render Dashboard if logged in
+  const activeHistory = (predictionData && chartHistory && chartHistory.length > 0) ? chartHistory : (predictionData ? predictionData.history : []);
+  
   return (
     <div className="app-container">
       {sidebarOpen && (
@@ -798,20 +848,20 @@ export default function Home() {
                   <span style={{ fontSize: "14px", color: "var(--text-muted)", marginRight: "5px" }}>Ticker: {activeSymbol}</span>
                   {predictionData && (
                     <>
-                      {getRsiBadge(predictionData.history[predictionData.history.length - 1]?.rsi)}
+                      {getRsiBadge(activeHistory[activeHistory.length - 1]?.rsi)}
                       {getMacdBadge(
-                        predictionData.history[predictionData.history.length - 1]?.macd,
-                        predictionData.history[predictionData.history.length - 1]?.macd_hist
+                        activeHistory[activeHistory.length - 1]?.macd,
+                        activeHistory[activeHistory.length - 1]?.macd_hist
                       )}
-                      <span className="badge badge-info">Open: ${predictionData.history[predictionData.history.length - 1]?.open?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">Close: ${predictionData.history[predictionData.history.length - 1]?.close?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">High: ${predictionData.history[predictionData.history.length - 1]?.high?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">Low: ${predictionData.history[predictionData.history.length - 1]?.low?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">Vol: {predictionData.history[predictionData.history.length - 1]?.volume?.toLocaleString("en-US")}</span>
-                      <span className="badge badge-info">EMA 20: ${predictionData.history[predictionData.history.length - 1]?.ema_20?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">EMA 50: ${predictionData.history[predictionData.history.length - 1]?.ema_50?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">BB Upper: ${predictionData.history[predictionData.history.length - 1]?.bb_upper?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">BB Lower: ${predictionData.history[predictionData.history.length - 1]?.bb_lower?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Open: ${activeHistory[activeHistory.length - 1]?.open?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Close: ${activeHistory[activeHistory.length - 1]?.close?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">High: ${activeHistory[activeHistory.length - 1]?.high?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Low: ${activeHistory[activeHistory.length - 1]?.low?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Vol: {activeHistory[activeHistory.length - 1]?.volume?.toLocaleString("en-US")}</span>
+                      <span className="badge badge-info">EMA 20: ${activeHistory[activeHistory.length - 1]?.ema_20?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">EMA 50: ${activeHistory[activeHistory.length - 1]?.ema_50?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">BB Upper: ${activeHistory[activeHistory.length - 1]?.bb_upper?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">BB Lower: ${activeHistory[activeHistory.length - 1]?.bb_lower?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </>
                   )}
                 </div>
@@ -839,10 +889,41 @@ export default function Home() {
               <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
                 {/* Price Chart Card */}
                 <div className="glass-panel">
-                  <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <LineChart style={{ color: "var(--accent-primary)" }} /> Historical Price & Next Day Prediction
-                  </h3>
-                  <div className="chart-wrapper">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
+                    <h3 style={{ fontSize: "18px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+                      <LineChart style={{ color: "var(--accent-primary)" }} /> Historical Price & Next Day Prediction
+                    </h3>
+                    
+                    {/* Interval Toggles */}
+                    <div style={{ display: "flex", gap: "6px", background: "rgba(255, 255, 255, 0.03)", padding: "4px", borderRadius: "var(--border-radius-md)", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                      {["15m", "1h", "1d"].map((interval) => (
+                        <button
+                          key={interval}
+                          onClick={() => setChartInterval(interval)}
+                          className={chartInterval === interval ? "btn-primary" : "btn-secondary"}
+                          style={{
+                            padding: "6px 12px",
+                            fontSize: "12px",
+                            height: "auto",
+                            borderRadius: "calc(var(--border-radius-md) - 2px)",
+                            border: "none",
+                            fontWeight: "600",
+                            textTransform: "uppercase"
+                          }}
+                          disabled={chartLoading}
+                        >
+                          {interval}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="chart-wrapper" style={{ position: "relative" }}>
+                    {chartLoading && (
+                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(11, 15, 25, 0.6)", backdropFilter: "blur(2px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, borderRadius: "8px" }}>
+                        <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "28px", height: "28px" }} />
+                      </div>
+                    )}
                     <canvas ref={priceChartRef} />
                   </div>
                 </div>
@@ -874,10 +955,10 @@ export default function Home() {
                       <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
                         <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>RSI (14)</span>
                         <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
-                          {predictionData.history[predictionData.history.length - 1]?.rsi?.toFixed(2) || "---"}
+                          {activeHistory[activeHistory.length - 1]?.rsi?.toFixed(2) || "---"}
                         </span>
                         {(() => {
-                          const rsi = predictionData.history[predictionData.history.length - 1]?.rsi;
+                          const rsi = activeHistory[activeHistory.length - 1]?.rsi;
                           if (rsi === null || rsi === undefined) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
                           if (rsi >= 70) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Overbought (Sell)</span>;
                           if (rsi <= 30) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Oversold (Buy)</span>;
@@ -888,22 +969,22 @@ export default function Home() {
                       <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
                         <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>MACD</span>
                         <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
-                          {predictionData.history[predictionData.history.length - 1]?.macd?.toFixed(2) || "---"}
+                          {activeHistory[activeHistory.length - 1]?.macd?.toFixed(2) || "---"}
                         </span>
                         {(() => {
-                          const hist = predictionData.history[predictionData.history.length - 1]?.macd_hist;
+                          const hist = activeHistory[activeHistory.length - 1]?.macd_hist;
                           if (hist === null || hist === undefined) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
                           if (hist > 0) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Bullish Cross</span>;
                           return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Bearish Cross</span>;
                         })()}
                       </div>
-
+ 
                       <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
                         <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>EMA (20 vs 50)</span>
                         <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
                           {(() => {
-                            const ema20 = predictionData.history[predictionData.history.length - 1]?.ema_20;
-                            const ema50 = predictionData.history[predictionData.history.length - 1]?.ema_50;
+                            const ema20 = activeHistory[activeHistory.length - 1]?.ema_20;
+                            const ema50 = activeHistory[activeHistory.length - 1]?.ema_50;
                             if (ema20 && ema50) {
                               return `${ema20.toFixed(1)} / ${ema50.toFixed(1)}`;
                             }
@@ -911,9 +992,9 @@ export default function Home() {
                           })()}
                         </span>
                         {(() => {
-                          const ema20 = predictionData.history[predictionData.history.length - 1]?.ema_20;
-                          const ema50 = predictionData.history[predictionData.history.length - 1]?.ema_50;
-                          const close = predictionData.history[predictionData.history.length - 1]?.close;
+                          const ema20 = activeHistory[activeHistory.length - 1]?.ema_20;
+                          const ema50 = activeHistory[activeHistory.length - 1]?.ema_50;
+                          const close = activeHistory[activeHistory.length - 1]?.close;
                           if (ema20 === null || ema50 === null || close === null) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
                           if (close > ema20 && ema20 > ema50) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Strong Uptrend</span>;
                           if (close < ema20 && ema20 < ema50) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Strong Downtrend</span>;
@@ -921,13 +1002,13 @@ export default function Home() {
                           return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>EMA Death Cross</span>;
                         })()}
                       </div>
-
+ 
                       <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
                         <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>Bollinger Bands</span>
                         <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
                           {(() => {
-                            const upper = predictionData.history[predictionData.history.length - 1]?.bb_upper;
-                            const lower = predictionData.history[predictionData.history.length - 1]?.bb_lower;
+                            const upper = activeHistory[activeHistory.length - 1]?.bb_upper;
+                            const lower = activeHistory[activeHistory.length - 1]?.bb_lower;
                             if (upper && lower) {
                               return `${upper.toFixed(1)} / ${lower.toFixed(1)}`;
                             }
@@ -935,9 +1016,9 @@ export default function Home() {
                           })()}
                         </span>
                         {(() => {
-                          const upper = predictionData.history[predictionData.history.length - 1]?.bb_upper;
-                          const lower = predictionData.history[predictionData.history.length - 1]?.bb_lower;
-                          const close = predictionData.history[predictionData.history.length - 1]?.close;
+                          const upper = activeHistory[activeHistory.length - 1]?.bb_upper;
+                          const lower = activeHistory[activeHistory.length - 1]?.bb_lower;
+                          const close = activeHistory[activeHistory.length - 1]?.close;
                           if (upper === null || lower === null || close === null) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
                           if (close >= upper) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Upper Band (Overbought)</span>;
                           if (close <= lower) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Lower Band (Oversold)</span>;
