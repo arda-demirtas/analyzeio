@@ -72,6 +72,18 @@ class PredictionMetrics(BaseModel):
     directional_accuracy: float  # Percentage of days predicted direction matches actual direction
     training_status: str
 
+class NewsArticle(BaseModel):
+    title: str
+    publisher: str
+    link: str
+    sentiment: str  # "Bullish", "Bearish", "Neutral"
+
+class FundamentalAnalysisResult(BaseModel):
+    sentiment_score: float
+    sentiment_class: str  # "Bullish", "Bearish", "Neutral"
+    recommendation: str
+    articles: List[NewsArticle]
+
 class PredictionResponse(BaseModel):
     symbol: str
     name: str
@@ -84,3 +96,4 @@ class PredictionResponse(BaseModel):
     current_price: Optional[float] = None
     metrics: PredictionMetrics
     history: List[IndicatorPoint]
+    fundamental_analysis: Optional[FundamentalAnalysisResult] = None
