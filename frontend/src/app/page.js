@@ -50,6 +50,15 @@ export default function Home() {
   const [predictionData, setPredictionData] = useState(null);
   const [predictLoading, setPredictLoading] = useState(false);
   const [predictError, setPredictError] = useState("");
+
+  // Helper to switch active symbol and reset states synchronously
+  const selectSymbol = (symbol) => {
+    if (symbol === activeSymbol) return;
+    setActiveSymbol(symbol);
+    setPredictionData(null);
+    setPredictError("");
+    setPredictLoading(true);
+  };
   
   // Settings / Profile Modals
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -336,6 +345,7 @@ export default function Home() {
   const loadPrediction = async (symbol) => {
     setPredictLoading(true);
     setPredictError("");
+    setPredictionData(null); // Clear old prediction data to trigger loading UI immediately
     try {
       const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}`, {
         headers: { "Authorization": `Bearer ${token}` }
@@ -431,7 +441,7 @@ export default function Home() {
       const data = await res.json();
       if (res.ok) {
         setWatchlist([...watchlist, data]);
-        setActiveSymbol(data.symbol);
+        selectSymbol(data.symbol);
       } else {
         alert(data.detail || "Could not add symbol to watchlist.");
       }
@@ -452,7 +462,7 @@ export default function Home() {
         const filtered = watchlist.filter(item => item.symbol !== symbolToRemove);
         setWatchlist(filtered);
         if (activeSymbol === symbolToRemove && filtered.length > 0) {
-          setActiveSymbol(filtered[0].symbol);
+          selectSymbol(filtered[0].symbol);
         }
       }
     } catch (err) {
@@ -681,7 +691,7 @@ export default function Home() {
             <div 
               key={item.id}
               onClick={() => {
-                setActiveSymbol(item.symbol);
+                selectSymbol(item.symbol);
                 setSidebarOpen(false);
               }}
               className={`watchlist-item ${activeSymbol === item.symbol ? "active" : ""}`}
@@ -722,117 +732,105 @@ export default function Home() {
 
       {/* Main Panel Content */}
       <main className="main-content">
-        {/* Main Content Header */}
-        <div className="glass-panel header-panel">
-          <div>
-            <h2 className="asset-title">{predictionData ? predictionData.name : activeSymbol}</h2>
-            <div className="header-badges-container">
-              <span style={{ fontSize: "14px", color: "var(--text-muted)", marginRight: "5px" }}>Ticker: {activeSymbol}</span>
-              {predictionData && (
-                <>
-                  {getRsiBadge(predictionData.history[predictionData.history.length - 1]?.rsi)}
-                  {getMacdBadge(
-                    predictionData.history[predictionData.history.length - 1]?.macd,
-                    predictionData.history[predictionData.history.length - 1]?.macd_hist
+        {predictLoading || (!predictionData && !predictError) || (predictionData && predictionData.symbol !== activeSymbol) ? (
+          <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: "60vh", alignItems: "center", justifyContent: "center", gap: "20px" }}>
+            <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "48px", height: "48px" }} />
+            <h3 style={{ fontSize: "18px", color: "var(--text-main)", fontWeight: "600" }}>Fetching Market Data & Training LSTM...</h3>
+            <p style={{ fontSize: "14px", color: "var(--text-muted)", textAlign: "center", maxWidth: "400px" }}>
+              Downloading historical daily prices, computing 11 indicators, and optimizing the neural network cache for {activeSymbol}.
+            </p>
+          </div>
+        ) : predictError ? (
+          <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: "60vh", alignItems: "center", justifyContent: "center", color: "var(--accent-danger)", gap: "10px" }}>
+            <span style={{ fontSize: "18px", fontWeight: "600" }}>Error Loading Data</span>
+            <span style={{ textAlign: "center", maxWidth: "400px" }}>{predictError}</span>
+            <button onClick={() => loadPrediction(activeSymbol)} className="btn-secondary" style={{ marginTop: "10px" }}>
+              <RefreshCw style={{ width: "14px" }} /> Try Again
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Main Content Header */}
+            <div className="glass-panel header-panel">
+              <div>
+                <h2 className="asset-title">{predictionData ? predictionData.name : activeSymbol}</h2>
+                <div className="header-badges-container">
+                  <span style={{ fontSize: "14px", color: "var(--text-muted)", marginRight: "5px" }}>Ticker: {activeSymbol}</span>
+                  {predictionData && (
+                    <>
+                      {getRsiBadge(predictionData.history[predictionData.history.length - 1]?.rsi)}
+                      {getMacdBadge(
+                        predictionData.history[predictionData.history.length - 1]?.macd,
+                        predictionData.history[predictionData.history.length - 1]?.macd_hist
+                      )}
+                      <span className="badge badge-info">Open: ${predictionData.history[predictionData.history.length - 1]?.open?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Close: ${predictionData.history[predictionData.history.length - 1]?.close?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">High: ${predictionData.history[predictionData.history.length - 1]?.high?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Low: ${predictionData.history[predictionData.history.length - 1]?.low?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Vol: {predictionData.history[predictionData.history.length - 1]?.volume?.toLocaleString("en-US")}</span>
+                      <span className="badge badge-info">EMA 20: ${predictionData.history[predictionData.history.length - 1]?.ema_20?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">EMA 50: ${predictionData.history[predictionData.history.length - 1]?.ema_50?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">BB Upper: ${predictionData.history[predictionData.history.length - 1]?.bb_upper?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">BB Lower: ${predictionData.history[predictionData.history.length - 1]?.bb_lower?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </>
                   )}
-                  <span className="badge badge-info">Open: ${predictionData.history[predictionData.history.length - 1]?.open?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  <span className="badge badge-info">Close: ${predictionData.history[predictionData.history.length - 1]?.close?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  <span className="badge badge-info">High: ${predictionData.history[predictionData.history.length - 1]?.high?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  <span className="badge badge-info">Low: ${predictionData.history[predictionData.history.length - 1]?.low?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  <span className="badge badge-info">Vol: {predictionData.history[predictionData.history.length - 1]?.volume?.toLocaleString("en-US")}</span>
-                  <span className="badge badge-info">EMA 20: ${predictionData.history[predictionData.history.length - 1]?.ema_20?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  <span className="badge badge-info">EMA 50: ${predictionData.history[predictionData.history.length - 1]?.ema_50?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  <span className="badge badge-info">BB Upper: ${predictionData.history[predictionData.history.length - 1]?.bb_upper?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  <span className="badge badge-info">BB Lower: ${predictionData.history[predictionData.history.length - 1]?.bb_lower?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="header-price-panel">
-            <div className="asset-price">
-              ${predictionData && predictionData.current_price !== undefined && predictionData.current_price !== null 
-                ? predictionData.current_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
-                : (predictionData ? predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---")}
-            </div>
-            <span style={{ fontSize: "12px", color: "var(--accent-primary)", fontWeight: "600", display: "block" }}>
-              ● Live Market Price
-            </span>
-            {predictionData && (
-              <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginTop: "2px" }}>
-                Last Close: ${predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({predictionData.last_date})
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Dashboard Grid (Charts and Predictions) */}
-        <div className="dashboard-grid">
-          {/* Column 1: Charts */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
-            {/* Price Chart Card */}
-            <div className="glass-panel">
-              <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
-                <LineChart style={{ color: "var(--accent-primary)" }} /> Historical Price & Next Day Prediction
-              </h3>
-              <div className="chart-wrapper">
-                {predictLoading ? (
-                  <div style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center" }}>
-                    <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "32px", height: "32px" }} />
-                  </div>
-                ) : predictError ? (
-                  <div style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center", color: "var(--accent-danger)" }}>
-                    {predictError}
-                  </div>
-                ) : (
-                  <canvas ref={priceChartRef} />
+                </div>
+              </div>
+              <div className="header-price-panel">
+                <div className="asset-price">
+                  ${predictionData && predictionData.current_price !== undefined && predictionData.current_price !== null 
+                    ? predictionData.current_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+                    : (predictionData ? predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---")}
+                </div>
+                <span style={{ fontSize: "12px", color: "var(--accent-primary)", fontWeight: "600", display: "block" }}>
+                  ● Live Market Price
+                </span>
+                {predictionData && (
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginTop: "2px" }}>
+                    Last Close: ${predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({predictionData.last_date})
+                  </span>
                 )}
               </div>
             </div>
 
-            {/* Technical Indicators Chart Card */}
-            <div className="glass-panel">
-              <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>Technical Oscillators</h3>
-              <div className="indicator-grid">
-                <div>
-                  <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>Relative Strength Index (RSI)</h4>
-                  <div className="indicator-wrapper">
-                    {predictLoading ? (
-                      <div style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center" }}>
-                        <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "24px", height: "24px" }} />
-                      </div>
-                    ) : (
-                      <canvas ref={rsiChartRef} />
-                    )}
+            {/* Dashboard Grid (Charts and Predictions) */}
+            <div className="dashboard-grid">
+              {/* Column 1: Charts */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
+                {/* Price Chart Card */}
+                <div className="glass-panel">
+                  <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <LineChart style={{ color: "var(--accent-primary)" }} /> Historical Price & Next Day Prediction
+                  </h3>
+                  <div className="chart-wrapper">
+                    <canvas ref={priceChartRef} />
                   </div>
                 </div>
-                <div>
-                  <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>MACD Divergence</h4>
-                  <div className="indicator-wrapper">
-                    {predictLoading ? (
-                      <div style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center" }}>
-                        <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "24px", height: "24px" }} />
+
+                {/* Technical Indicators Chart Card */}
+                <div className="glass-panel">
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>Technical Oscillators</h3>
+                  <div className="indicator-grid">
+                    <div>
+                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>Relative Strength Index (RSI)</h4>
+                      <div className="indicator-wrapper">
+                        <canvas ref={rsiChartRef} />
                       </div>
-                    ) : (
-                      <canvas ref={macdChartRef} />
-                    )}
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>MACD Divergence</h4>
+                      <div className="indicator-wrapper">
+                        <canvas ref={macdChartRef} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Column 2: LSTM Prediction Summary */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
-            {/* Prediction Highlight Card */}
-            <div className="glass-panel prediction-card" style={{ minHeight: "220px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-              {predictLoading ? (
-                <div className="animate-pulse" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "15px" }}>
-                  <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "36px", height: "36px" }} />
-                  <span className="prediction-label" style={{ color: "var(--accent-primary)" }}>Training LSTM Model...</span>
-                  <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Optimizing parameters for 11 indicators</span>
-                </div>
-              ) : (
-                <>
+              {/* Column 2: LSTM Prediction Summary */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
+                {/* Prediction Highlight Card */}
+                <div className="glass-panel prediction-card" style={{ minHeight: "220px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                   <span className="prediction-label">Next Trading Day Predicted Close</span>
                   <div className="prediction-value">
                     ${predictionData ? predictionData.predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"}
@@ -860,49 +858,49 @@ export default function Home() {
                       )}
                     </div>
                   )}
-                </>
-              )}
-            </div>
+                </div>
 
-            {/* Model Information & Metrics */}
-            <div className="glass-panel">
-              <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>LSTM Model Analytics</h3>
-              
-              <div className="stats-list" style={{ opacity: predictLoading ? 0.6 : 1, transition: "var(--transition-smooth)" }}>
-                <div className="stats-row">
-                  <span>Cache Status</span>
-                  <span>{predictLoading ? "Training..." : (predictionData ? predictionData.metrics.training_status : "---")}</span>
+                {/* Model Information & Metrics */}
+                <div className="glass-panel">
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>LSTM Model Analytics</h3>
+                  
+                  <div className="stats-list">
+                    <div className="stats-row">
+                      <span>Cache Status</span>
+                      <span>{predictionData ? predictionData.metrics.training_status : "---"}</span>
+                    </div>
+                    <div className="stats-row">
+                      <span>Backtest Root MSE (RMSE)</span>
+                      <span>{predictionData ? `$${predictionData.metrics.rmse.toFixed(2)}` : "---"}</span>
+                    </div>
+                    <div className="stats-row">
+                      <span>Mean Absolute Error (MAPE)</span>
+                      <span>{predictionData ? `${predictionData.metrics.mape.toFixed(2)}%` : "---"}</span>
+                    </div>
+                    <div className="stats-row">
+                      <span>Directional Accuracy</span>
+                      <span style={{ color: predictionData && predictionData.metrics.directional_accuracy >= 55 ? "var(--accent-success)" : "inherit" }}>
+                        {predictionData ? `${predictionData.metrics.directional_accuracy.toFixed(1)}%` : "---"}
+                      </span>
+                    </div>
+                    <div className="stats-row">
+                      <span>Features Used</span>
+                      <span>RSI, MACD, Open, Close, Volume, High, Low, Bollinger Bands, EMA 20/50</span>
+                    </div>
+                    <div className="stats-row">
+                      <span>Time Step (Sequence)</span>
+                      <span>60 Days</span>
+                    </div>
+                  </div>
+                  
+                  <div style={{ marginTop: "20px", fontSize: "12px", color: "var(--text-muted)", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "15px" }}>
+                    * The model calculates RSI (14) and MACD (12, 26, 9) and feeds normalized sequences into a deep LSTM network. Dynamic re-training optimizes parameters to fit the asset's current volatility.
+                  </div>
                 </div>
-                <div className="stats-row">
-                  <span>Backtest Root MSE (RMSE)</span>
-                  <span>{predictLoading ? "Calculating..." : (predictionData ? `$${predictionData.metrics.rmse.toFixed(2)}` : "---")}</span>
-                </div>
-                <div className="stats-row">
-                  <span>Mean Absolute Error (MAPE)</span>
-                  <span>{predictLoading ? "Calculating..." : (predictionData ? `${predictionData.metrics.mape.toFixed(2)}%` : "---")}</span>
-                </div>
-                <div className="stats-row">
-                  <span>Directional Accuracy</span>
-                  <span style={{ color: !predictLoading && predictionData && predictionData.metrics.directional_accuracy >= 55 ? "var(--accent-success)" : "inherit" }}>
-                    {predictLoading ? "Evaluating..." : (predictionData ? `${predictionData.metrics.directional_accuracy.toFixed(1)}%` : "---")}
-                  </span>
-                </div>
-                <div className="stats-row">
-                  <span>Features Used</span>
-                  <span>RSI, MACD, Open, Close, Volume, High, Low, Bollinger Bands, EMA 20/50</span>
-                </div>
-                <div className="stats-row">
-                  <span>Time Step (Sequence)</span>
-                  <span>60 Days</span>
-                </div>
-              </div>
-              
-              <div style={{ marginTop: "20px", fontSize: "12px", color: "var(--text-muted)", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "15px" }}>
-                * The model calculates RSI (14) and MACD (12, 26, 9) and feeds normalized sequences into a deep LSTM network. Dynamic re-training optimizes parameters to fit the asset's current volatility.
               </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </main>
 
       {/* Change Password Modal */}
