@@ -141,7 +141,12 @@ def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str, b
     
     return df, asset_name, is_crypto, current_price
 
-def prepare_lstm_data(df: pd.DataFrame, seq_length: int) -> Tuple[np.ndarray, np.ndarray, MinMaxScaler, MinMaxScaler]:
+def prepare_lstm_data(
+    df: pd.DataFrame, 
+    seq_length: int, 
+    scaler_x: Optional[MinMaxScaler] = None, 
+    scaler_y: Optional[MinMaxScaler] = None
+) -> Tuple[np.ndarray, np.ndarray, MinMaxScaler, MinMaxScaler]:
     """
     Scales the data and creates sequences for LSTM training.
     Features: RSI, MACD, Open, Close, Volume, High, Low, BB_Upper, BB_Lower, EMA_20, EMA_50
@@ -152,11 +157,17 @@ def prepare_lstm_data(df: pd.DataFrame, seq_length: int) -> Tuple[np.ndarray, np
     target_data = df[["Close"]].values
     
     # Normalize features and target separately
-    scaler_x = MinMaxScaler(feature_range=(0, 1))
-    scaler_y = MinMaxScaler(feature_range=(0, 1))
-    
-    scaled_x = scaler_x.fit_transform(feature_data)
-    scaled_y = scaler_y.fit_transform(target_data)
+    if scaler_x is None:
+        scaler_x = MinMaxScaler(feature_range=(0, 1))
+        scaled_x = scaler_x.fit_transform(feature_data)
+    else:
+        scaled_x = scaler_x.transform(feature_data)
+        
+    if scaler_y is None:
+        scaler_y = MinMaxScaler(feature_range=(0, 1))
+        scaled_y = scaler_y.fit_transform(target_data)
+    else:
+        scaled_y = scaler_y.transform(target_data)
     
     x_seq, y_val = [], []
     for i in range(seq_length, len(scaled_x)):
@@ -248,8 +259,13 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
     df_train = df.iloc[:split_idx]
     df_test = df.iloc[split_idx - seq_length:]  # overlap for sequences
     
-    x_train, y_train, scaler_x, scaler_y = prepare_lstm_data(df_train, seq_length)
-    x_test, y_test, _, _ = prepare_lstm_data(df_test, seq_length)
+    # Fit train scalers for evaluation
+    x_train, y_train, scaler_x_train, scaler_y_train = prepare_lstm_data(df_train, seq_length)
+    # Scale test data using train scalers
+    x_test, y_test, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x_train, scaler_y_train)
+    
+    # Fit full scalers for final prediction
+    x_all, y_all, scaler_x, scaler_y = prepare_lstm_data(df, seq_length)
     
     # 3. Check if cached model exists
     cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_model.keras")
@@ -266,15 +282,20 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
                 pass  # If load fails, we will re-train
                 
     if not model_loaded:
-        # Train a new model
-        model = train_lstm_model(x_train, y_train, seq_length)
+        # Train temporary model for evaluation
+        eval_model = train_lstm_model(x_train, y_train, seq_length)
+        metrics = evaluate_model_performance(eval_model, x_test, y_test, scaler_y_train, df_test, seq_length)
+        
+        # Train final model on 100% of the data
+        model = train_lstm_model(x_all, y_all, seq_length)
         model.save(cache_path)
-        training_status = "Trained new model"
+        training_status = "Trained new model (100% historical data)"
     else:
+        # Use full scalers to scale the test set for evaluation of the loaded model
+        x_test_full, y_test_full, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x, scaler_y)
+        metrics = evaluate_model_performance(model, x_test_full, y_test_full, scaler_y, df_test, seq_length)
         training_status = "Loaded cached model (last 24h)"
         
-    # 4. Evaluate performance on test set
-    metrics = evaluate_model_performance(model, x_test, y_test, scaler_y, df_test, seq_length)
     metrics["training_status"] = training_status
     
     # 5. Predict the next day's price
