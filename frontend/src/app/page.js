@@ -130,6 +130,10 @@ export default function Home() {
     const history = predictionData.history;
     const labels = history.map(item => item.date);
     const closePrices = history.map(item => item.close);
+    const ema20Prices = history.map(item => item.ema_20);
+    const ema50Prices = history.map(item => item.ema_50);
+    const bbUpperPrices = history.map(item => item.bb_upper);
+    const bbLowerPrices = history.map(item => item.bb_lower);
     
     // Add prediction point
     const extendedLabels = [...labels, predictionData.prediction_date];
@@ -150,7 +154,7 @@ export default function Home() {
               data: closePrices,
               borderColor: "#8b5cf6",
               backgroundColor: "rgba(139, 92, 246, 0.05)",
-              borderWidth: 2,
+              borderWidth: 2.5,
               pointRadius: 0,
               tension: 0.15,
               fill: true,
@@ -160,12 +164,48 @@ export default function Home() {
               data: predictedPrices,
               borderColor: "#10b981",
               backgroundColor: "rgba(16, 185, 129, 0.05)",
-              borderWidth: 2,
+              borderWidth: 2.5,
               borderDash: [5, 5],
               pointRadius: 6,
               pointBackgroundColor: "#10b981",
               pointBorderColor: "#fff",
               tension: 0.15,
+            },
+            {
+              label: "EMA 20",
+              data: ema20Prices,
+              borderColor: "rgba(59, 130, 246, 0.65)",
+              borderWidth: 1.5,
+              pointRadius: 0,
+              fill: false,
+              tension: 0.15,
+            },
+            {
+              label: "EMA 50",
+              data: ema50Prices,
+              borderColor: "rgba(236, 72, 153, 0.65)",
+              borderWidth: 1.5,
+              pointRadius: 0,
+              fill: false,
+              tension: 0.15,
+            },
+            {
+              label: "BB Upper",
+              data: bbUpperPrices,
+              borderColor: "rgba(245, 158, 11, 0.35)",
+              borderWidth: 1,
+              borderDash: [3, 3],
+              pointRadius: 0,
+              fill: false,
+            },
+            {
+              label: "BB Lower",
+              data: bbLowerPrices,
+              borderColor: "rgba(245, 158, 11, 0.35)",
+              borderWidth: 1,
+              borderDash: [3, 3],
+              pointRadius: 0,
+              fill: false,
             }
           ]
         },
@@ -241,7 +281,7 @@ export default function Home() {
       const signalValues = history.map(item => item.macd_signal);
       const histValues = history.map(item => item.macd_hist);
       
-      rsiChartInst.current = new Chart(ctxMacd, {
+      macdChartInst.current = new Chart(ctxMacd, {
         type: "bar",
         data: {
           labels: labels,
@@ -809,7 +849,7 @@ export default function Home() {
 
                 {/* Technical Indicators Chart Card */}
                 <div className="glass-panel">
-                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>Technical Oscillators</h3>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>Technical Indicators & Oscillators</h3>
                   <div className="indicator-grid">
                     <div>
                       <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>Relative Strength Index (RSI)</h4>
@@ -821,6 +861,88 @@ export default function Home() {
                       <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>MACD Divergence</h4>
                       <div className="indicator-wrapper">
                         <canvas ref={macdChartRef} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Summary of Technical Signals */}
+                  <div style={{ marginTop: "25px", paddingTop: "20px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                    <h4 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+                      Active Technical Signals
+                    </h4>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "15px" }}>
+                      <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
+                        <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>RSI (14)</span>
+                        <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
+                          {predictionData.history[predictionData.history.length - 1]?.rsi?.toFixed(2) || "---"}
+                        </span>
+                        {(() => {
+                          const rsi = predictionData.history[predictionData.history.length - 1]?.rsi;
+                          if (rsi === null || rsi === undefined) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+                          if (rsi >= 70) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Overbought (Sell)</span>;
+                          if (rsi <= 30) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Oversold (Buy)</span>;
+                          return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Neutral</span>;
+                        })()}
+                      </div>
+                      
+                      <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
+                        <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>MACD</span>
+                        <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
+                          {predictionData.history[predictionData.history.length - 1]?.macd?.toFixed(2) || "---"}
+                        </span>
+                        {(() => {
+                          const hist = predictionData.history[predictionData.history.length - 1]?.macd_hist;
+                          if (hist === null || hist === undefined) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+                          if (hist > 0) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Bullish Cross</span>;
+                          return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Bearish Cross</span>;
+                        })()}
+                      </div>
+
+                      <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
+                        <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>EMA (20 vs 50)</span>
+                        <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
+                          {(() => {
+                            const ema20 = predictionData.history[predictionData.history.length - 1]?.ema_20;
+                            const ema50 = predictionData.history[predictionData.history.length - 1]?.ema_50;
+                            if (ema20 && ema50) {
+                              return `${ema20.toFixed(1)} / ${ema50.toFixed(1)}`;
+                            }
+                            return "---";
+                          })()}
+                        </span>
+                        {(() => {
+                          const ema20 = predictionData.history[predictionData.history.length - 1]?.ema_20;
+                          const ema50 = predictionData.history[predictionData.history.length - 1]?.ema_50;
+                          const close = predictionData.history[predictionData.history.length - 1]?.close;
+                          if (ema20 === null || ema50 === null || close === null) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+                          if (close > ema20 && ema20 > ema50) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Strong Uptrend</span>;
+                          if (close < ema20 && ema20 < ema50) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Strong Downtrend</span>;
+                          if (ema20 > ema50) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>EMA Golden Cross</span>;
+                          return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>EMA Death Cross</span>;
+                        })()}
+                      </div>
+
+                      <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
+                        <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>Bollinger Bands</span>
+                        <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
+                          {(() => {
+                            const upper = predictionData.history[predictionData.history.length - 1]?.bb_upper;
+                            const lower = predictionData.history[predictionData.history.length - 1]?.bb_lower;
+                            if (upper && lower) {
+                              return `${upper.toFixed(1)} / ${lower.toFixed(1)}`;
+                            }
+                            return "---";
+                          })()}
+                        </span>
+                        {(() => {
+                          const upper = predictionData.history[predictionData.history.length - 1]?.bb_upper;
+                          const lower = predictionData.history[predictionData.history.length - 1]?.bb_lower;
+                          const close = predictionData.history[predictionData.history.length - 1]?.close;
+                          if (upper === null || lower === null || close === null) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+                          if (close >= upper) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Upper Band (Overbought)</span>;
+                          if (close <= lower) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Lower Band (Oversold)</span>;
+                          return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Inside Bands</span>;
+                        })()}
                       </div>
                     </div>
                   </div>
