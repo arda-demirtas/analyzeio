@@ -982,6 +982,67 @@ export default function Home() {
                   )}
                 </div>
 
+                {/* Fundamental Analysis Card */}
+                {predictionData && predictionData.fundamental_analysis && (
+                  <div className="glass-panel">
+                    <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <PieChart style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} /> Fundamental Analysis & News
+                    </h3>
+                    
+                    <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                      {/* Overall Sentiment Badge */}
+                      <div style={{ display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "space-between", background: "rgba(255, 255, 255, 0.03)", padding: "10px 14px", borderRadius: "var(--border-radius-md)", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                        <span style={{ fontSize: "13px", color: "var(--text-muted)", fontWeight: "500" }}>Market Outlook:</span>
+                        {predictionData.fundamental_analysis.sentiment_class === "Bullish" ? (
+                          <span className="badge badge-success">Bullish / Positive Sentiment</span>
+                        ) : predictionData.fundamental_analysis.sentiment_class === "Bearish" ? (
+                          <span className="badge badge-danger">Bearish / Negative Sentiment</span>
+                        ) : (
+                          <span className="badge badge-warning">Neutral Sentiment</span>
+                        )}
+                      </div>
+                      
+                      {/* Recommendation Text */}
+                      <p style={{ fontSize: "13px", color: "var(--text-main)", lineHeight: "1.6", background: "rgba(139, 92, 246, 0.05)", padding: "14px", borderRadius: "var(--border-radius-md)", borderLeft: "4px solid var(--accent-primary)", margin: 0 }}>
+                        {predictionData.fundamental_analysis.recommendation}
+                      </p>
+                      
+                      {/* News list */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "5px" }}>
+                        <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.5px" }}>Recent News Headlines</span>
+                        {predictionData.fundamental_analysis.articles.length === 0 ? (
+                          <div style={{ fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center" }}>No recent news articles found.</div>
+                        ) : (
+                          predictionData.fundamental_analysis.articles.map((art, idx) => (
+                            <a 
+                              key={idx}
+                              href={art.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="watchlist-item"
+                              style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "6px", padding: "10px 14px", margin: 0 }}
+                            >
+                              <div style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
+                                <span style={{ fontSize: "13px", fontWeight: "600", color: "#fff", lineHeight: "1.4", textAlign: "left" }}>{art.title}</span>
+                              </div>
+                              <div style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
+                                <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{art.publisher}</span>
+                                {art.sentiment === "Bullish" ? (
+                                  <span className="badge badge-success" style={{ fontSize: "9px", padding: "1px 6px" }}>Bullish</span>
+                                ) : art.sentiment === "Bearish" ? (
+                                  <span className="badge badge-danger" style={{ fontSize: "9px", padding: "1px 6px" }}>Bearish</span>
+                                ) : (
+                                  <span className="badge badge-warning" style={{ fontSize: "9px", padding: "1px 6px" }}>Neutral</span>
+                                )}
+                              </div>
+                            </a>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Model Information & Metrics */}
                 <div className="glass-panel">
                   <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>LSTM Model Analytics</h3>
