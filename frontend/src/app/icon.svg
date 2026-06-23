@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <!-- Background disc -->
+  <rect width="100" height="100" rx="24" fill="#0b0f19" stroke="rgba(255, 255, 255, 0.08)" stroke-width="2" />
+  
+  <!-- Icon Graphics: A combination of a chart trendline rising from purple to emerald green -->
+  <path d="M 25 72 L 45 35 L 58 55 L 78 28" fill="none" stroke="url(#grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
+  <circle cx="25" cy="72" r="5" fill="#8b5cf6" />
+  <circle cx="45" cy="35" r="5" fill="#8b5cf6" />
+  <circle cx="58" cy="55" r="5" fill="#10b981" />
+  <circle cx="78" cy="28" r="6" fill="#10b981" filter="url(#glow)" />
+</svg>
