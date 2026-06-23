@@ -4,9 +4,9 @@ from typing import List
 
 from backend.database import get_db
 from backend.models import User, Watchlist
-from backend.schemas import WatchlistAdd, WatchlistResponse, PredictionResponse
+from backend.schemas import WatchlistAdd, WatchlistResponse, PredictionResponse, IndicatorPoint
 from backend.auth import get_current_user
-from backend.predictor import get_prediction
+from backend.predictor import get_prediction, fetch_interval_history
 
 router = APIRouter(prefix="/api", tags=["Predictions & Watchlist"])
 
@@ -90,3 +90,29 @@ def remove_from_watchlist(symbol: str, current_user: User = Depends(get_current_
     db.delete(item)
     db.commit()
     return {"message": f"{symbol_upper} removed from watchlist"}
+
+@router.get("/history", response_model=List[IndicatorPoint])
+def get_asset_history(symbol: str, interval: str = "1d", current_user: User = Depends(get_current_user)):
+    """
+    Returns historical price and technical indicators data for a specific asset at a given interval
+    (e.g., 15m, 1h, 1d) without re-running the prediction model.
+    """
+    symbol_upper = normalize_symbol(symbol)
+    if interval not in ["15m", "1h", "1d"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported interval. Allowed: 15m, 1h, 1d"
+        )
+    try:
+        history = fetch_interval_history(symbol_upper, interval)
+        return history
+    except ValueError as val_err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(val_err)
+        )
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching asset history: {str(err)}"
+        )
