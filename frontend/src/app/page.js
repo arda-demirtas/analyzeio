@@ -19,7 +19,10 @@ import {
   Shield,
   Briefcase,
   Menu,
-  X
+  X,
+  MessageSquare,
+  CornerDownRight,
+  Camera
 } from "lucide-react";
 import { Chart, registerables } from "chart.js";
 
@@ -55,6 +58,12 @@ export default function Home() {
   const [chartHistory, setChartHistory] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
 
+  // Comments state variables
+  const [comments, setComments] = useState([]);
+  const [newCommentContent, setNewCommentContent] = useState("");
+  const [replyingToId, setReplyingToId] = useState(null);
+  const [replyContent, setReplyContent] = useState("");
+
   // Helper to switch active symbol and reset states synchronously
   const selectSymbol = (symbol) => {
     if (symbol === activeSymbol) return;
@@ -85,8 +94,16 @@ export default function Home() {
     if (savedToken) {
       setToken(savedToken);
       fetchWatchlist(savedToken);
+      fetchCurrentUser(savedToken);
     }
   }, []);
+
+  // Fetch comments when activeSymbol changes
+  useEffect(() => {
+    if (activeSymbol) {
+      fetchComments(activeSymbol);
+    }
+  }, [activeSymbol]);
 
   // 2. Fetch Prediction data when activeSymbol or chartInterval changes
   useEffect(() => {
@@ -420,6 +437,124 @@ export default function Home() {
     }
   };
 
+  // API Call: Fetch User Profile
+  const fetchCurrentUser = async (authToken) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data);
+      }
+    } catch (err) {
+      console.error("Error fetching user details:", err);
+    }
+  };
+
+  // API Call: Profile Picture Upload
+  const handleProfilePictureUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 1024 * 1024) {
+      alert("Image is too large. Please select an image under 1MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      const base64String = reader.result;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ profile_picture: base64String })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setUser(data);
+        } else {
+          alert(data.detail || "Could not upload profile picture.");
+        }
+      } catch (err) {
+        console.error("Profile picture upload failed:", err);
+      }
+    };
+  };
+
+  // API Call: Fetch Comments
+  const fetchComments = async (symbol) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/comments/${symbol}`);
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data);
+      }
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+    }
+  };
+
+  // API Call: Post Comment/Reply
+  const handlePostComment = async (e, parentId = null) => {
+    if (e) e.preventDefault();
+    const content = parentId ? replyContent : newCommentContent;
+    if (!content.trim()) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          symbol: activeSymbol,
+          content: content,
+          parent_id: parentId
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await fetchComments(activeSymbol);
+        if (parentId) {
+          setReplyContent("");
+          setReplyingToId(null);
+        } else {
+          setNewCommentContent("");
+        }
+      } else {
+        alert(data.detail || "Could not post comment.");
+      }
+    } catch (err) {
+      console.error("Error posting comment:", err);
+    }
+  };
+
+  // API Call: Delete Comment
+  const handleDeleteComment = async (commentId) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/comments/${commentId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        await fetchComments(activeSymbol);
+      } else {
+        const data = await res.json();
+        alert(data.detail || "Could not delete comment.");
+      }
+    } catch (err) {
+      console.error("Error deleting comment:", err);
+    }
+  };
+
   // API Call: Register
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -461,6 +596,7 @@ export default function Home() {
         localStorage.setItem("token", data.access_token);
         setToken(data.access_token);
         fetchWatchlist(data.access_token);
+        fetchCurrentUser(data.access_token);
         // Clear forms
         setUsername("");
         setPassword("");
@@ -675,6 +811,103 @@ export default function Home() {
     );
   }
 
+  // Helper to render nested comments
+  const renderCommentNode = (comment, depth = 0) => {
+    const replies = comments.filter(c => c.parent_id === comment.id);
+    const isOwner = user && user.id === comment.user.id;
+    
+    return (
+      <div key={comment.id} style={{ marginLeft: depth > 0 ? `${Math.min(depth * 15, 45)}px` : "0px", borderLeft: depth > 0 ? "2px solid rgba(139, 92, 246, 0.15)" : "none", paddingLeft: depth > 0 ? "10px" : "0px", marginTop: "10px" }}>
+        <div className="glass-panel" style={{ padding: "10px 12px", background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.05)", borderRadius: "var(--border-radius-md)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              {comment.user.profile_picture ? (
+                <img 
+                  src={comment.user.profile_picture} 
+                  alt={comment.user.username}
+                  style={{ width: "20px", height: "20px", borderRadius: "50%", objectFit: "cover" }}
+                />
+              ) : (
+                <div style={{ background: "rgba(139, 92, 246, 0.2)", borderRadius: "50%", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyItems: "center" }}>
+                  <User style={{ width: "10px", color: "var(--accent-primary)", margin: "auto" }} />
+                </div>
+              )}
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-main)" }}>{comment.user.username}</span>
+              <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+                {new Date(comment.created_at + "Z").toLocaleString()}
+              </span>
+            </div>
+            {isOwner && (
+              <button 
+                onClick={() => handleDeleteComment(comment.id)}
+                style={{ background: "none", border: "none", color: "var(--accent-danger)", cursor: "pointer", opacity: 0.8, padding: "2px" }}
+              >
+                <Trash style={{ width: "11px" }} />
+              </button>
+            )}
+          </div>
+          
+          <p style={{ fontSize: "12px", color: "var(--text-main)", margin: "4px 0", whiteSpace: "pre-wrap" }}>{comment.content}</p>
+          
+          <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+            <button 
+              onClick={() => {
+                if (replyingToId === comment.id) {
+                  setReplyingToId(null);
+                } else {
+                  setReplyingToId(comment.id);
+                  setReplyContent("");
+                }
+              }}
+              style={{ background: "none", border: "none", color: "var(--accent-primary)", fontSize: "11px", fontWeight: "600", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "4px" }}
+            >
+              <CornerDownRight style={{ width: "10px" }} /> Reply
+            </button>
+          </div>
+          
+          {/* Reply Input Box */}
+          {replyingToId === comment.id && (
+            <form onSubmit={(e) => handlePostComment(e, comment.id)} style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "8px" }}>
+              <input
+                type="text"
+                placeholder={`Reply to ${comment.user.username}...`}
+                className="input-field"
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                style={{ fontSize: "11px", height: "30px", padding: "0 8px" }}
+                autoFocus
+              />
+              <div style={{ display: "flex", gap: "6px", alignSelf: "flex-end" }}>
+                <button 
+                  type="button" 
+                  onClick={() => setReplyingToId(null)}
+                  className="btn-secondary" 
+                  style={{ height: "24px", padding: "0 8px", fontSize: "11px" }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-primary" 
+                  style={{ height: "24px", padding: "0 8px", fontSize: "11px" }}
+                >
+                  Post
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+        
+        {/* Replies rendering recursive */}
+        {replies.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+            {replies.map(reply => renderCommentNode(reply, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Render Dashboard if logged in
   const activeHistory = (predictionData && chartHistory && chartHistory.length > 0) ? chartHistory : (predictionData ? predictionData.history : []);
   
@@ -765,11 +998,39 @@ export default function Home() {
         {/* User profile controls */}
         <div className="user-panel">
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div style={{ background: "rgba(139, 92, 246, 0.2)", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyItems: "center" }}>
-                <User style={{ width: "16px", color: "var(--accent-primary)", margin: "auto" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", position: "relative" }}>
+              <div style={{ position: "relative", width: "40px", height: "40px", flexShrink: 0 }}>
+                {user && user.profile_picture ? (
+                  <img 
+                    src={user.profile_picture} 
+                    alt="Profile"
+                    style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover", border: "2px solid var(--accent-primary)" }}
+                  />
+                ) : (
+                  <div style={{ background: "rgba(139, 92, 246, 0.2)", borderRadius: "50%", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyItems: "center", border: "1px solid rgba(255,255,255,0.1)" }}>
+                    <User style={{ width: "20px", color: "var(--accent-primary)", margin: "auto" }} />
+                  </div>
+                )}
+                <label 
+                  htmlFor="profile-upload" 
+                  style={{ position: "absolute", bottom: "-2px", right: "-2px", background: "var(--accent-primary)", borderRadius: "50%", width: "18px", height: "18px", display: "flex", alignItems: "center", justifyItems: "center", cursor: "pointer", border: "1px solid #fff", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}
+                >
+                  <Camera style={{ width: "10px", color: "#fff", margin: "auto" }} />
+                </label>
+                <input 
+                  id="profile-upload" 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleProfilePictureUpload} 
+                  style={{ display: "none" }} 
+                />
               </div>
-              <span style={{ fontSize: "14px", fontWeight: "600" }}>Dashboard Session</span>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>Active User</span>
+                <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-main)" }}>
+                  {user ? user.username : "Dashboard Session"}
+                </span>
+              </div>
             </div>
 
             <button onClick={() => setShowPasswordModal(true)} className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }}>
@@ -991,6 +1252,40 @@ export default function Home() {
                         })()}
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Comments & Discussion Panel */}
+                <div className="glass-panel" style={{ marginTop: "10px" }}>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <MessageSquare style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} /> Symbol Discussion ({activeSymbol})
+                  </h3>
+                  
+                  {/* Post New Comment Form */}
+                  <form onSubmit={(e) => handlePostComment(e)} style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+                    <textarea
+                      placeholder="Share your technical outlook or ask a question..."
+                      className="input-field"
+                      rows="3"
+                      value={newCommentContent}
+                      onChange={(e) => setNewCommentContent(e.target.value)}
+                      style={{ resize: "none", fontSize: "13px", padding: "10px" }}
+                      required
+                    />
+                    <button type="submit" className="btn-primary" style={{ alignSelf: "flex-end", height: "36px", padding: "0 16px", fontSize: "13px" }}>
+                      Comment
+                    </button>
+                  </form>
+                  
+                  {/* Comments Tree */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "450px", overflowY: "auto", paddingRight: "5px" }}>
+                    {comments.filter(c => c.parent_id === null).length === 0 ? (
+                      <div style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center", padding: "20px 0", fontStyle: "italic" }}>
+                        No comments yet. Start the conversation!
+                      </div>
+                    ) : (
+                      comments.filter(c => c.parent_id === null).map(comment => renderCommentNode(comment))
+                    )}
                   </div>
                 </div>
               </div>
