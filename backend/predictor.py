@@ -11,7 +11,12 @@ from typing import Tuple, Dict, Any, List, Optional
 
 from backend.config import MODEL_CACHE_DIR, DEFAULT_SEQUENCE_LENGTH
 
-FEATURES = ["RSI", "MACD", "Open", "Close", "Volume", "High", "Low", "BB_Upper", "BB_Lower", "EMA_20", "EMA_50"]
+FEATURES = [
+    "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
+    "Open", "Close", "Volume", "High", "Low", 
+    "BB_Upper", "BB_Lower", "BB_Width",
+    "EMA_20", "EMA_50", "ATR", "Daily_Return"
+]
 
 def calculate_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
     """Calculates the Relative Strength Index (RSI) for a price series."""
@@ -36,6 +41,15 @@ def calculate_macd(prices: pd.Series, fast: int = 12, slow: int = 26, signal: in
     macd_hist = macd_line - signal_line
     return macd_line, signal_line, macd_hist
 
+def calculate_atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
+    """Calculates the Average True Range (ATR)."""
+    tr1 = high - low
+    tr2 = (high - close.shift(1)).abs()
+    tr3 = (low - close.shift(1)).abs()
+    tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+    atr = tr.rolling(window=period).mean()
+    return atr
+
 # Dictionary of popular symbols to their readable names
 TICKER_NAMES = {
     "BTC-USD": "Bitcoin USD",
@@ -50,18 +64,27 @@ TICKER_NAMES = {
     "ETH-USDT": "Ethereum USD"
 }
 
-def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str, bool, Optional[float]]:
+def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, str, bool, Optional[float]]:
     """
-    Downloads historical market data directly from Yahoo Finance API using requests with a browser User-Agent
-    to bypass datacenter IP blocks, calculates technical indicators, and returns a cleaned DataFrame.
+    Downloads historical market data from Yahoo Finance API for a specific interval,
+    resamples hourly to 4-hour if requested, computes indicators, and returns a DataFrame.
     """
-    end_date = datetime.datetime.now()
-    start_date = end_date - datetime.timedelta(days=years * 365)
-    
-    period1 = int(start_date.timestamp())
-    period2 = int(end_date.timestamp())
-    
-    url = f"https://query2.finance.yahoo.com/v8/finance/chart/{symbol}?period1={period1}&period2={period2}&interval=1d"
+    if interval == "15m":
+        range_param = "60d"
+        api_interval = "15m"
+    elif interval == "1h":
+        range_param = "365d"
+        api_interval = "1h"
+    elif interval == "4h":
+        range_param = "365d"
+        api_interval = "1h"  # Resample from hourly
+    elif interval == "1d":
+        range_param = "5y"
+        api_interval = "1d"
+    else:
+        raise ValueError(f"Unsupported interval: {interval}")
+
+    url = f"https://query2.finance.yahoo.com/v8/finance/chart/{symbol}?range={range_param}&interval={api_interval}"
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
@@ -74,12 +97,14 @@ def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str, b
             
         data = r.json()
         result = data["chart"]["result"][0]
-        timestamps = result["timestamp"]
+        timestamps = result.get("timestamp", [])
         quote = result["indicators"]["quote"][0]
         meta = result.get("meta", {})
         current_price = meta.get("regularMarketPrice")
         
-        # Parse lists
+        if not timestamps:
+            raise ValueError(f"No historical data returned for symbol: {symbol}")
+            
         dates = [datetime.datetime.fromtimestamp(ts) for ts in timestamps]
         df = pd.DataFrame({
             "Open": quote["open"],
@@ -96,25 +121,36 @@ def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str, b
         
     if df.empty:
         raise ValueError(f"No historical data found for symbol: {symbol}")
+
+    # Resample to 4H if interval is 4h
+    if interval == "4h":
+        df = df.resample("4h").agg({
+            "Open": "first",
+            "High": "max",
+            "Low": "min",
+            "Close": "last",
+            "Volume": "sum"
+        }).dropna()
         
     # Get asset name from dictionary, fallback to meta or symbol
     asset_name = TICKER_NAMES.get(symbol)
     if not asset_name:
         asset_name = symbol
         
-    # Check if cryptocurrency
     is_crypto = symbol.endswith("-USD") or meta.get("instrumentType") == "CRYPTOCURRENCY"
-    last_row_date_str = df.index[-1].strftime("%Y-%m-%d")
     
-    if is_crypto:
-        today_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
-    else:
-        today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-        
-    if last_row_date_str == today_str:
-        current_hour = datetime.datetime.now().hour
-        if is_crypto or current_hour < 23:
-            df = df.iloc[:-1]
+    # For daily data, exclude today's incomplete candle if market is active
+    if interval == "1d":
+        last_row_date_str = df.index[-1].strftime("%Y-%m-%d")
+        if is_crypto:
+            today_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+        else:
+            today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+            
+        if last_row_date_str == today_str:
+            current_hour = datetime.datetime.now().hour
+            if is_crypto or current_hour < 23:
+                df = df.iloc[:-1]
         
     # Calculate indicators
     df["RSI"] = calculate_rsi(df["Close"])
@@ -133,10 +169,15 @@ def fetch_market_data(symbol: str, years: int = 3) -> Tuple[pd.DataFrame, str, b
     df["EMA_20"] = df["Close"].ewm(span=20, adjust=False).mean()
     df["EMA_50"] = df["Close"].ewm(span=50, adjust=False).mean()
     
+    # New Indicators
+    df["ATR"] = calculate_atr(df["High"], df["Low"], df["Close"])
+    df["BB_Width"] = (df["BB_Upper"] - df["BB_Lower"]) / (df["Close"] + 1e-10)
+    df["Daily_Return"] = df["Close"].pct_change()
+    
     # Drop rows with NaN values resulting from indicators
     df = df.dropna(subset=[
         "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
-        "BB_Upper", "BB_Lower", "EMA_20", "EMA_50"
+        "BB_Upper", "BB_Lower", "BB_Width", "EMA_20", "EMA_50", "ATR", "Daily_Return"
     ])
     
     return df, asset_name, is_crypto, current_price
@@ -149,12 +190,12 @@ def prepare_lstm_data(
 ) -> Tuple[np.ndarray, np.ndarray, MinMaxScaler, MinMaxScaler]:
     """
     Scales the data and creates sequences for LSTM training.
-    Features: RSI, MACD, Open, Close, Volume, High, Low, BB_Upper, BB_Lower, EMA_20, EMA_50
-    Target: Close
+    Features: RSI, MACD, MACD_Signal, MACD_Hist, Open, Close, Volume, High, Low, BB_Upper, BB_Lower, BB_Width, EMA_20, EMA_50, ATR, Daily_Return
+    Target: Daily_Return
     """
     features = FEATURES
     feature_data = df[features].values
-    target_data = df[["Close"]].values
+    target_data = df[["Daily_Return"]].values
     
     # Normalize features and target separately
     if scaler_x is None:
@@ -176,18 +217,40 @@ def prepare_lstm_data(
         
     return np.array(x_seq), np.array(y_val), scaler_x, scaler_y
 
-def train_lstm_model(x_train: np.ndarray, y_train: np.ndarray, seq_length: int) -> tf.keras.Model:
-    """Creates and trains an LSTM model."""
+def train_lstm_model(x_train: np.ndarray, y_train: np.ndarray, seq_length: int, use_early_stopping: bool = False) -> tf.keras.Model:
+    """Creates and trains an LSTM model with Dropout regularization."""
     model = tf.keras.Sequential([
         tf.keras.layers.Input(shape=(seq_length, len(FEATURES))),
         tf.keras.layers.LSTM(units=50, return_sequences=False),
+        tf.keras.layers.Dropout(0.2),
         tf.keras.layers.Dense(units=25, activation="relu"),
         tf.keras.layers.Dense(units=1)
     ])
     
     model.compile(optimizer="adam", loss="mean_squared_error")
-    # Train model (15 epochs is fast and accurate enough for daily trading patterns)
-    model.fit(x_train, y_train, epochs=15, batch_size=32, verbose=0)
+    
+    callbacks = []
+    if use_early_stopping:
+        callbacks.append(tf.keras.callbacks.EarlyStopping(
+            monitor="val_loss",
+            patience=7,
+            restore_best_weights=True
+        ))
+        validation_split = 0.1
+        epochs = 80
+    else:
+        validation_split = 0.0
+        epochs = 30
+        
+    model.fit(
+        x_train, 
+        y_train, 
+        epochs=epochs, 
+        batch_size=32, 
+        validation_split=validation_split, 
+        callbacks=callbacks, 
+        verbose=0
+    )
     return model
 
 def evaluate_model_performance(
@@ -206,8 +269,15 @@ def evaluate_model_performance(
         return {"rmse": 0.0, "mape": 0.0, "directional_accuracy": 0.0}
         
     scaled_preds = model.predict(x_test, verbose=0)
-    preds = scaler_y.inverse_transform(scaled_preds).flatten()
-    actuals = scaler_y.inverse_transform(y_test).flatten()
+    preds_returns = scaler_y.inverse_transform(scaled_preds).flatten()
+    actual_returns = scaler_y.inverse_transform(y_test).flatten()
+    
+    # Reconstruct absolute close prices from return predictions
+    actual_prices = df_test["Close"].values[seq_length:]
+    prev_prices = df_test["Close"].values[seq_length-1:-1]
+    
+    preds = prev_prices * (1 + preds_returns)
+    actuals = actual_prices
     
     # Calculate RMSE
     rmse = np.sqrt(np.mean((actuals - preds) ** 2))
@@ -215,20 +285,13 @@ def evaluate_model_performance(
     # Calculate MAPE
     mape = np.mean(np.abs((actuals - preds) / (actuals + 1e-10))) * 100
     
-    # Calculate Directional Accuracy
-    # Align dates for actual direction check
-    actual_prices = df_test["Close"].values
-    
-    # We want to check if the predicted direction matches the actual direction compared to the PREVIOUS day's close
+    # Calculate Directional Accuracy using returns directly
     correct_directions = 0
-    total_comparisons = len(preds) - 1
+    total_comparisons = len(preds_returns)
     
-    for i in range(1, len(preds)):
-        # Actual direction: today's actual vs yesterday's actual
-        actual_up = actual_prices[seq_length + i] > actual_prices[seq_length + i - 1]
-        # Predicted direction: today's prediction vs yesterday's actual
-        pred_up = preds[i] > actual_prices[seq_length + i - 1]
-        
+    for i in range(total_comparisons):
+        actual_up = actual_returns[i] > 0
+        pred_up = preds_returns[i] > 0
         if actual_up == pred_up:
             correct_directions += 1
             
@@ -360,19 +423,19 @@ def get_fundamental_analysis(symbol: str, name: str) -> Dict[str, Any]:
         "articles": articles
     }
 
-def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Dict[str, Any]:
+def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Dict[str, Any]:
     """
     Main function to coordinate market data retrieval, model loading/training,
-    and predicting the next close price.
+    and predicting the next close price for a specific interval (15m, 1h, 4h, 1d).
     """
     # 1. Download and clean data
-    df, asset_name, is_crypto, current_price = fetch_market_data(symbol, years=3)
+    df, asset_name, is_crypto, current_price = fetch_market_data(symbol, interval=interval)
     if current_price is None and not df.empty:
         current_price = float(df["Close"].iloc[-1])
     
     # Ensure there is enough data
     if len(df) < seq_length + 50:
-        raise ValueError(f"Insufficient data for symbol {symbol}. Needed: {seq_length + 50}, Got: {len(df)}")
+        raise ValueError(f"Insufficient data for symbol {symbol} at interval {interval}. Needed: {seq_length + 50}, Got: {len(df)}")
     
     # 2. Split data into train (80%) and test (20%) for evaluation
     split_idx = int(len(df) * 0.8)
@@ -387,8 +450,8 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
     # Fit full scalers for final prediction
     x_all, y_all, scaler_x, scaler_y = prepare_lstm_data(df, seq_length)
     
-    # 3. Check if cached model exists
-    cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_model.keras")
+    # 3. Check if cached model exists for this specific interval
+    cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.keras")
     model_loaded = False
     
     # Check modification time to enforce 24 hour cache
@@ -402,87 +465,96 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
                 pass  # If load fails, we will re-train
                 
     if not model_loaded:
-        # Train temporary model for evaluation
-        eval_model = train_lstm_model(x_train, y_train, seq_length)
-        metrics = evaluate_model_performance(eval_model, x_test, y_test, scaler_y_train, df_test, seq_length)
+        # Train base model on 80% split with early stopping
+        model = train_lstm_model(x_train, y_train, seq_length, use_early_stopping=True)
         
-        # Train final model on 100% of the data
-        model = train_lstm_model(x_all, y_all, seq_length)
+        # Evaluate on 20% test data to get honest out-of-sample metrics
+        metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
+        
+        # Fine-tune the same model weights on the test data (latest market data)
+        x_test_full, y_test_full, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x, scaler_y)
+        
+        # Train for 15 epochs without validation split to absorb the latest price action
+        model.fit(x_test_full, y_test_full, epochs=15, batch_size=32, verbose=0)
         model.save(cache_path)
-        training_status = "Trained new model (100% historical data)"
+        training_status = f"Trained & fine-tuned model ({interval} timeframe)"
     else:
         # Use full scalers to scale the test set for evaluation of the loaded model
         x_test_full, y_test_full, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x, scaler_y)
         metrics = evaluate_model_performance(model, x_test_full, y_test_full, scaler_y, df_test, seq_length)
-        training_status = "Loaded cached model (last 24h)"
+        training_status = f"Loaded cached model ({interval} last 24h)"
         
     metrics["training_status"] = training_status
     
-    # 5. Predict the next day's price
-    # Extract the last sequence (most recent X days) from the full dataset
+    # 5. Predict the next close price
     last_features = df[FEATURES].iloc[-seq_length:].values
     scaled_last_features = scaler_x.transform(last_features)
     
-    # Shape for prediction: (1, seq_length, 11)
+    # Shape for prediction: (1, seq_length, 16)
     input_seq = np.array([scaled_last_features])
     scaled_pred = model.predict(input_seq, verbose=0)
-    predicted_close = float(scaler_y.inverse_transform(scaled_pred)[0][0])
+    predicted_return = float(scaler_y.inverse_transform(scaled_pred)[0][0])
     
-    # Details of the last available day
+    # Details of the last available candle
     last_row = df.iloc[-1]
-    last_date_str = last_row.name.strftime("%Y-%m-%d")
     last_close = float(last_row["Close"])
     
-    # Cryptocurrencies trade 24/7. Other assets (stocks, commodities) skip weekends.
-
-    # Calculate prediction date based on the current local time in Turkey (TRT / UTC+3)
-    now = datetime.datetime.now()
+    # Reconstruct predicted absolute price
+    predicted_close = last_close * (1 + predicted_return)
     
-    if is_crypto:
-        # Cryptocurrencies close at 00:00 UTC, which is 03:00 TRT next day.
-        # If current local time is before 03:00 AM, the active candle is yesterday's.
-        # If after 03:00 AM, the active candle is today's.
-        if now.hour < 3:
-            pred_date = now - datetime.timedelta(days=1)
-        else:
-            pred_date = now
-            
-        close_time = pred_date + datetime.timedelta(days=1)
-        expected_close_time = f"{close_time.strftime('%Y-%m-%d')} 03:00 (TRT)"
-    else:
-        # Stock markets / Commodities
-        # Standard US market closes at 23:00 TRT.
-        # If now is Saturday or Sunday, the next session is Monday.
-        if now.weekday() == 5:    # Saturday -> Monday
-            pred_date = now + datetime.timedelta(days=2)
-        elif now.weekday() == 6:  # Sunday -> Monday
-            pred_date = now + datetime.timedelta(days=1)
-        else:
-            if now.hour >= 23:
-                # Today's session is closed. Next session is tomorrow (or Monday if it's Friday night)
-                pred_date = now + datetime.timedelta(days=1)
-                if pred_date.weekday() == 5:    # Friday night -> Monday
-                    pred_date += datetime.timedelta(days=2)
+    # Calculate expected close time of the predicted candle
+    if interval == "1d":
+        last_date_str = last_row.name.strftime("%Y-%m-%d")
+        now = datetime.datetime.now()
+        if is_crypto:
+            if now.hour < 3:
+                pred_date = now - datetime.timedelta(days=1)
             else:
-                # Today's session is active/upcoming
                 pred_date = now
-                
-        if symbol.endswith(".IS"):
-            expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} 18:00 (TRT)"
+            close_time = pred_date + datetime.timedelta(days=1)
+            expected_close_time = f"{close_time.strftime('%Y-%m-%d')} 03:00 (TRT)"
         else:
-            expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} 23:00 (TRT)"
-            
-    pred_date_str = pred_date.strftime("%Y-%m-%d")
+            if now.weekday() == 5:    # Saturday -> Monday
+                pred_date = now + datetime.timedelta(days=2)
+            elif now.weekday() == 6:  # Sunday -> Monday
+                pred_date = now + datetime.timedelta(days=1)
+            else:
+                if now.hour >= 23:
+                    pred_date = now + datetime.timedelta(days=1)
+                    if pred_date.weekday() == 5:
+                        pred_date += datetime.timedelta(days=2)
+                else:
+                    pred_date = now
+                    
+            if symbol.endswith(".IS"):
+                expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} 18:00 (TRT)"
+            else:
+                expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} 23:00 (TRT)"
+        pred_date_str = pred_date.strftime("%Y-%m-%d")
+    else:
+        last_date_str = last_row.name.strftime("%Y-%m-%d %H:%M")
+        if interval == "15m":
+            pred_time = last_row.name + datetime.timedelta(minutes=15)
+        elif interval == "1h":
+            pred_time = last_row.name + datetime.timedelta(hours=1)
+        elif interval == "4h":
+            pred_time = last_row.name + datetime.timedelta(hours=4)
+        pred_date_str = pred_time.strftime("%Y-%m-%d %H:%M")
+        expected_close_time = f"{pred_date_str} (TRT)"
         
-    # Percent change between predicted close and last close
     change_percent = ((predicted_close - last_close) / last_close) * 100
     
-    # 6. Format recent history for charting (last 100 days)
+    # 6. Format recent history for charting (last 100 candles)
     history_df = df.tail(100)
     history_list = []
     for idx, row in history_df.iterrows():
+        if interval == "1d":
+            date_str = idx.strftime("%Y-%m-%d")
+        else:
+            date_str = idx.strftime("%Y-%m-%d %H:%M")
+            
         history_list.append({
-            "date": idx.strftime("%Y-%m-%d"),
+            "date": date_str,
             "open": float(row["Open"]),
             "close": float(row["Close"]),
             "volume": float(row["Volume"]),
@@ -498,7 +570,6 @@ def get_prediction(symbol: str, seq_length: int = DEFAULT_SEQUENCE_LENGTH) -> Di
             "ema_50": float(row["EMA_50"]),
         })
         
-    # 7. Fetch fundamental analysis
     fundamental_result = get_fundamental_analysis(symbol, asset_name)
         
     return {
