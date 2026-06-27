@@ -84,6 +84,10 @@ class FundamentalAnalysisResult(BaseModel):
     recommendation: str
     articles: List[NewsArticle]
 
+class TechnicalRecommendation(BaseModel):
+    signal: str  # "STRONG_BUY", "STRONG_SELL", "HOLD"
+    text: str
+
 class PredictionResponse(BaseModel):
     symbol: str
     name: str
@@ -97,3 +101,4 @@ class PredictionResponse(BaseModel):
     metrics: PredictionMetrics
     history: List[IndicatorPoint]
     fundamental_analysis: Optional[FundamentalAnalysisResult] = None
+    technical_recommendation: Optional[TechnicalRecommendation] = None
