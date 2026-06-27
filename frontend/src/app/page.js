@@ -792,7 +792,7 @@ export default function Home() {
             <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "48px", height: "48px" }} />
             <h3 style={{ fontSize: "18px", color: "var(--text-main)", fontWeight: "600" }}>Fetching Market Data & Training LSTM...</h3>
             <p style={{ fontSize: "14px", color: "var(--text-muted)", textAlign: "center", maxWidth: "400px" }}>
-              Downloading historical {chartInterval === "1d" ? "daily" : chartInterval} prices, computing 11 indicators, and optimizing the neural network cache for {activeSymbol}.
+              Downloading historical {chartInterval === "1d" ? "daily" : chartInterval} prices, computing 19 indicators, and optimizing the neural network cache for {activeSymbol}.
             </p>
           </div>
         ) : predictError ? (
