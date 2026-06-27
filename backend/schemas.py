@@ -21,6 +21,7 @@ class UserResponse(BaseModel):
     username: str
     email: str
     is_active: bool
+    profile_picture: Optional[str] = None
     created_at: datetime.datetime
 
     class Config:
@@ -102,3 +103,31 @@ class PredictionResponse(BaseModel):
     history: List[IndicatorPoint]
     fundamental_analysis: Optional[FundamentalAnalysisResult] = None
     technical_recommendation: Optional[TechnicalRecommendation] = None
+
+# Profile & Comments schemas
+class ProfilePictureUpdate(BaseModel):
+    profile_picture: str  # Base64 string
+
+class CommentCreate(BaseModel):
+    symbol: str
+    content: str = Field(..., min_length=1, max_length=1000)
+    parent_id: Optional[int] = None
+
+class CommentUser(BaseModel):
+    id: int
+    username: str
+    profile_picture: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class CommentResponse(BaseModel):
+    id: int
+    symbol: str
+    content: str
+    created_at: datetime.datetime
+    parent_id: Optional[int] = None
+    user: CommentUser
+
+    class Config:
+        from_attributes = True
