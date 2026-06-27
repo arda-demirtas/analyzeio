@@ -1026,6 +1026,24 @@ export default function Home() {
                       )}
                     </div>
                   )}
+                  
+                  {predictionData && predictionData.technical_recommendation && (
+                    <div style={{ marginTop: "18px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "14px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>Trading Action:</span>
+                        {predictionData.technical_recommendation.signal === "STRONG_BUY" ? (
+                          <span className="badge badge-success" style={{ fontWeight: "700" }}>BUY / LONG</span>
+                        ) : predictionData.technical_recommendation.signal === "STRONG_SELL" ? (
+                          <span className="badge badge-danger" style={{ fontWeight: "700" }}>SELL / SHORT</span>
+                        ) : (
+                          <span className="badge badge-warning" style={{ fontWeight: "700" }}>CASH / HOLD</span>
+                        )}
+                      </div>
+                      <p style={{ fontSize: "11.5px", color: "var(--text-muted)", lineHeight: "1.4", margin: 0 }}>
+                        {predictionData.technical_recommendation.text}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Fundamental Analysis Card */}
