@@ -1132,7 +1132,7 @@ export default function Home() {
                     </div>
                     <div className="stats-row">
                       <span>Features Used</span>
-                      <span>RSI, MACD, Open, Close, Volume, High, Low, Bollinger Bands, EMA 20/50</span>
+                      <span>RSI, MACD, Bollinger Bands (Upper/Lower/Width), EMA 20/50, Open, Close, Vol, High, Low, ATR, Lags (1,3,7), Vol Change (19 total)</span>
                     </div>
                     <div className="stats-row">
                       <span>Time Step (Sequence)</span>
@@ -1141,7 +1141,7 @@ export default function Home() {
                   </div>
                   
                   <div style={{ marginTop: "20px", fontSize: "12px", color: "var(--text-muted)", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "15px" }}>
-                    * The model calculates RSI (14) and MACD (12, 26, 9) and feeds normalized sequences into a deep LSTM network. Dynamic re-training optimizes parameters to fit the asset's current volatility.
+                    * The model calculates 19 normalized indicators (including RSI, MACD Signal/Hist, Bollinger Band Width, ATR, and short/weekly return lags) to feed into a deep LSTM network.
                   </div>
                 </div>
               </div>
