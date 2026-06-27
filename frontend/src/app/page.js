@@ -154,7 +154,7 @@ export default function Home() {
       }
     ];
 
-    if (chartInterval === "1d") {
+    if (predictionData) {
       extendedLabels = [...labels, predictionData.prediction_date];
       const predictedPrices = Array(labels.length).fill(null);
       predictedPrices[labels.length - 1] = closePrices[closePrices.length - 1];
