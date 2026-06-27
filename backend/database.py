@@ -18,3 +18,19 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def run_migrations():
+    from sqlalchemy import text
+    db = SessionLocal()
+    try:
+        # Check if users table has profile_picture column
+        result = db.execute(text("PRAGMA table_info(users)")).fetchall()
+        columns = [row[1] for row in result]
+        if "profile_picture" not in columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN profile_picture TEXT"))
+            db.commit()
+            print("Successfully migrated database: added profile_picture to users table")
+    except Exception as e:
+        print(f"Migration error: {e}")
+    finally:
+        db.close()
