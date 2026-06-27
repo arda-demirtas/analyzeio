@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.database import engine, Base
+from backend.database import engine, Base, run_migrations
 from backend.routes_auth import router as auth_router
 from backend.routes_predict import router as predict_router
+from backend.routes_comments import router as comments_router
 
 # Initialize database tables
-# In production, alembic migrations are preferred, but this is clean and automatic for sqlite setup.
+# Run startup database migrations for SQLite schemas
+run_migrations()
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -26,6 +28,7 @@ app.add_middleware(
 # Register routes
 app.include_router(auth_router)
 app.include_router(predict_router)
+app.include_router(comments_router, prefix="/api")
 
 @app.get("/")
 def read_root():
