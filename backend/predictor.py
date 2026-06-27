@@ -178,12 +178,11 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
     df["Return_7"] = df["Close"].pct_change(7)
     df["Volume_Change"] = df["Volume"].pct_change()
     
+    # Replace all infinite values (inf, -inf) with NaN
+    df = df.replace([np.inf, -np.inf], np.nan)
+    
     # Drop rows with NaN values resulting from indicators
-    df = df.dropna(subset=[
-        "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
-        "BB_Upper", "BB_Lower", "BB_Width", "EMA_20", "EMA_50", "ATR", 
-        "Daily_Return", "Return_3", "Return_7", "Volume_Change"
-    ])
+    df = df.dropna(subset=FEATURES)
     
     return df, asset_name, is_crypto, current_price
 
