@@ -88,19 +88,12 @@ export default function Home() {
     }
   }, []);
 
-  // 2. Fetch Prediction data when activeSymbol changes
-  useEffect(() => {
-    if (token) {
-      loadPrediction(activeSymbol);
-    }
-  }, [activeSymbol, token]);
-
-  // Fetch custom chart history when interval or active symbol changes
+  // 2. Fetch Prediction data when activeSymbol or chartInterval changes
   useEffect(() => {
     if (token && activeSymbol) {
-      loadChartHistory(activeSymbol, chartInterval);
+      loadPrediction(activeSymbol, chartInterval);
     }
-  }, [chartInterval, activeSymbol, token, predictionData]);
+  }, [activeSymbol, chartInterval, token]);
 
   // 3. Render charts when predictionData or chartHistory updates
   useEffect(() => {
@@ -400,13 +393,13 @@ export default function Home() {
     setWatchlist(addedItems);
   };
 
-  // API Call: Load LSTM Prediction
-  const loadPrediction = async (symbol) => {
+  // API Call: Load LSTM Prediction (timeframe-aware)
+  const loadPrediction = async (symbol, interval = chartInterval) => {
     setPredictLoading(true);
     setPredictError("");
     setPredictionData(null); // Clear old prediction data to trigger loading UI immediately
     try {
-      const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}`, {
+      const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.status === 401) {
@@ -416,9 +409,7 @@ export default function Home() {
       const data = await res.json();
       if (res.ok) {
         setPredictionData(data);
-        if (chartInterval === "1d") {
-          setChartHistory(data.history);
-        }
+        setChartHistory(data.history);
       } else {
         setPredictError(data.detail || "Failed to load prediction model.");
       }
@@ -426,32 +417,6 @@ export default function Home() {
       setPredictError("Connection failed to Python FastAPI server.");
     } finally {
       setPredictLoading(false);
-    }
-  };
-
-  // API Call: Fetch custom chart history for alternate intervals (15m, 1h)
-  const loadChartHistory = async (symbol, interval) => {
-    if (interval === "1d") {
-      if (predictionData && predictionData.symbol === symbol) {
-        setChartHistory(predictionData.history);
-      }
-      return;
-    }
-    setChartLoading(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/history?symbol=${symbol}&interval=${interval}`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setChartHistory(data);
-      } else {
-        console.error("Failed to load chart history:", data.detail);
-      }
-    } catch (err) {
-      console.error("Error loading chart history:", err);
-    } finally {
-      setChartLoading(false);
     }
   };
 
@@ -827,14 +792,14 @@ export default function Home() {
             <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "48px", height: "48px" }} />
             <h3 style={{ fontSize: "18px", color: "var(--text-main)", fontWeight: "600" }}>Fetching Market Data & Training LSTM...</h3>
             <p style={{ fontSize: "14px", color: "var(--text-muted)", textAlign: "center", maxWidth: "400px" }}>
-              Downloading historical daily prices, computing 11 indicators, and optimizing the neural network cache for {activeSymbol}.
+              Downloading historical {chartInterval === "1d" ? "daily" : chartInterval} prices, computing 11 indicators, and optimizing the neural network cache for {activeSymbol}.
             </p>
           </div>
         ) : predictError ? (
           <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: "60vh", alignItems: "center", justifyContent: "center", color: "var(--accent-danger)", gap: "10px" }}>
             <span style={{ fontSize: "18px", fontWeight: "600" }}>Error Loading Data</span>
             <span style={{ textAlign: "center", maxWidth: "400px" }}>{predictError}</span>
-            <button onClick={() => loadPrediction(activeSymbol)} className="btn-secondary" style={{ marginTop: "10px" }}>
+            <button onClick={() => loadPrediction(activeSymbol, chartInterval)} className="btn-secondary" style={{ marginTop: "10px" }}>
               <RefreshCw style={{ width: "14px" }} /> Try Again
             </button>
           </div>
@@ -896,7 +861,7 @@ export default function Home() {
                     
                     {/* Interval Toggles */}
                     <div style={{ display: "flex", gap: "6px", background: "rgba(255, 255, 255, 0.03)", padding: "4px", borderRadius: "var(--border-radius-md)", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
-                      {["15m", "1h", "1d"].map((interval) => (
+                      {["15m", "1h", "4h", "1d"].map((interval) => (
                         <button
                           key={interval}
                           onClick={() => setChartInterval(interval)}
@@ -910,7 +875,7 @@ export default function Home() {
                             fontWeight: "600",
                             textTransform: "uppercase"
                           }}
-                          disabled={chartLoading}
+                          disabled={predictLoading}
                         >
                           {interval}
                         </button>
