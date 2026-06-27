@@ -11,6 +11,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
+    profile_picture = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships
@@ -27,3 +28,17 @@ class Watchlist(Base):
 
     # Relationships
     user = relationship("User", back_populates="watchlist_items")
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    symbol = Column(String, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    content = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    parent_id = Column(Integer, ForeignKey("comments.id", ondelete="CASCADE"), nullable=True)
+
+    # Relationships
+    user = relationship("User")
