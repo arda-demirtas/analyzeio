@@ -23,14 +23,19 @@ def normalize_symbol(symbol: str) -> str:
     return sym
 
 @router.get("/predict", response_model=PredictionResponse)
-def predict_asset(symbol: str, current_user: User = Depends(get_current_user)):
+def predict_asset(symbol: str, interval: str = "1d", current_user: User = Depends(get_current_user)):
     """
     Triggers historical data loading, computes technical indicators,
-    and runs LSTM model inference to predict the next day's close price.
+    and runs LSTM model inference to predict the close price for the next candle of the selected interval.
     """
     symbol_upper = normalize_symbol(symbol)
+    if interval not in ["15m", "1h", "4h", "1d"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported interval. Allowed: 15m, 1h, 4h, 1d"
+        )
     try:
-        prediction_result = get_prediction(symbol_upper)
+        prediction_result = get_prediction(symbol_upper, interval=interval)
         return prediction_result
     except ValueError as val_err:
         raise HTTPException(
@@ -90,29 +95,3 @@ def remove_from_watchlist(symbol: str, current_user: User = Depends(get_current_
     db.delete(item)
     db.commit()
     return {"message": f"{symbol_upper} removed from watchlist"}
-
-@router.get("/history", response_model=List[IndicatorPoint])
-def get_asset_history(symbol: str, interval: str = "1d", current_user: User = Depends(get_current_user)):
-    """
-    Returns historical price and technical indicators data for a specific asset at a given interval
-    (e.g., 15m, 1h, 1d) without re-running the prediction model.
-    """
-    symbol_upper = normalize_symbol(symbol)
-    if interval not in ["15m", "1h", "1d"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Unsupported interval. Allowed: 15m, 1h, 1d"
-        )
-    try:
-        history = fetch_interval_history(symbol_upper, interval)
-        return history
-    except ValueError as val_err:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(val_err)
-        )
-    except Exception as err:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching asset history: {str(err)}"
-        )
