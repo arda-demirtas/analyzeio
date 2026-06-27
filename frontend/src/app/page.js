@@ -25,6 +25,7 @@ import {
   Camera
 } from "lucide-react";
 import { Chart, registerables } from "chart.js";
+import { TRANSLATIONS } from "./translations";
 
 // Register all Chart.js components
 Chart.register(...registerables);
@@ -38,6 +39,25 @@ const API_BASE_URL = typeof window !== "undefined"
 export default function Home() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
+  const [lang, setLang] = useState("en");
+
+  // Read initial language on client mount
+  useEffect(() => {
+    const savedLang = localStorage.getItem("lang");
+    if (savedLang) {
+      setLang(savedLang);
+    }
+  }, []);
+
+  const changeLanguage = (newLang) => {
+    setLang(newLang);
+    localStorage.setItem("lang", newLang);
+  };
+
+  const t = (key) => {
+    return TRANSLATIONS[lang]?.[key] || TRANSLATIONS["en"][key] || key;
+  };
+
   const [authMode, setAuthMode] = useState("login"); // login, register
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -718,15 +738,15 @@ export default function Home() {
   // Helpers to calculate badges for RSI and MACD
   const getRsiBadge = (rsi) => {
     if (rsi === null || rsi === undefined) return <span className="badge badge-warning">N/A</span>;
-    if (rsi >= 70) return <span className="badge badge-danger">RSI: {rsi.toFixed(1)} (Overbought)</span>;
-    if (rsi <= 30) return <span className="badge badge-success">RSI: {rsi.toFixed(1)} (Oversold)</span>;
-    return <span className="badge badge-warning">RSI: {rsi.toFixed(1)} (Neutral)</span>;
+    if (rsi >= 70) return <span className="badge badge-danger">RSI: {rsi.toFixed(1)} ({t("rsi_status_overbought")})</span>;
+    if (rsi <= 30) return <span className="badge badge-success">RSI: {rsi.toFixed(1)} ({t("rsi_status_oversold")})</span>;
+    return <span className="badge badge-warning">RSI: {rsi.toFixed(1)} ({t("rsi_status_neutral")})</span>;
   };
 
   const getMacdBadge = (macd, hist) => {
     if (macd === null || macd === undefined) return <span className="badge badge-warning">N/A</span>;
-    if (hist > 0) return <span className="badge badge-success">MACD: Bullish</span>;
-    return <span className="badge badge-danger">MACD: Bearish</span>;
+    if (hist > 0) return <span className="badge badge-success">MACD: {t("bullish")}</span>;
+    return <span className="badge badge-danger">MACD: {t("bearish")}</span>;
   };
 
   // Render Auth UI if not logged in
@@ -746,7 +766,7 @@ export default function Home() {
               <User style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
               <input
                 type="text"
-                placeholder="Username"
+                placeholder={t("username")}
                 className="input-field"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
@@ -760,7 +780,7 @@ export default function Home() {
                 <Mail style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
                 <input
                   type="email"
-                  placeholder="Email Address"
+                  placeholder={t("email")}
                   className="input-field"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
@@ -774,7 +794,7 @@ export default function Home() {
               <Lock style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
               <input
                 type="password"
-                placeholder="Password"
+                placeholder={t("password")}
                 className="input-field"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -791,18 +811,18 @@ export default function Home() {
 
             <button type="submit" className="btn-primary" disabled={authLoading}>
               {authLoading ? <RefreshCw className="animate-spin" style={{ width: "18px" }} /> : null}
-              {authMode === "login" ? "Sign In" : "Create Account"}
+              {authMode === "login" ? t("sign_in") : t("create_account")}
             </button>
           </form>
 
           <div className="auth-toggle">
             {authMode === "login" ? (
               <>
-                New to analyzeio? <span onClick={() => { setAuthMode("register"); setAuthError(""); }}>Create an account</span>
+                {t("auth_no_account")} <span onClick={() => { setAuthMode("register"); setAuthError(""); }}>{t("create_account")}</span>
               </>
             ) : (
               <>
-                Already have an account? <span onClick={() => { setAuthMode("login"); setAuthError(""); }}>Sign In</span>
+                {t("auth_have_account")} <span onClick={() => { setAuthMode("login"); setAuthError(""); }}>{t("sign_in")}</span>
               </>
             )}
           </div>
@@ -861,7 +881,7 @@ export default function Home() {
               }}
               style={{ background: "none", border: "none", color: "var(--accent-primary)", fontSize: "11px", fontWeight: "600", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "4px" }}
             >
-              <CornerDownRight style={{ width: "10px" }} /> Reply
+              <CornerDownRight style={{ width: "10px" }} /> {t("reply_btn")}
             </button>
           </div>
           
@@ -870,7 +890,7 @@ export default function Home() {
             <form onSubmit={(e) => handlePostComment(e, comment.id)} style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "8px" }}>
               <input
                 type="text"
-                placeholder={`Reply to ${comment.user.username}...`}
+                placeholder={lang === "tr" ? `${comment.user.username} kullanıcısına yanıt ver...` : (lang === "de" ? `Antworten an ${comment.user.username}...` : (lang === "ru" ? `Ответить ${comment.user.username}...` : (lang === "zh" ? `回复 ${comment.user.username}...` : (lang === "es" ? `Responder a ${comment.user.username}...` : `Reply to ${comment.user.username}...`))))}
                 className="input-field"
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
@@ -884,14 +904,14 @@ export default function Home() {
                   className="btn-secondary" 
                   style={{ height: "24px", padding: "0 8px", fontSize: "11px" }}
                 >
-                  Cancel
+                  {t("cancel_btn")}
                 </button>
                 <button 
                   type="submit" 
                   className="btn-primary" 
                   style={{ height: "24px", padding: "0 8px", fontSize: "11px" }}
                 >
-                  Post
+                  {t("post_btn")}
                 </button>
               </div>
             </form>
@@ -960,7 +980,7 @@ export default function Home() {
             <Search style={{ position: "absolute", left: "12px", top: "12px", color: "var(--text-muted)", width: "16px" }} />
             <input
               type="text"
-              placeholder="Search symbol (AAPL...)"
+              placeholder={t("search_placeholder")}
               className="input-field"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -974,7 +994,7 @@ export default function Home() {
 
         {/* Watchlist */}
         <div className="watchlist-container">
-          <h3 className="watchlist-title">Your Watchlist</h3>
+          <h3 className="watchlist-title">{t("watchlist_title")}</h3>
           {watchlist.map(item => (
             <div 
               key={item.id}
@@ -1026,21 +1046,21 @@ export default function Home() {
                 />
               </div>
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>Active User</span>
+                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>{t("active_user")}</span>
                 <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-main)" }}>
-                  {user ? user.username : "Dashboard Session"}
+                  {user ? user.username : t("session")}
                 </span>
               </div>
             </div>
 
             <button onClick={() => setShowPasswordModal(true)} className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }}>
-              <Key style={{ width: "14px" }} /> Change Password
+              <Key style={{ width: "14px" }} /> {t("change_password")}
             </button>
             <button onClick={handleDeleteAccount} className="btn-danger" style={{ width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: "6px" }}>
-              <UserMinus style={{ width: "14px" }} /> Close Account
+              <UserMinus style={{ width: "14px" }} /> {t("close_account")}
             </button>
             <button onClick={handleLogout} className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start", marginTop: "10px" }}>
-              <LogOut style={{ width: "14px" }} /> Sign Out
+              <LogOut style={{ width: "14px" }} /> {t("sign_out")}
             </button>
           </div>
         </div>
@@ -1051,17 +1071,19 @@ export default function Home() {
         {predictLoading || (!predictionData && !predictError) || (predictionData && predictionData.symbol !== activeSymbol) ? (
           <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: "60vh", alignItems: "center", justifyContent: "center", gap: "20px" }}>
             <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "48px", height: "48px" }} />
-            <h3 style={{ fontSize: "18px", color: "var(--text-main)", fontWeight: "600" }}>Fetching Market Data & Training LSTM...</h3>
+            <h3 style={{ fontSize: "18px", color: "var(--text-main)", fontWeight: "600" }}>{t("loading")}</h3>
             <p style={{ fontSize: "14px", color: "var(--text-muted)", textAlign: "center", maxWidth: "400px" }}>
-              Downloading historical {chartInterval === "1d" ? "daily" : chartInterval} prices, computing 19 indicators, and optimizing the neural network cache for {activeSymbol}.
+              {t("loading_desc")
+                .replace("{interval}", chartInterval === "1d" ? (lang === "tr" ? "günlük" : (lang === "de" ? "tägliche" : (lang === "ru" ? "дневные" : (lang === "zh" ? "日线" : (lang === "es" ? "diarios" : "daily"))))) : chartInterval)
+                .replace("{symbol}", activeSymbol)}
             </p>
           </div>
         ) : predictError ? (
           <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: "60vh", alignItems: "center", justifyContent: "center", color: "var(--accent-danger)", gap: "10px" }}>
-            <span style={{ fontSize: "18px", fontWeight: "600" }}>Error Loading Data</span>
+            <span style={{ fontSize: "18px", fontWeight: "600" }}>{t("error_title")}</span>
             <span style={{ textAlign: "center", maxWidth: "400px" }}>{predictError}</span>
             <button onClick={() => loadPrediction(activeSymbol, chartInterval)} className="btn-secondary" style={{ marginTop: "10px" }}>
-              <RefreshCw style={{ width: "14px" }} /> Try Again
+              <RefreshCw style={{ width: "14px" }} /> {t("try_again")}
             </button>
           </div>
         ) : (
@@ -1092,20 +1114,47 @@ export default function Home() {
                   )}
                 </div>
               </div>
-              <div className="header-price-panel">
-                <div className="asset-price">
-                  ${predictionData && predictionData.current_price !== undefined && predictionData.current_price !== null 
-                    ? predictionData.current_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
-                    : (predictionData ? predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---")}
-                </div>
-                <span style={{ fontSize: "12px", color: "var(--accent-primary)", fontWeight: "600", display: "block" }}>
-                  ● Live Market Price
-                </span>
-                {predictionData && (
-                  <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginTop: "2px" }}>
-                    Last Close: ${predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({predictionData.last_date})
+              <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+                {/* Language Dropdown Selector */}
+                <select
+                  value={lang}
+                  onChange={(e) => changeLanguage(e.target.value)}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.03)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    color: "var(--text-main)",
+                    borderRadius: "6px",
+                    padding: "6px 10px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    outline: "none",
+                    backdropFilter: "blur(4px)"
+                  }}
+                >
+                  <option value="en" style={{ background: "#110b29", color: "#fff" }}>English</option>
+                  <option value="tr" style={{ background: "#110b29", color: "#fff" }}>Türkçe</option>
+                  <option value="de" style={{ background: "#110b29", color: "#fff" }}>Deutsch</option>
+                  <option value="ru" style={{ background: "#110b29", color: "#fff" }}>Русский</option>
+                  <option value="zh" style={{ background: "#110b29", color: "#fff" }}>中文</option>
+                  <option value="es" style={{ background: "#110b29", color: "#fff" }}>Español</option>
+                </select>
+
+                <div className="header-price-panel">
+                  <div className="asset-price">
+                    ${predictionData && predictionData.current_price !== undefined && predictionData.current_price !== null 
+                      ? predictionData.current_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+                      : (predictionData ? predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---")}
+                  </div>
+                  <span style={{ fontSize: "12px", color: "var(--accent-primary)", fontWeight: "600", display: "block" }}>
+                    ● {t("live_price")}
                   </span>
-                )}
+                  {predictionData && (
+                    <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginTop: "2px" }}>
+                      {t("last_close")}: ${predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({predictionData.last_date})
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1117,7 +1166,7 @@ export default function Home() {
                 <div className="glass-panel">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
                     <h3 style={{ fontSize: "18px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
-                      <LineChart style={{ color: "var(--accent-primary)" }} /> Historical Price & Next Day Prediction
+                      <LineChart style={{ color: "var(--accent-primary)" }} /> {t("chart_title")}
                     </h3>
                     
                     {/* Interval Toggles */}
@@ -1156,16 +1205,16 @@ export default function Home() {
 
                 {/* Technical Indicators Chart Card */}
                 <div className="glass-panel">
-                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>Technical Indicators & Oscillators</h3>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>{t("chart_indicators")}</h3>
                   <div className="indicator-grid">
                     <div>
-                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>Relative Strength Index (RSI)</h4>
+                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>{t("rsi_title")}</h4>
                       <div className="indicator-wrapper">
                         <canvas ref={rsiChartRef} />
                       </div>
                     </div>
                     <div>
-                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>MACD Divergence</h4>
+                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>{t("macd_title")}</h4>
                       <div className="indicator-wrapper">
                         <canvas ref={macdChartRef} />
                       </div>
@@ -1175,7 +1224,7 @@ export default function Home() {
                   {/* Summary of Technical Signals */}
                   <div style={{ marginTop: "25px", paddingTop: "20px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
                     <h4 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
-                      Active Technical Signals
+                      {t("signals_title")}
                     </h4>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "15px" }}>
                       <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
@@ -1186,9 +1235,9 @@ export default function Home() {
                         {(() => {
                           const rsi = activeHistory[activeHistory.length - 1]?.rsi;
                           if (rsi === null || rsi === undefined) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
-                          if (rsi >= 70) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Overbought (Sell)</span>;
-                          if (rsi <= 30) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Oversold (Buy)</span>;
-                          return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Neutral</span>;
+                          if (rsi >= 70) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("rsi_status_overbought")}</span>;
+                          if (rsi <= 30) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("rsi_status_oversold")}</span>;
+                          return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("rsi_status_neutral")}</span>;
                         })()}
                       </div>
                       
@@ -1200,8 +1249,8 @@ export default function Home() {
                         {(() => {
                           const hist = activeHistory[activeHistory.length - 1]?.macd_hist;
                           if (hist === null || hist === undefined) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
-                          if (hist > 0) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Bullish Cross</span>;
-                          return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Bearish Cross</span>;
+                          if (hist > 0) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("macd_status_bullish")}</span>;
+                          return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("macd_status_bearish")}</span>;
                         })()}
                       </div>
  
@@ -1222,10 +1271,10 @@ export default function Home() {
                           const ema50 = activeHistory[activeHistory.length - 1]?.ema_50;
                           const close = activeHistory[activeHistory.length - 1]?.close;
                           if (ema20 === null || ema50 === null || close === null) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
-                          if (close > ema20 && ema20 > ema50) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Strong Uptrend</span>;
-                          if (close < ema20 && ema20 < ema50) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Strong Downtrend</span>;
-                          if (ema20 > ema50) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>EMA Golden Cross</span>;
-                          return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>EMA Death Cross</span>;
+                          if (close > ema20 && ema20 > ema50) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("ema_status_uptrend")}</span>;
+                          if (close < ema20 && ema20 < ema50) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("ema_status_downtrend")}</span>;
+                          if (ema20 > ema50) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("ema_status_golden")}</span>;
+                          return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("ema_status_death")}</span>;
                         })()}
                       </div>
  
@@ -1246,9 +1295,9 @@ export default function Home() {
                           const lower = activeHistory[activeHistory.length - 1]?.bb_lower;
                           const close = activeHistory[activeHistory.length - 1]?.close;
                           if (upper === null || lower === null || close === null) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
-                          if (close >= upper) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Upper Band (Overbought)</span>;
-                          if (close <= lower) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Lower Band (Oversold)</span>;
-                          return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>Inside Bands</span>;
+                          if (close >= upper) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("bb_status_overbought")}</span>;
+                          if (close <= lower) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("bb_status_oversold")}</span>;
+                          return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("bb_status_inside")}</span>;
                         })()}
                       </div>
                     </div>
@@ -1258,13 +1307,13 @@ export default function Home() {
                 {/* Comments & Discussion Panel */}
                 <div className="glass-panel" style={{ marginTop: "10px" }}>
                   <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <MessageSquare style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} /> Symbol Discussion ({activeSymbol})
+                    <MessageSquare style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} /> {t("discussion_title")} ({activeSymbol})
                   </h3>
                   
                   {/* Post New Comment Form */}
                   <form onSubmit={(e) => handlePostComment(e)} style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
                     <textarea
-                      placeholder="Share your technical outlook or ask a question..."
+                      placeholder={t("discussion_placeholder")}
                       className="input-field"
                       rows="3"
                       value={newCommentContent}
@@ -1273,7 +1322,7 @@ export default function Home() {
                       required
                     />
                     <button type="submit" className="btn-primary" style={{ alignSelf: "flex-end", height: "36px", padding: "0 16px", fontSize: "13px" }}>
-                      Comment
+                      {t("comment_btn")}
                     </button>
                   </form>
                   
@@ -1281,7 +1330,7 @@ export default function Home() {
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "450px", overflowY: "auto", paddingRight: "5px" }}>
                     {comments.filter(c => c.parent_id === null).length === 0 ? (
                       <div style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center", padding: "20px 0", fontStyle: "italic" }}>
-                        No comments yet. Start the conversation!
+                        {t("no_comments")}
                       </div>
                     ) : (
                       comments.filter(c => c.parent_id === null).map(comment => renderCommentNode(comment))
@@ -1294,12 +1343,12 @@ export default function Home() {
               <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
                 {/* Prediction Highlight Card */}
                 <div className="glass-panel prediction-card" style={{ minHeight: "220px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                  <span className="prediction-label">Next Trading Day Predicted Close</span>
+                  <span className="prediction-label">{t("prediction_header")}</span>
                   <div className="prediction-value">
                     ${predictionData ? predictionData.predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"}
                   </div>
                   <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "-5px" }}>
-                    Expected Close: {predictionData ? predictionData.expected_close_time : "---"}
+                    {t("expected_close")}: {predictionData ? predictionData.expected_close_time : "---"}
                   </div>
                   
                   {predictionData && (
@@ -1308,14 +1357,14 @@ export default function Home() {
                         <>
                           <TrendingUp style={{ color: "var(--accent-success)" }} />
                           <span style={{ color: "var(--accent-success)" }}>
-                            +{predictionData.price_change_percent.toFixed(2)}% (Bullish)
+                            +{predictionData.price_change_percent.toFixed(2)}% ({t("bullish")})
                           </span>
                         </>
                       ) : (
                         <>
                           <TrendingDown style={{ color: "var(--accent-danger)" }} />
                           <span style={{ color: "var(--accent-danger)" }}>
-                            {predictionData.price_change_percent.toFixed(2)}% (Bearish)
+                            {predictionData.price_change_percent.toFixed(2)}% ({t("bearish")})
                           </span>
                         </>
                       )}
@@ -1325,13 +1374,13 @@ export default function Home() {
                   {predictionData && predictionData.technical_recommendation && (
                     <div style={{ marginTop: "18px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "14px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>Trading Action:</span>
+                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>{t("trading_action")}:</span>
                         {predictionData.technical_recommendation.signal === "STRONG_BUY" ? (
-                          <span className="badge badge-success" style={{ fontWeight: "700" }}>BUY / LONG</span>
+                          <span className="badge badge-success" style={{ fontWeight: "700" }}>{t("buy_long")}</span>
                         ) : predictionData.technical_recommendation.signal === "STRONG_SELL" ? (
-                          <span className="badge badge-danger" style={{ fontWeight: "700" }}>SELL / SHORT</span>
+                          <span className="badge badge-danger" style={{ fontWeight: "700" }}>{t("sell_short")}</span>
                         ) : (
-                          <span className="badge badge-warning" style={{ fontWeight: "700" }}>CASH / HOLD</span>
+                          <span className="badge badge-warning" style={{ fontWeight: "700" }}>{t("cash_hold")}</span>
                         )}
                       </div>
                       <p style={{ fontSize: "11.5px", color: "var(--text-muted)", lineHeight: "1.4", margin: 0 }}>
@@ -1345,19 +1394,19 @@ export default function Home() {
                 {predictionData && predictionData.fundamental_analysis && (
                   <div className="glass-panel">
                     <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <PieChart style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} /> Fundamental Analysis & News
+                      <PieChart style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} /> {t("fundamental_title")}
                     </h3>
                     
                     <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
                       {/* Overall Sentiment Badge */}
                       <div style={{ display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "space-between", background: "rgba(255, 255, 255, 0.03)", padding: "10px 14px", borderRadius: "var(--border-radius-md)", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
-                        <span style={{ fontSize: "13px", color: "var(--text-muted)", fontWeight: "500" }}>Market Outlook:</span>
+                        <span style={{ fontSize: "13px", color: "var(--text-muted)", fontWeight: "500" }}>{t("outlook")}:</span>
                         {predictionData.fundamental_analysis.sentiment_class === "Bullish" ? (
-                          <span className="badge badge-success">Bullish / Positive Sentiment</span>
+                          <span className="badge badge-success">{t("bullish")}</span>
                         ) : predictionData.fundamental_analysis.sentiment_class === "Bearish" ? (
-                          <span className="badge badge-danger">Bearish / Negative Sentiment</span>
+                          <span className="badge badge-danger">{t("bearish")}</span>
                         ) : (
-                          <span className="badge badge-warning">Neutral Sentiment</span>
+                          <span className="badge badge-warning">{t("neutral")}</span>
                         )}
                       </div>
                       
@@ -1368,9 +1417,9 @@ export default function Home() {
                       
                       {/* News list */}
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "5px" }}>
-                        <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.5px" }}>Recent News Headlines</span>
+                        <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.5px" }}>{t("news_title")}</span>
                         {predictionData.fundamental_analysis.articles.length === 0 ? (
-                          <div style={{ fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center" }}>No recent news articles found.</div>
+                          <div style={{ fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center" }}>{t("no_news")}</div>
                         ) : (
                           predictionData.fundamental_analysis.articles.map((art, idx) => (
                             <a 
@@ -1387,11 +1436,11 @@ export default function Home() {
                               <div style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
                                 <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{art.publisher}</span>
                                 {art.sentiment === "Bullish" ? (
-                                  <span className="badge badge-success" style={{ fontSize: "9px", padding: "1px 6px" }}>Bullish</span>
+                                  <span className="badge badge-success" style={{ fontSize: "9px", padding: "1px 6px" }}>{t("bullish")}</span>
                                 ) : art.sentiment === "Bearish" ? (
-                                  <span className="badge badge-danger" style={{ fontSize: "9px", padding: "1px 6px" }}>Bearish</span>
+                                  <span className="badge badge-danger" style={{ fontSize: "9px", padding: "1px 6px" }}>{t("bearish")}</span>
                                 ) : (
-                                  <span className="badge badge-warning" style={{ fontSize: "9px", padding: "1px 6px" }}>Neutral</span>
+                                  <span className="badge badge-warning" style={{ fontSize: "9px", padding: "1px 6px" }}>{t("neutral")}</span>
                                 )}
                               </div>
                             </a>
@@ -1404,34 +1453,34 @@ export default function Home() {
 
                 {/* Model Information & Metrics */}
                 <div className="glass-panel">
-                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>LSTM Model Analytics</h3>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>{t("analytics_title")}</h3>
                   
                   <div className="stats-list">
                     <div className="stats-row">
-                      <span>Cache Status</span>
+                      <span>{t("cache_status")}</span>
                       <span>{predictionData ? predictionData.metrics.training_status : "---"}</span>
                     </div>
                     <div className="stats-row">
-                      <span>Backtest Root MSE (RMSE)</span>
+                      <span>{t("rmse")}</span>
                       <span>{predictionData ? `$${predictionData.metrics.rmse.toFixed(2)}` : "---"}</span>
                     </div>
                     <div className="stats-row">
-                      <span>Mean Absolute Error (MAPE)</span>
+                      <span>{t("mape")}</span>
                       <span>{predictionData ? `${predictionData.metrics.mape.toFixed(2)}%` : "---"}</span>
                     </div>
                     <div className="stats-row">
-                      <span>Directional Accuracy</span>
+                      <span>{t("directional_accuracy")}</span>
                       <span style={{ color: predictionData && predictionData.metrics.directional_accuracy >= 55 ? "var(--accent-success)" : "inherit" }}>
                         {predictionData ? `${predictionData.metrics.directional_accuracy.toFixed(1)}%` : "---"}
                       </span>
                     </div>
                     <div className="stats-row">
-                      <span>Features Used</span>
+                      <span>{t("features_used")}</span>
                       <span>RSI, MACD, Bollinger Bands (Upper/Lower/Width), EMA 20/50, Open, Close, Vol, High, Low, ATR, Lags (1,3,7), Vol Change (19 total)</span>
                     </div>
                     <div className="stats-row">
-                      <span>Time Step (Sequence)</span>
-                      <span>60 Days</span>
+                      <span>{t("time_step")}</span>
+                      <span>60 {t("days")}</span>
                     </div>
                   </div>
                   
@@ -1449,11 +1498,11 @@ export default function Home() {
       {showPasswordModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
           <div className="glass-panel" style={{ width: "90%", maxWidth: "400px" }}>
-            <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px" }}>Update Password</h3>
+            <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px" }}>{t("update_password_title")}</h3>
             <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
               <input
                 type="password"
-                placeholder="Current Password"
+                placeholder={t("old_password")}
                 className="input-field"
                 value={oldPassword}
                 onChange={e => setOldPassword(e.target.value)}
@@ -1461,7 +1510,7 @@ export default function Home() {
               />
               <input
                 type="password"
-                placeholder="New Password"
+                placeholder={t("new_password")}
                 className="input-field"
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
@@ -1470,8 +1519,8 @@ export default function Home() {
               {passwordError && <div style={{ color: "var(--accent-danger)", fontSize: "13px" }}>{passwordError}</div>}
               {passwordSuccess && <div style={{ color: "var(--accent-success)", fontSize: "13px" }}>{passwordSuccess}</div>}
               <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                <button type="submit" className="btn-primary">Update</button>
-                <button type="button" onClick={() => { setShowPasswordModal(false); setPasswordError(""); setPasswordSuccess(""); }} className="btn-secondary">Cancel</button>
+                <button type="submit" className="btn-primary">{t("confirm")}</button>
+                <button type="button" onClick={() => { setShowPasswordModal(false); setPasswordError(""); setPasswordSuccess(""); }} className="btn-secondary">{t("cancel_btn")}</button>
               </div>
             </form>
           </div>
