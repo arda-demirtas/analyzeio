@@ -15,7 +15,8 @@ FEATURES = [
     "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
     "Open", "Close", "Volume", "High", "Low", 
     "BB_Upper", "BB_Lower", "BB_Width",
-    "EMA_20", "EMA_50", "ATR", "Daily_Return"
+    "EMA_20", "EMA_50", "ATR", "Daily_Return",
+    "Return_3", "Return_7", "Volume_Change"
 ]
 
 def calculate_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
@@ -173,11 +174,15 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
     df["ATR"] = calculate_atr(df["High"], df["Low"], df["Close"])
     df["BB_Width"] = (df["BB_Upper"] - df["BB_Lower"]) / (df["Close"] + 1e-10)
     df["Daily_Return"] = df["Close"].pct_change()
+    df["Return_3"] = df["Close"].pct_change(3)
+    df["Return_7"] = df["Close"].pct_change(7)
+    df["Volume_Change"] = df["Volume"].pct_change()
     
     # Drop rows with NaN values resulting from indicators
     df = df.dropna(subset=[
         "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
-        "BB_Upper", "BB_Lower", "BB_Width", "EMA_20", "EMA_50", "ATR", "Daily_Return"
+        "BB_Upper", "BB_Lower", "BB_Width", "EMA_20", "EMA_50", "ATR", 
+        "Daily_Return", "Return_3", "Return_7", "Volume_Change"
     ])
     
     return df, asset_name, is_crypto, current_price
@@ -474,8 +479,8 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         # Fine-tune the same model weights on the test data (latest market data)
         x_test_full, y_test_full, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x, scaler_y)
         
-        # Train for 15 epochs without validation split to absorb the latest price action
-        model.fit(x_test_full, y_test_full, epochs=15, batch_size=32, verbose=0)
+        # Train for 20 epochs without validation split to absorb the latest price action
+        model.fit(x_test_full, y_test_full, epochs=20, batch_size=32, verbose=0)
         model.save(cache_path)
         training_status = f"Trained & fine-tuned model ({interval} timeframe)"
     else:
