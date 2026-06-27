@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models import User
-from backend.schemas import UserCreate, UserLogin, UserChangePassword, UserResponse, Token
+from backend.schemas import UserCreate, UserLogin, UserChangePassword, UserResponse, Token, ProfilePictureUpdate
 from backend.auth import get_password_hash, verify_password, create_access_token, get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
@@ -76,3 +76,16 @@ def delete_account(current_user: User = Depends(get_current_user), db: Session =
     db.delete(current_user)
     db.commit()
     return {"message": "Account successfully closed and all user data deleted"}
+
+@router.put("/profile-picture", response_model=UserResponse)
+def update_profile_picture(data: ProfilePictureUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Updates the profile picture of the currently logged-in user."""
+    current_user.profile_picture = data.profile_picture
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_user)):
+    """Returns the currently logged-in user profile details (including avatar)."""
+    return current_user
