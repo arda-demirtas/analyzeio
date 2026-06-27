@@ -23,7 +23,7 @@ def normalize_symbol(symbol: str) -> str:
     return sym
 
 @router.get("/predict", response_model=PredictionResponse)
-def predict_asset(symbol: str, interval: str = "1d", current_user: User = Depends(get_current_user)):
+def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", current_user: User = Depends(get_current_user)):
     """
     Triggers historical data loading, computes technical indicators,
     and runs LSTM model inference to predict the close price for the next candle of the selected interval.
@@ -35,7 +35,7 @@ def predict_asset(symbol: str, interval: str = "1d", current_user: User = Depend
             detail="Unsupported interval. Allowed: 15m, 1h, 4h, 1d"
         )
     try:
-        prediction_result = get_prediction(symbol_upper, interval=interval)
+        prediction_result = get_prediction(symbol_upper, interval=interval, lang=lang)
         return prediction_result
     except ValueError as val_err:
         raise HTTPException(
