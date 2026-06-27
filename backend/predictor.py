@@ -549,6 +549,22 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         
     change_percent = ((predicted_close - last_close) / last_close) * 100
     
+    # Calculate threshold-filtered technical recommendation (0.2% threshold)
+    if change_percent > 0.2:
+        tech_signal = "STRONG_BUY"
+        tech_text = "Model forecasts high-conviction upward momentum (>0.2%). Opening a Long position is recommended."
+    elif change_percent < -0.2:
+        tech_signal = "STRONG_SELL"
+        tech_text = "Model forecasts high-conviction downward momentum (<-0.2%). Opening a Short position or staying in Cash is recommended."
+    else:
+        tech_signal = "HOLD"
+        tech_text = "Model forecasts low-conviction price consolidation (between -0.2% and 0.2%). Staying in Cash (no position) is recommended to filter out market noise."
+        
+    technical_recommendation = {
+        "signal": tech_signal,
+        "text": tech_text
+    }
+    
     # 6. Format recent history for charting (last 100 candles)
     history_df = df.tail(100)
     history_list = []
@@ -589,7 +605,8 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         "current_price": current_price,
         "metrics": metrics,
         "history": history_list,
-        "fundamental_analysis": fundamental_result
+        "fundamental_analysis": fundamental_result,
+        "technical_recommendation": technical_recommendation
     }
 
 def fetch_interval_history(symbol: str, interval: str) -> List[Dict[str, Any]]:
