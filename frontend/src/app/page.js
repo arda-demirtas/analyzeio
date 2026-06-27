@@ -125,12 +125,12 @@ export default function Home() {
     }
   }, [activeSymbol]);
 
-  // 2. Fetch Prediction data when activeSymbol or chartInterval changes
+  // 2. Fetch Prediction data when activeSymbol, chartInterval, or lang changes
   useEffect(() => {
     if (token && activeSymbol) {
       loadPrediction(activeSymbol, chartInterval);
     }
-  }, [activeSymbol, chartInterval, token]);
+  }, [activeSymbol, chartInterval, token, lang]);
 
   // 3. Render charts when predictionData or chartHistory updates
   useEffect(() => {
@@ -436,7 +436,7 @@ export default function Home() {
     setPredictError("");
     setPredictionData(null); // Clear old prediction data to trigger loading UI immediately
     try {
-      const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}`, {
+      const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}&lang=${lang}`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.status === 401) {
