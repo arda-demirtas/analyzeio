@@ -99,6 +99,8 @@ export default function Home() {
   const [newPassword, setNewPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [accuracyLogs, setAccuracyLogs] = useState([]);
+  const [accuracyLoading, setAccuracyLoading] = useState(false);
 
   // Refs for Charts
   const priceChartRef = useRef(null);
@@ -430,6 +432,25 @@ export default function Home() {
     setWatchlist(addedItems);
   };
 
+  // API Call: Fetch Prediction Accuracy Logs
+  const fetchAccuracyLogs = async (symbol, interval = chartInterval) => {
+    if (!token) return;
+    setAccuracyLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/predictions/accuracy/${symbol}?interval=${interval}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAccuracyLogs(data);
+      }
+    } catch (err) {
+      console.error("Error fetching accuracy logs:", err);
+    } finally {
+      setAccuracyLoading(false);
+    }
+  };
+
   // API Call: Load LSTM Prediction (timeframe-aware)
   const loadPrediction = async (symbol, interval = chartInterval) => {
     setPredictLoading(true);
@@ -447,6 +468,7 @@ export default function Home() {
       if (res.ok) {
         setPredictionData(data);
         setChartHistory(data.history);
+        fetchAccuracyLogs(symbol, interval);
       } else {
         setPredictError(data.detail || "Failed to load prediction model.");
       }
@@ -1487,6 +1509,88 @@ export default function Home() {
                   <div style={{ marginTop: "20px", fontSize: "12px", color: "var(--text-muted)", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "15px" }}>
                     * The model calculates 19 normalized indicators (including RSI, MACD Signal/Hist, Bollinger Band Width, ATR, and short/weekly return lags) to feed into a deep LSTM network.
                   </div>
+                </div>
+
+                {/* Prediction Accuracy Logs */}
+                <div className="glass-panel" style={{ marginTop: "20px" }}>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <LineChart style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} /> {t("accuracy_title")}
+                  </h3>
+                  
+                  {accuracyLoading ? (
+                    <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
+                      <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)" }} />
+                    </div>
+                  ) : accuracyLogs.length === 0 ? (
+                    <div style={{ fontSize: "13px", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", padding: "15px" }}>
+                      {t("table_no_logs")}
+                    </div>
+                  ) : (
+                    <div style={{ overflowX: "auto" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                        <thead>
+                          <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)", textAlign: "left" }}>
+                            <th style={{ padding: "8px 4px" }}>{t("table_target_date")}</th>
+                            <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_predicted")}</th>
+                            <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_actual")}</th>
+                            <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_error")}</th>
+                            <th style={{ padding: "8px 4px", textAlign: "center" }}>{t("table_direction")}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {accuracyLogs.map(log => {
+                            const actualVal = log.actual_close;
+                            const predVal = log.predicted_close;
+                            const lastVal = log.last_close;
+                            
+                            let errorPct = "---";
+                            let dirCorr = "---";
+                            let dirBadgeClass = "badge-secondary";
+                            
+                            if (actualVal !== null && actualVal !== undefined) {
+                              const err = Math.abs(predVal - actualVal) / actualVal;
+                              errorPct = `${(err * 100).toFixed(2)}%`;
+                              
+                              const predUp = predVal > lastVal;
+                              const actualUp = actualVal > lastVal;
+                              const matched = predUp === actualUp;
+                              
+                              dirCorr = matched ? "✓" : "✗";
+                              dirBadgeClass = matched ? "badge-success" : "badge-danger";
+                            }
+                            
+                            return (
+                              <tr key={log.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.03)" }}>
+                                <td style={{ padding: "8px 4px", whiteSpace: "nowrap" }}>
+                                  {log.prediction_date}
+                                </td>
+                                <td style={{ padding: "8px 4px", textAlign: "right", fontWeight: "600" }}>
+                                  ${predVal.toFixed(2)}
+                                </td>
+                                <td style={{ padding: "8px 4px", textAlign: "right" }}>
+                                  {actualVal !== null ? `$${actualVal.toFixed(2)}` : (
+                                    <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic" }}>
+                                      {t("table_pending")}
+                                    </span>
+                                  )}
+                                </td>
+                                <td style={{ padding: "8px 4px", textAlign: "right" }}>
+                                  {errorPct}
+                                </td>
+                                <td style={{ padding: "8px 4px", textAlign: "center" }}>
+                                  {actualVal !== null ? (
+                                    <span className={`badge ${dirBadgeClass}`} style={{ fontSize: "10px", padding: "1px 6px" }}>
+                                      {dirCorr}
+                                    </span>
+                                  ) : "---"}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
