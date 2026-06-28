@@ -69,9 +69,7 @@ def main():
         # 2. Update python dependencies
         f"cd {DEST_DIR} && venv/bin/pip install -r requirements.txt",
         
-        # Seed initial prediction logs on VPS
-        f"cd {DEST_DIR} && PYTHONPATH=. venv/bin/python scratch/seed_mock_logs.py",
-        
+
         # 3. Update node packages & build frontend
         f"cd {DEST_DIR}/frontend && npm install",
         f"cd {DEST_DIR}/frontend && npm run build",
