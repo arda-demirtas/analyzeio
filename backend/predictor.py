@@ -722,6 +722,65 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         })
         
     fundamental_result = get_fundamental_analysis(symbol, asset_name, lang=lang)
+    
+    # 7. Log Prediction and resolve past pending predictions in database
+    from backend.database import SessionLocal
+    from backend.models import PredictionLog
+    
+    db_session = SessionLocal()
+    try:
+        # A. Check and update any pending past predictions for this symbol & interval
+        pending_logs = (
+            db_session.query(PredictionLog)
+            .filter(PredictionLog.symbol == symbol, PredictionLog.interval == interval, PredictionLog.actual_close == None)
+            .all()
+        )
+        if pending_logs:
+            price_map = {}
+            for idx, row in df.iterrows():
+                if interval == "1d":
+                    d_str = idx.strftime("%Y-%m-%d")
+                else:
+                    d_str = idx.strftime("%Y-%m-%d %H:%M")
+                price_map[d_str] = float(row["Close"])
+                
+            updated = False
+            for pl in pending_logs:
+                if pl.prediction_date in price_map:
+                    pl.actual_close = price_map[pl.prediction_date]
+                    updated = True
+            if updated:
+                db_session.commit()
+                
+        # B. Save or update the active prediction log to avoid duplicates on the same target candle date
+        existing_log = (
+            db_session.query(PredictionLog)
+            .filter(
+                PredictionLog.symbol == symbol,
+                PredictionLog.interval == interval,
+                PredictionLog.prediction_date == pred_date_str
+            )
+            .first()
+        )
+        if existing_log:
+            existing_log.predicted_close = predicted_close
+            existing_log.last_close = last_close
+            existing_log.created_at = datetime.datetime.utcnow()
+        else:
+            new_log = PredictionLog(
+                symbol=symbol,
+                interval=interval,
+                prediction_date=pred_date_str,
+                predicted_close=predicted_close,
+                last_close=last_close,
+                actual_close=None
+            )
+            db_session.add(new_log)
+        db_session.commit()
+    except Exception as db_err:
+        print(f"Database logging error in get_prediction: {db_err}")
+    finally:
+        db_session.close()
         
     return {
         "symbol": symbol,
