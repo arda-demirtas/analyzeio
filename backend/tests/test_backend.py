@@ -91,5 +91,36 @@ class TestAnalyzeioBackend(unittest.TestCase):
         self.assertTrue(isinstance(signal, pd.Series))
         self.assertTrue(isinstance(hist, pd.Series))
 
+    def test_prediction_accuracy_logging(self):
+        """Verifies database logging of predictions and close price resolving."""
+        from backend.models import PredictionLog
+        
+        # Insert a pending prediction
+        new_log = PredictionLog(
+            symbol="BTC-USD",
+            interval="1d",
+            prediction_date="2026-06-28",
+            predicted_close=61000.0,
+            last_close=60000.0,
+            actual_close=None
+        )
+        self.db.add(new_log)
+        self.db.commit()
+        
+        # Verify it exists in db
+        db_log = self.db.query(PredictionLog).filter(PredictionLog.symbol == "BTC-USD").first()
+        self.assertIsNotNone(db_log)
+        self.assertIsNone(db_log.actual_close)
+        
+        # Simulate price map matching
+        price_map = {"2026-06-28": 60850.0}
+        if db_log.prediction_date in price_map:
+            db_log.actual_close = price_map[db_log.prediction_date]
+        self.db.commit()
+        
+        # Verify actual close updated
+        db_log_updated = self.db.query(PredictionLog).filter(PredictionLog.symbol == "BTC-USD").first()
+        self.assertEqual(db_log_updated.actual_close, 60850.0)
+
 if __name__ == "__main__":
     unittest.main()
