@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Float
 from sqlalchemy.orm import relationship
 from backend.database import Base
 
@@ -42,3 +42,16 @@ class Comment(Base):
 
     # Relationships
     user = relationship("User")
+
+
+class PredictionLog(Base):
+    __tablename__ = "prediction_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    symbol = Column(String, index=True, nullable=False)
+    interval = Column(String, nullable=False)
+    prediction_date = Column(String, index=True, nullable=False)
+    predicted_close = Column(Float, nullable=False)
+    last_close = Column(Float, nullable=False)
+    actual_close = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
