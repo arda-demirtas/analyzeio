@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from backend.database import get_db
-from backend.models import User, Watchlist
-from backend.schemas import WatchlistAdd, WatchlistResponse, PredictionResponse, IndicatorPoint
+from backend.models import User, Watchlist, PredictionLog
+from backend.schemas import WatchlistAdd, WatchlistResponse, PredictionResponse, IndicatorPoint, PredictionLogResponse
 from backend.auth import get_current_user
 from backend.predictor import get_prediction, fetch_interval_history
 
@@ -95,3 +95,24 @@ def remove_from_watchlist(symbol: str, current_user: User = Depends(get_current_
     db.delete(item)
     db.commit()
     return {"message": f"{symbol_upper} removed from watchlist"}
+
+@router.get("/predictions/accuracy/{symbol}", response_model=List[PredictionLogResponse])
+def get_prediction_accuracy_logs(
+    symbol: str,
+    interval: str = "1d",
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns the logs of all predictions made for the symbol,
+    along with actual closes if they have resolved.
+    """
+    symbol_upper = normalize_symbol(symbol)
+    logs = (
+        db.query(PredictionLog)
+        .filter(PredictionLog.symbol == symbol_upper, PredictionLog.interval == interval)
+        .order_by(PredictionLog.prediction_date.desc())
+        .limit(30)
+        .all()
+    )
+    return logs
