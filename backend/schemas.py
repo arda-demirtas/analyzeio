@@ -131,3 +131,16 @@ class CommentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class PredictionLogResponse(BaseModel):
+    id: int
+    symbol: str
+    interval: str
+    prediction_date: str
+    predicted_close: float
+    last_close: float
+    actual_close: Optional[float] = None
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
