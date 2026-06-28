@@ -69,7 +69,15 @@ export const TRANSLATIONS = {
     confirm: "Confirm",
     bullish: "Bullish",
     bearish: "Bearish",
-    neutral: "Neutral"
+    neutral: "Neutral",
+    accuracy_title: "Prediction Accuracy History",
+    table_target_date: "Target Date",
+    table_predicted: "Predicted",
+    table_actual: "Actual",
+    table_error: "Error",
+    table_direction: "Dir.",
+    table_pending: "Pending",
+    table_no_logs: "No predictions logged yet for this asset."
   },
   tr: {
     loading: "Piyasa Verileri Alınıyor & LSTM Eğitiliyor...",
@@ -141,7 +149,15 @@ export const TRANSLATIONS = {
     confirm: "Onayla",
     bullish: "Boğa (Pozitif)",
     bearish: "Ayı (Negatif)",
-    neutral: "Nötr"
+    neutral: "Nötr",
+    accuracy_title: "Tahmin Tutarlılık Geçmişi",
+    table_target_date: "Hedef Tarih",
+    table_predicted: "Tahmin",
+    table_actual: "Gerçekleşen",
+    table_error: "Hata",
+    table_direction: "Yön",
+    table_pending: "Beklemede",
+    table_no_logs: "Bu varlık için henüz kaydedilmiş tahmin yok."
   },
   de: {
     loading: "Marktdaten abrufen & LSTM trainieren...",
@@ -213,7 +229,15 @@ export const TRANSLATIONS = {
     confirm: "Bestätigen",
     bullish: "Bullish",
     bearish: "Bearish",
-    neutral: "Neutral"
+    neutral: "Neutral",
+    accuracy_title: "Historische Vorhersagegenauigkeit",
+    table_target_date: "Zieldatum",
+    table_predicted: "Vorhergesagt",
+    table_actual: "Tatsächlich",
+    table_error: "Fehler",
+    table_direction: "Richtung",
+    table_pending: "Ausstehend",
+    table_no_logs: "Noch keine Vorhersagen für dieses Asset protokolliert."
   },
   ru: {
     loading: "Получение рыночных данных и обучение LSTM...",
@@ -357,7 +381,15 @@ export const TRANSLATIONS = {
     confirm: "确认",
     bullish: "牛市 (看涨)",
     bearish: "熊市 (看跌)",
-    neutral: "中性"
+    neutral: "中性",
+    accuracy_title: "预测准确度历史",
+    table_target_date: "目标日期",
+    table_predicted: "预测值",
+    table_actual: "实际值",
+    table_error: "误差",
+    table_direction: "方向",
+    table_pending: "待定",
+    table_no_logs: "该资产尚无记录的预测。"
   },
   es: {
     loading: "Obteniendo datos de mercado y entrenando LSTM...",
