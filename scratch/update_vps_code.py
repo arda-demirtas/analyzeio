@@ -76,6 +76,7 @@ def main():
         
         # 4. Restart pm2 services
         "pm2 restart all",
+        f"pm2 describe crypto-daemon > /dev/null && pm2 restart crypto-daemon || pm2 start {DEST_DIR}/backend/crypto_daemon.py --name \"crypto-daemon\" --interpreter {DEST_DIR}/venv/bin/python",
         "pm2 status"
     ]
     
