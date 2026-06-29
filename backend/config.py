@@ -27,3 +27,16 @@ POPULAR_CRYPTOS = [
     "AXS-USD", "SAND-USD", "JUP-USD", "PYTH-USD", "CHZ-USD", "DYDX-USD", "ENS-USD", "LRC-USD", 
     "ONE-USD", "CRO-USD", "TIA-USD", "MINA-USD"
 ]
+
+POPULAR_COMMODITIES = ["GC=F", "SI=F"]
+
+POPULAR_STOCKS = [
+    "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA", "BRK-B", "LLY", "AVGO",
+    "JPM", "V", "UNH", "TSM", "WMT", "XOM", "MA", "PG", "JNJ", "HD",
+    "ASML", "ORCL", "COST", "MRK", "CVX", "BAC", "ABBV", "AMD", "NFLX", "PEP",
+    "KO", "TMO", "WFC", "DIS", "ADBE", "AZN", "CSCO", "QCOM", "NVO", "ACN",
+    "SAP", "GE", "CAT", "AMGN", "TXN", "INTC", "IBM", "AXP", "MS", "PFE",
+    "GS", "HON", "NKE", "SBUX", "UBER", "INTU", "ISRG", "LRCX", "SYK", "BA"
+]
+
+AUTO_TRAINED_SYMBOLS = POPULAR_CRYPTOS + POPULAR_COMMODITIES + POPULAR_STOCKS
