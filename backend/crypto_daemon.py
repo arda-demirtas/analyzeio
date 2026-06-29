@@ -8,17 +8,17 @@ import traceback
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.predictor import get_prediction
-from backend.config import MODEL_CACHE_DIR, POPULAR_CRYPTOS
+from backend.config import MODEL_CACHE_DIR, AUTO_TRAINED_SYMBOLS
 
-def check_and_train_crypto():
-    """Runs daily model training sequentially for the popular cryptos list."""
-    print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Starting Daily Crypto Auto-Training loop...")
+def check_and_train_assets():
+    """Runs daily model training sequentially for the popular cryptos, stocks, and commodities."""
+    print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Starting Daily Auto-Training loop...")
     success_count = 0
     fail_count = 0
     
-    for idx, symbol in enumerate(POPULAR_CRYPTOS):
+    for idx, symbol in enumerate(AUTO_TRAINED_SYMBOLS):
         try:
-            print(f"[{idx+1}/{len(POPULAR_CRYPTOS)}] Training/Updating cache for {symbol} (1d)...")
+            print(f"[{idx+1}/{len(AUTO_TRAINED_SYMBOLS)}] Training/Updating cache for {symbol} (1d)...")
             get_prediction(symbol, interval="1d", force_retrain=True)
             success_count += 1
         except Exception as e:
@@ -26,7 +26,7 @@ def check_and_train_crypto():
             traceback.print_exc()
             fail_count += 1
             
-    print(f"[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Crypto training cycle completed. Success: {success_count}, Failed: {fail_count}")
+    print(f"[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Auto-training cycle completed. Success: {success_count}, Failed: {fail_count}")
     cleanup_old_models()
 
 def cleanup_old_models():
@@ -65,11 +65,11 @@ def get_seconds_until_next_run():
 
 def main():
     print("====================================================")
-    print("Crypto Daily Auto-Training Daemon Started!")
+    print("Daily Asset Auto-Training Daemon Started!")
     print("====================================================")
     
     # 1. Warm up cache immediately on startup (for missing or stale models)
-    check_and_train_crypto()
+    check_and_train_assets()
     
     # 2. Main sleep-and-run loop
     while True:
@@ -79,7 +79,7 @@ def main():
         time.sleep(sleep_sec)
         
         # Trigger training
-        check_and_train_crypto()
+        check_and_train_assets()
 
 if __name__ == "__main__":
     main()
