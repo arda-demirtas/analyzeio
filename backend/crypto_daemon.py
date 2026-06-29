@@ -38,6 +38,32 @@ def check_and_train_crypto():
             fail_count += 1
             
     print(f"[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Crypto training cycle completed. Success: {success_count}, Failed: {fail_count}")
+    cleanup_old_models()
+
+def cleanup_old_models():
+    """Deletes any cached model files in model_cache that are older than 24 hours."""
+    print(f"[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Cleaning up stale model files...")
+    if not os.path.exists(MODEL_CACHE_DIR):
+        return
+        
+    now = time.time()
+    deleted_count = 0
+    
+    for filename in os.listdir(MODEL_CACHE_DIR):
+        file_path = os.path.join(MODEL_CACHE_DIR, filename)
+        if os.path.isfile(file_path) and filename.endswith(".keras"):
+            mtime = os.path.getmtime(file_path)
+            age_hours = (now - mtime) / 3600
+            # Delete if model has not been updated in the last 24 hours
+            if age_hours > 24:
+                try:
+                    os.remove(file_path)
+                    print(f"Deleted stale model: {filename} (age: {age_hours:.1f} hours)")
+                    deleted_count += 1
+                except Exception as e:
+                    print(f"Error deleting file {filename}: {e}")
+                    
+    print(f"Cleanup finished. Stale models deleted: {deleted_count}")
 
 def get_seconds_until_next_run():
     """Calculates seconds remaining until the next run at 00:05 UTC."""
