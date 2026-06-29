@@ -8,18 +8,7 @@ import traceback
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.predictor import get_prediction
-from backend.config import MODEL_CACHE_DIR
-
-POPULAR_CRYPTOS = [
-    "BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD", "XRP-USD", "ADA-USD", "AVAX-USD", "DOGE-USD", 
-    "SHIB-USD", "DOT-USD", "LINK-USD", "LTC-USD", "BCH-USD", "NEAR-USD", "UNI-USD", "MATIC-USD", 
-    "ICP-USD", "ETC-USD", "FIL-USD", "XLM-USD", "HBAR-USD", "ATOM-USD", "APT-USD", "VET-USD", 
-    "RNDR-USD", "PEPE-USD", "OP-USD", "STX-USD", "GRT-USD", "LDO-USD", "INJ-USD", "THETA-USD", 
-    "IMX-USD", "EGLD-USD", "FTM-USD", "ALGO-USD", "MKR-USD", "FLOW-USD", "MNT-USD", "AAVE-USD", 
-    "SEI-USD", "AR-USD", "WIF-USD", "BONK-USD", "FLOKI-USD", "QNT-USD", "GALA-USD", "MANA-USD", 
-    "AXS-USD", "SAND-USD", "JUP-USD", "PYTH-USD", "CHZ-USD", "DYDX-USD", "ENS-USD", "LRC-USD", 
-    "ONE-USD", "CRO-USD", "TIA-USD", "MINA-USD"
-]
+from backend.config import MODEL_CACHE_DIR, POPULAR_CRYPTOS
 
 def check_and_train_crypto():
     """Runs daily model training sequentially for the popular cryptos list."""
@@ -30,7 +19,7 @@ def check_and_train_crypto():
     for idx, symbol in enumerate(POPULAR_CRYPTOS):
         try:
             print(f"[{idx+1}/{len(POPULAR_CRYPTOS)}] Training/Updating cache for {symbol} (1d)...")
-            get_prediction(symbol, interval="1d")
+            get_prediction(symbol, interval="1d", force_retrain=True)
             success_count += 1
         except Exception as e:
             print(f"Error training {symbol}: {e}")
