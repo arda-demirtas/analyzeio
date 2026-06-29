@@ -18,8 +18,8 @@ def check_and_train_assets():
     
     for idx, symbol in enumerate(AUTO_TRAINED_SYMBOLS):
         try:
-            print(f"[{idx+1}/{len(AUTO_TRAINED_SYMBOLS)}] Training/Updating cache for {symbol} (1d)...")
-            get_prediction(symbol, interval="1d", force_retrain=True)
+            print(f"[{idx+1}/{len(AUTO_TRAINED_SYMBOLS)}] Training/Updating cache for {symbol} (1h)...")
+            get_prediction(symbol, interval="1h", force_retrain=True)
             success_count += 1
         except Exception as e:
             print(f"Error training {symbol}: {e}")
