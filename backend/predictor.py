@@ -574,7 +574,7 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
                 pass  # If load fails, we will re-train
                 
     if not model_loaded:
-        is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
+        is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1h")
         
         if is_auto_trained_asset and not force_retrain:
             # Standard user request: do NOT train on the fly. Try loading stale/older cached model
