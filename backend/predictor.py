@@ -560,11 +560,16 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
     # Check modification time to enforce 24 hour cache (skipped if force_retrain is True)
     if not force_retrain and os.path.exists(cache_path):
         mtime = datetime.datetime.fromtimestamp(os.path.getmtime(cache_path))
-        if datetime.datetime.now() - mtime < datetime.timedelta(hours=24):
+        last_candle_time = df.index[-1]
+        
+        # Cache is valid if it's less than 24h old OR if it was trained after the last completed candle in df started (handles weekends/closures)
+        is_cache_valid = (datetime.datetime.now() - mtime < datetime.timedelta(hours=24)) or (mtime > last_candle_time)
+        
+        if is_cache_valid:
             try:
                 model = tf.keras.models.load_model(cache_path)
                 model_loaded = True
-                training_status = f"Loaded cached model ({interval} last 24h)"
+                training_status = f"Loaded cached model ({interval} last 24h/weekend)"
             except Exception:
                 pass  # If load fails, we will re-train
                 
