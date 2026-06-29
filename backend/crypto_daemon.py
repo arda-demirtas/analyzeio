@@ -30,7 +30,7 @@ def check_and_train_crypto():
     cleanup_old_models()
 
 def cleanup_old_models():
-    """Deletes any cached model files in model_cache that are older than 24 hours."""
+    """Deletes any cached model files in model_cache that are older than 72 hours."""
     print(f"[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Cleaning up stale model files...")
     if not os.path.exists(MODEL_CACHE_DIR):
         return
@@ -43,8 +43,8 @@ def cleanup_old_models():
         if os.path.isfile(file_path) and filename.endswith(".keras"):
             mtime = os.path.getmtime(file_path)
             age_hours = (now - mtime) / 3600
-            # Delete if model has not been updated in the last 24 hours
-            if age_hours > 24:
+            # Delete if model has not been updated in the last 72 hours (prevents weekend stock model deletion)
+            if age_hours > 72:
                 try:
                     os.remove(file_path)
                     print(f"Deleted stale model: {filename} (age: {age_hours:.1f} hours)")
