@@ -9,7 +9,7 @@ from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 from typing import Tuple, Dict, Any, List, Optional
 
-from backend.config import MODEL_CACHE_DIR, DEFAULT_SEQUENCE_LENGTH
+from backend.config import MODEL_CACHE_DIR, DEFAULT_SEQUENCE_LENGTH, POPULAR_CRYPTOS
 
 FEATURES = [
     "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
@@ -525,7 +525,7 @@ def get_fundamental_analysis(symbol: str, name: str, lang: str = "en") -> Dict[s
         "articles": articles
     }
 
-def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_SEQUENCE_LENGTH, lang: str = "en") -> Dict[str, Any]:
+def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_SEQUENCE_LENGTH, lang: str = "en", force_retrain: bool = False) -> Dict[str, Any]:
     """
     Main function to coordinate market data retrieval, model loading/training,
     and predicting the next close price for a specific interval (15m, 1h, 4h, 1d).
@@ -557,34 +557,54 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
     model_loaded = False
     
     # Check modification time to enforce 24 hour cache
-    if os.path.exists(cache_path):
+    # Check modification time to enforce 24 hour cache (skipped if force_retrain is True)
+    if not force_retrain and os.path.exists(cache_path):
         mtime = datetime.datetime.fromtimestamp(os.path.getmtime(cache_path))
         if datetime.datetime.now() - mtime < datetime.timedelta(hours=24):
             try:
                 model = tf.keras.models.load_model(cache_path)
                 model_loaded = True
+                training_status = f"Loaded cached model ({interval} last 24h)"
             except Exception:
                 pass  # If load fails, we will re-train
                 
     if not model_loaded:
-        # Train base model on 80% split with early stopping
-        model = train_lstm_model(x_train, y_train, seq_length, use_early_stopping=True)
+        is_popular_crypto = (symbol in POPULAR_CRYPTOS) and (interval == "1d")
         
-        # Evaluate on 20% test data to get honest out-of-sample metrics
-        metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
-        
-        # Fine-tune the same model weights on the test data (latest market data)
-        x_test_full, y_test_full, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x, scaler_y)
-        
-        # Train for 20 epochs without validation split to absorb the latest price action
-        model.fit(x_test_full, y_test_full, epochs=20, batch_size=32, verbose=0)
-        model.save(cache_path)
-        training_status = f"Trained & fine-tuned model ({interval} timeframe)"
-    else:
+        if is_popular_crypto and not force_retrain:
+            # Standard user request: do NOT train on the fly. Try loading stale/older cached model
+            if os.path.exists(cache_path):
+                try:
+                    model = tf.keras.models.load_model(cache_path)
+                    model_loaded = True
+                    training_status = f"Loaded cached model ({interval} - Stale/Fallback)"
+                except Exception:
+                    pass
+            
+            # If still not loaded (e.g. no cache file exists yet), raise error
+            if not model_loaded:
+                raise ValueError(f"Model for {symbol} is currently being initialized/trained on the server. Please try again in a few minutes.")
+        else:
+            # Either daemon is training, or it is a non-popular pair: run training on the fly
+            # Train base model on 80% split with early stopping
+            model = train_lstm_model(x_train, y_train, seq_length, use_early_stopping=True)
+            
+            # Evaluate on 20% test data to get honest out-of-sample metrics
+            metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
+            
+            # Fine-tune the same model weights on the test data (latest market data)
+            x_test_full, y_test_full, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x, scaler_y)
+            
+            # Train for 20 epochs without validation split to absorb the latest price action
+            model.fit(x_test_full, y_test_full, epochs=20, batch_size=32, verbose=0)
+            model.save(cache_path)
+            training_status = f"Trained & fine-tuned model ({interval} timeframe)"
+            
+    # If the model was loaded (either cache hit or stale fallback), run evaluation
+    if model_loaded:
         # Use full scalers to scale the test set for evaluation of the loaded model
         x_test_full, y_test_full, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x, scaler_y)
         metrics = evaluate_model_performance(model, x_test_full, y_test_full, scaler_y, df_test, seq_length)
-        training_status = f"Loaded cached model ({interval} last 24h)"
         
     metrics["training_status"] = training_status
     
