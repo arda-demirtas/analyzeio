@@ -486,7 +486,7 @@ export default function Home() {
       if (res.ok) {
         setPredictionData(data);
         setChartHistory(data.history);
-        if (AUTO_TRAINED_SYMBOLS.includes(symbol) && interval === "1h") {
+        if (AUTO_TRAINED_SYMBOLS.includes(symbol) && interval === "1d") {
           fetchAccuracyLogs(symbol, interval);
         } else {
           setAccuracyLogs([]);
@@ -1534,7 +1534,7 @@ export default function Home() {
                 </div>
 
                 {/* Prediction Accuracy Logs */}
-                {AUTO_TRAINED_SYMBOLS.includes(activeSymbol) && chartInterval === "1h" && (
+                {AUTO_TRAINED_SYMBOLS.includes(activeSymbol) && chartInterval === "1d" && (
                   <div className="glass-panel" style={{ marginTop: "20px" }}>
                     <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
                       <LineChart style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} /> {t("accuracy_title")}
