@@ -23,20 +23,20 @@ def migrate():
     
     # 1. Migrate users
     print("Migrating table: users...")
-    lite_cur.execute("SELECT id, username, email, hashed_password, is_premium, profile_picture, created_at FROM users")
+    lite_cur.execute("SELECT id, username, email, hashed_password, is_active, is_premium, profile_picture, created_at FROM users")
     users = lite_cur.fetchall()
     
-    # Convert is_premium from 0/1 to True/False
+    # Convert is_active and is_premium from 0/1 to True/False
     processed_users = []
     for u in users:
         processed_users.append((
             u[0], u[1], u[2], u[3],
-            bool(u[4]), u[5], u[6]
+            bool(u[4]), bool(u[5]), u[6], u[7]
         ))
         
     pg_cur.execute("TRUNCATE TABLE users CASCADE")
     execute_values(pg_cur, 
-        "INSERT INTO users (id, username, email, hashed_password, is_premium, profile_picture, created_at) VALUES %s", 
+        "INSERT INTO users (id, username, email, hashed_password, is_active, is_premium, profile_picture, created_at) VALUES %s", 
         processed_users
     )
     
