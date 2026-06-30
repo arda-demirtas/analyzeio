@@ -30,6 +30,10 @@ def run_migrations():
             db.execute(text("ALTER TABLE users ADD COLUMN profile_picture TEXT"))
             db.commit()
             print("Successfully migrated database: added profile_picture to users table")
+        if "is_premium" not in columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN is_premium BOOLEAN DEFAULT 0"))
+            db.commit()
+            print("Successfully migrated database: added is_premium to users table")
     except Exception as e:
         print(f"Migration error: {e}")
     finally:
