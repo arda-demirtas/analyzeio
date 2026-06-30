@@ -420,10 +420,10 @@ export default function Home() {
         return;
       }
       const data = await res.json();
-      setWatchlist(data);
+      setWatchlist(Array.isArray(data) ? data : []);
       
       // Populate standard items if user's watchlist is empty
-      if (data.length === 0) {
+      if (Array.isArray(data) && data.length === 0) {
         initializeDefaultWatchlist(authToken);
       }
     } catch (err) {
@@ -466,7 +466,7 @@ export default function Home() {
       });
       if (res.ok) {
         const data = await res.json();
-        setAccuracyLogs(data);
+        setAccuracyLogs(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       console.error("Error fetching accuracy logs:", err);
@@ -584,7 +584,7 @@ export default function Home() {
       const res = await fetch(`${API_BASE_URL}/api/comments/${symbol}`);
       if (res.ok) {
         const data = await res.json();
-        setComments(data);
+        setComments(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       console.error("Error fetching comments:", err);
@@ -1675,16 +1675,16 @@ export default function Home() {
                     </div>
                     <div className="stats-row">
                       <span>{t("rmse")}</span>
-                      <span>{predictionData && predictionData.metrics ? `$${predictionData.metrics.rmse.toFixed(2)}` : "---"}</span>
+                      <span>{predictionData && predictionData.metrics && predictionData.metrics.rmse !== null && predictionData.metrics.rmse !== undefined ? `$${predictionData.metrics.rmse.toFixed(2)}` : "---"}</span>
                     </div>
                     <div className="stats-row">
                       <span>{t("mape")}</span>
-                      <span>{predictionData && predictionData.metrics ? `${predictionData.metrics.mape.toFixed(2)}%` : "---"}</span>
+                      <span>{predictionData && predictionData.metrics && predictionData.metrics.mape !== null && predictionData.metrics.mape !== undefined ? `${predictionData.metrics.mape.toFixed(2)}%` : "---"}</span>
                     </div>
                     <div className="stats-row">
                       <span>{t("directional_accuracy")}</span>
-                      <span style={{ color: predictionData && predictionData.metrics && predictionData.metrics.directional_accuracy >= 55 ? "var(--accent-success)" : "inherit" }}>
-                        {predictionData && predictionData.metrics ? `${predictionData.metrics.directional_accuracy.toFixed(1)}%` : "---"}
+                      <span style={{ color: predictionData && predictionData.metrics && predictionData.metrics.directional_accuracy !== null && predictionData.metrics.directional_accuracy >= 55 ? "var(--accent-success)" : "inherit" }}>
+                        {predictionData && predictionData.metrics && predictionData.metrics.directional_accuracy !== null && predictionData.metrics.directional_accuracy !== undefined ? `${predictionData.metrics.directional_accuracy.toFixed(1)}%` : "---"}
                       </span>
                     </div>
                     <div className="stats-row">
@@ -1757,10 +1757,10 @@ export default function Home() {
                                     {log.prediction_date}
                                   </td>
                                   <td style={{ padding: "8px 4px", textAlign: "right", fontWeight: "600" }}>
-                                    ${predVal.toFixed(2)}
+                                    {predVal !== null && predVal !== undefined ? `$${predVal.toFixed(2)}` : "---"}
                                   </td>
                                   <td style={{ padding: "8px 4px", textAlign: "right" }}>
-                                    {actualVal !== null ? `$${actualVal.toFixed(2)}` : (
+                                    {actualVal !== null && actualVal !== undefined ? `$${actualVal.toFixed(2)}` : (
                                       <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic" }}>
                                         {t("table_pending")}
                                       </span>
