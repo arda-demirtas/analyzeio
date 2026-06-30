@@ -3,9 +3,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from backend.config import DATABASE_URL
 
-# Connect to SQLite. check_same_thread is needed only for SQLite.
+# Connect to SQLite/PostgreSQL conditionally
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
 engine = create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}
+    DATABASE_URL, connect_args=connect_args
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -20,20 +24,21 @@ def get_db():
         db.close()
 
 def run_migrations():
-    from sqlalchemy import text
+    from sqlalchemy import text, inspect
     db = SessionLocal()
     try:
-        # Check if users table has profile_picture column
-        result = db.execute(text("PRAGMA table_info(users)")).fetchall()
-        columns = [row[1] for row in result]
-        if "profile_picture" not in columns:
-            db.execute(text("ALTER TABLE users ADD COLUMN profile_picture TEXT"))
-            db.commit()
-            print("Successfully migrated database: added profile_picture to users table")
-        if "is_premium" not in columns:
-            db.execute(text("ALTER TABLE users ADD COLUMN is_premium BOOLEAN DEFAULT 0"))
-            db.commit()
-            print("Successfully migrated database: added is_premium to users table")
+        # Inspect database schema in a database-agnostic way
+        inspector = inspect(engine)
+        if inspector.has_table("users"):
+            columns = [col["name"] for col in inspector.get_columns("users")]
+            if "profile_picture" not in columns:
+                db.execute(text("ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255)"))
+                db.commit()
+                print("Successfully migrated database: added profile_picture to users table")
+            if "is_premium" not in columns:
+                db.execute(text("ALTER TABLE users ADD COLUMN is_premium BOOLEAN DEFAULT FALSE"))
+                db.commit()
+                print("Successfully migrated database: added is_premium to users table")
             
         # Ensure all tables are created
         Base.metadata.create_all(bind=engine)
