@@ -35,24 +35,15 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", current_u
             detail="Unsupported interval. Allowed: 15m, 1h, 4h, 1d"
         )
     if not current_user.is_premium and interval != "1d":
-        import yfinance as yf
         try:
             history_points = fetch_interval_history(symbol_upper, interval=interval)
             if not history_points:
                 raise ValueError("No historical points returned")
             last_point = history_points[-1]
-            try:
-                ticker = yf.Ticker(symbol_upper)
-                info = ticker.info
-                name = info.get("longName", info.get("shortName", symbol_upper))
-            except Exception:
-                name = symbol_upper
             
-            current_price = None
-            try:
-                current_price = float(ticker.history(period="1d")["Close"].iloc[-1])
-            except Exception:
-                pass
+            from backend.predictor import TICKER_NAMES
+            name = TICKER_NAMES.get(symbol_upper, symbol_upper)
+            current_price = last_point["close"]
                 
             return {
                 "symbol": symbol_upper,
