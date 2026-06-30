@@ -1,5 +1,10 @@
 export const TRANSLATIONS = {
   en: {
+    premium_badge: "Premium",
+    premium_upgrade: "Upgrade to Premium",
+    premium_downgrade: "Switch to Free Account",
+    premium_only_msg: "Intervals other than 1d are restricted to Premium members.",
+
     loading: "Fetching Market Data & Training LSTM...",
     loading_desc: "Downloading historical {interval} prices, computing 19 indicators, and optimizing the neural network cache for {symbol}.",
     error_title: "Error Loading Data",
@@ -80,6 +85,11 @@ export const TRANSLATIONS = {
     table_no_logs: "No predictions logged yet for this asset."
   },
   tr: {
+    premium_badge: "Premium",
+    premium_upgrade: "Premium'a Yükselt",
+    premium_downgrade: "Ücretsiz Hesaba Geç",
+    premium_only_msg: "1 günlük dışındaki grafik tahminleri sadece Premium üyelere açıktır.",
+
     loading: "Piyasa Verileri Alınıyor & LSTM Eğitiliyor...",
     loading_desc: "Geçmiş {interval} fiyatları indiriliyor, 19 gösterge hesaplanıyor ve {symbol} için yapay sinir ağı önbelleği optimize ediliyor.",
     error_title: "Veri Yükleme Hatası",
@@ -160,6 +170,11 @@ export const TRANSLATIONS = {
     table_no_logs: "Bu varlık için henüz kaydedilmiş tahmin yok."
   },
   de: {
+    premium_badge: "Premium",
+    premium_upgrade: "Auf Premium upgraden",
+    premium_downgrade: "Zu kostenlosem Konto wechseln",
+    premium_only_msg: "Intervalle außer 1d sind Premium-Mitgliedern vorbehalten.",
+
     loading: "Marktdaten abrufen & LSTM trainieren...",
     loading_desc: "Historische {interval}-Preise werden heruntergeladen, 19 Indikatoren berechnet und der neuronale Netzwerkhähe-Cache für {symbol} optimiert.",
     error_title: "Fehler beim Laden der Daten",
@@ -240,6 +255,11 @@ export const TRANSLATIONS = {
     table_no_logs: "Noch keine Vorhersagen für dieses Asset protokolliert."
   },
   ru: {
+    premium_badge: "Премиум",
+    premium_upgrade: "Перейти на Премиум",
+    premium_downgrade: "Перейти на бесплатный аккаунт",
+    premium_only_msg: "Интервалы, отличные от 1d, доступны только премиум-пользователям.",
+
     loading: "Получение рыночных данных и обучение LSTM...",
     loading_desc: "Загрузка исторических цен за {interval}, вычисление 19 индикаторов и оптимизация кэша нейросети для {symbol}.",
     error_title: "Ошибка загрузки данных",
@@ -312,6 +332,11 @@ export const TRANSLATIONS = {
     neutral: "Нейтрально"
   },
   zh: {
+    premium_badge: "高级版",
+    premium_upgrade: "升级至高级版",
+    premium_downgrade: "切换为免费账户",
+    premium_only_msg: "除1d之外的预测仅限高级会员使用。",
+
     loading: "正在获取市场数据并训练 LSTM 神经网络...",
     loading_desc: "正在下载历史 {interval} 价格，计算 19 个指标，并优化 {symbol} 的神经网络缓存。",
     error_title: "数据加载出错",
@@ -392,6 +417,11 @@ export const TRANSLATIONS = {
     table_no_logs: "该资产尚无记录的预测。"
   },
   es: {
+    premium_badge: "Premium",
+    premium_upgrade: "Actualizar a Premium",
+    premium_downgrade: "Cambiar a Cuenta Gratis",
+    premium_only_msg: "Los intervalos que no sean 1d están restringidos a miembros Premium.",
+
     loading: "Obteniendo datos de mercado y entrenando LSTM...",
     loading_desc: "Descargando precios históricos de {interval}, calculando 19 indicadores y optimizando la caché de la red neuronal para {symbol}.",
     error_title: "Error al cargar los datos",
