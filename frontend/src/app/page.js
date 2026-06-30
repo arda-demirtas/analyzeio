@@ -138,13 +138,6 @@ export default function Home() {
     }
   }, []);
 
-  // Redirect non-premium users from sub-daily timeframes to 1d daily chart
-  useEffect(() => {
-    if (user && !user.is_premium && chartInterval !== "1d") {
-      setChartInterval("1d");
-    }
-  }, [user, chartInterval]);
-
   // Fetch comments when activeSymbol changes
   useEffect(() => {
     if (activeSymbol) {
@@ -218,7 +211,7 @@ export default function Home() {
       }
     ];
 
-    if (predictionData) {
+    if (predictionData && predictionData.predicted_close) {
       extendedLabels = [...labels, predictionData.prediction_date];
       const predictedPrices = Array(labels.length).fill(null);
       predictedPrices[labels.length - 1] = closePrices[closePrices.length - 1];
@@ -1087,34 +1080,6 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Conditional Sidebar Ad Banner (only shown to free tier users) */}
-        {user && !user.is_premium && (
-          <div className="glass-panel" style={{ 
-            marginTop: "10px", 
-            marginBottom: "10px",
-            padding: "15px", 
-            textAlign: "center", 
-            background: "linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.04) 100%)",
-            border: "1px solid rgba(255, 255, 255, 0.05)",
-            borderRadius: "var(--border-radius-md)",
-            position: "relative",
-            overflow: "hidden"
-          }}>
-            <div style={{ position: "absolute", top: "4px", right: "6px", fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>
-              Ad
-            </div>
-            <h4 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "6px", color: "var(--accent-primary)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
-              ★ Upgrade to Premium
-            </h4>
-            <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 10px 0", lineHeight: "1.4" }}>
-              Unlock sub-daily chart predictions (15m, 1h, 4h) and enjoy an ad-free experience.
-            </p>
-            <button onClick={handlePremiumToggle} className="btn-primary" style={{ width: "100%", fontSize: "11px", height: "30px", padding: "0" }}>
-              Go Premium
-            </button>
-          </div>
-        )}
-
         {/* User profile controls */}
         <div className="user-panel">
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -1305,13 +1270,7 @@ export default function Home() {
                       {["15m", "1h", "4h", "1d"].map((interval) => (
                         <button
                           key={interval}
-                          onClick={() => {
-                            if (!user?.is_premium && interval !== "1d") {
-                              alert(t("premium_only_msg"));
-                            } else {
-                              setChartInterval(interval);
-                            }
-                          }}
+                          onClick={() => setChartInterval(interval)}
                           className={chartInterval === interval ? "btn-primary" : "btn-secondary"}
                           style={{
                             padding: "6px 12px",
@@ -1320,8 +1279,7 @@ export default function Home() {
                             borderRadius: "calc(var(--border-radius-md) - 2px)",
                             border: "none",
                             fontWeight: "600",
-                            textTransform: "uppercase",
-                            opacity: (!user?.is_premium && interval !== "1d") ? 0.6 : 1
+                            textTransform: "uppercase"
                           }}
                           disabled={predictLoading}
                         >
@@ -1480,51 +1438,68 @@ export default function Home() {
               {/* Column 2: LSTM Prediction Summary */}
               <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
                 {/* Prediction Highlight Card */}
-                <div className="glass-panel prediction-card" style={{ minHeight: "220px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                  <span className="prediction-label">{t("prediction_header")}</span>
-                  <div className="prediction-value">
-                    ${predictionData ? predictionData.predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"}
-                  </div>
-                  <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "-5px" }}>
-                    {t("expected_close")}: {predictionData ? predictionData.expected_close_time : "---"}
-                  </div>
-                  
-                  {predictionData && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "16px", fontWeight: "700", marginTop: "15px" }}>
-                      {predictionData.price_change_percent >= 0 ? (
-                        <>
-                          <TrendingUp style={{ color: "var(--accent-success)" }} />
-                          <span style={{ color: "var(--accent-success)" }}>
-                            +{predictionData.price_change_percent.toFixed(2)}% ({t("bullish")})
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <TrendingDown style={{ color: "var(--accent-danger)" }} />
-                          <span style={{ color: "var(--accent-danger)" }}>
-                            {predictionData.price_change_percent.toFixed(2)}% ({t("bearish")})
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  )}
-                  
-                  {predictionData && predictionData.technical_recommendation && (
-                    <div style={{ marginTop: "18px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "14px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>{t("trading_action")}:</span>
-                        {predictionData.technical_recommendation.signal === "STRONG_BUY" ? (
-                          <span className="badge badge-success" style={{ fontWeight: "700" }}>{t("buy_long")}</span>
-                        ) : predictionData.technical_recommendation.signal === "STRONG_SELL" ? (
-                          <span className="badge badge-danger" style={{ fontWeight: "700" }}>{t("sell_short")}</span>
-                        ) : (
-                          <span className="badge badge-warning" style={{ fontWeight: "700" }}>{t("cash_hold")}</span>
-                        )}
-                      </div>
-                      <p style={{ fontSize: "11.5px", color: "var(--text-muted)", lineHeight: "1.4", margin: 0 }}>
-                        {predictionData.technical_recommendation.text}
+                <div className="glass-panel prediction-card" style={{ minHeight: "220px", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+                  {predictionData && predictionData.predicted_close === null ? (
+                    <div style={{ textAlign: "center", padding: "10px" }}>
+                      <span style={{ fontSize: "28px", display: "block", marginBottom: "8px" }}>🔒</span>
+                      <h4 style={{ fontSize: "14px", fontWeight: "700", color: "#f59e0b", marginBottom: "6px" }}>
+                        ★ {t("premium_badge")} {t("expected_close")}
+                      </h4>
+                      <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 12px 0", lineHeight: "1.4" }}>
+                        {t("premium_only_msg")}
                       </p>
+                      <button onClick={handlePremiumToggle} className="btn-primary" style={{ fontSize: "11px", height: "30px", padding: "0 15px", background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", border: "none" }}>
+                        ★ {t("premium_upgrade")}
+                      </button>
                     </div>
+                  ) : (
+                    <>
+                      <span className="prediction-label">{t("prediction_header")}</span>
+                      <div className="prediction-value">
+                        ${predictionData ? predictionData.predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"}
+                      </div>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "-5px" }}>
+                        {t("expected_close")}: {predictionData ? predictionData.expected_close_time : "---"}
+                      </div>
+                      
+                      {predictionData && predictionData.price_change_percent !== null && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "16px", fontWeight: "700", marginTop: "15px" }}>
+                          {predictionData.price_change_percent >= 0 ? (
+                            <>
+                              <TrendingUp style={{ color: "var(--accent-success)" }} />
+                              <span style={{ color: "var(--accent-success)" }}>
+                                +{predictionData.price_change_percent.toFixed(2)}% ({t("bullish")})
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <TrendingDown style={{ color: "var(--accent-danger)" }} />
+                              <span style={{ color: "var(--accent-danger)" }}>
+                                {predictionData.price_change_percent.toFixed(2)}% ({t("bearish")})
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      
+                      {predictionData && predictionData.technical_recommendation && (
+                        <div style={{ marginTop: "18px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "14px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                            <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>{t("trading_action")}:</span>
+                            {predictionData.technical_recommendation.signal === "STRONG_BUY" ? (
+                              <span className="badge badge-success" style={{ fontWeight: "700" }}>{t("buy_long")}</span>
+                            ) : predictionData.technical_recommendation.signal === "STRONG_SELL" ? (
+                              <span className="badge badge-danger" style={{ fontWeight: "700" }}>{t("sell_short")}</span>
+                            ) : (
+                              <span className="badge badge-warning" style={{ fontWeight: "700" }}>{t("cash_hold")}</span>
+                            )}
+                          </div>
+                          <p style={{ fontSize: "11.5px", color: "var(--text-muted)", lineHeight: "1.4", margin: 0 }}>
+                            {predictionData.technical_recommendation.text}
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
