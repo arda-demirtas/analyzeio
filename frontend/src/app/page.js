@@ -810,6 +810,66 @@ export default function Home() {
     return `60 ${t("days")}`;
   };
 
+  const getSymbolDetails = (symbol) => {
+    if (!symbol) return null;
+    const s = symbol.toUpperCase().trim();
+    const isTr = lang === "tr";
+    
+    if (s.endsWith(".IS")) {
+      return {
+        exchange: "Borsa İstanbul (BIST)",
+        country: isTr ? "Türkiye" : "Turkey",
+        market: isTr ? "Hisse Senedi" : "Stock"
+      };
+    }
+    
+    if (s.endsWith("-USD") || s.endsWith("-BTC") || s.endsWith("-EUR")) {
+      return {
+        exchange: isTr ? "Merkeziyetsiz / Global Kripto" : "Decentralized / Global Crypto",
+        country: "Global",
+        market: isTr ? "Kripto Para" : "Cryptocurrency"
+      };
+    }
+    
+    if (s === "GC=F" || s === "GOLD") {
+      return {
+        exchange: "COMEX (Chicago Mercantile Exchange)",
+        country: isTr ? "Amerika (Global)" : "United States (Global)",
+        market: isTr ? "Altın Emtiası" : "Gold Commodity"
+      };
+    }
+    
+    if (s === "CL=F" || s === "OIL" || s === "BZ=F") {
+      return {
+        exchange: "NYMEX (New York Mercantile Exchange)",
+        country: "Global",
+        market: isTr ? "Ham Petrol" : "Crude Oil"
+      };
+    }
+    
+    if (s === "SI=F" || s === "SILVER") {
+      return {
+        exchange: "COMEX",
+        country: "Global",
+        market: isTr ? "Gümüş Emtiası" : "Silver Commodity"
+      };
+    }
+    
+    if (s.includes("=F")) {
+      return {
+        exchange: isTr ? "Vadeli İşlem Borsaları" : "Futures Exchange",
+        country: "Global",
+        market: isTr ? "Vadeli İşlem / Emtia" : "Futures / Commodity"
+      };
+    }
+    
+    return {
+      exchange: "NASDAQ / NYSE",
+      country: isTr ? "Amerika Birleşik Devletleri (ABD)" : "United States (USA)",
+      market: isTr ? "Hisse Senedi" : "Stock"
+    };
+  };
+
   const fetchAdminData = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -1343,6 +1403,19 @@ export default function Home() {
             <div className="glass-panel header-panel">
               <div>
                 <h2 className="asset-title">{predictionData ? predictionData.name : activeSymbol}</h2>
+                {(() => {
+                  const details = getSymbolDetails(activeSymbol);
+                  if (!details) return null;
+                  return (
+                    <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px", marginBottom: "8px", display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                      <span>📍 <strong>{lang === "tr" ? "Ülke" : "Country"}:</strong> {details.country}</span>
+                      <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
+                      <span>🏛️ <strong>{lang === "tr" ? "Borsa" : "Exchange"}:</strong> {details.exchange}</span>
+                      <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
+                      <span>📈 <strong>{lang === "tr" ? "Piyasa" : "Market"}:</strong> {details.market}</span>
+                    </div>
+                  );
+                })()}
                 <div className="header-badges-container">
                   <span style={{ fontSize: "14px", color: "var(--text-muted)", marginRight: "5px" }}>Ticker: {activeSymbol}</span>
                   {predictionData && (
