@@ -56,3 +56,11 @@ class PredictionLog(Base):
     last_close = Column(Float, nullable=False)
     actual_close = Column(Float, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class AutoTrainSymbol(Base):
+    __tablename__ = "auto_train_symbols"
+
+    id = Column(Integer, primary_key=True, index=True)
+    symbol = Column(String, unique=True, index=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
