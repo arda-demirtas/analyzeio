@@ -1283,7 +1283,7 @@ export default function Home() {
                           }}
                           disabled={predictLoading}
                         >
-                          {interval} {!user?.is_premium && interval !== "1d" && " 🔒"}
+                          {interval}
                         </button>
                       ))}
                     </div>
