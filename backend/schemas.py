@@ -145,3 +145,17 @@ class PredictionLogResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AutoTrainSymbolResponse(BaseModel):
+    id: int
+    symbol: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AutoTrainSymbolAdd(BaseModel):
+    symbol: str
+
