@@ -159,5 +159,27 @@ class TestAnalyzeioBackend(unittest.TestCase):
         self.db.refresh(std_user)
         self.assertTrue(std_user.is_premium)
 
+    def test_auto_train_symbol_model(self):
+        """Verifies that AutoTrainSymbol rows can be added, queried, and deleted correctly."""
+        from backend.models import AutoTrainSymbol
+        
+        # Add new auto-train symbol
+        new_symbol = AutoTrainSymbol(symbol="SOL-USD")
+        self.db.add(new_symbol)
+        self.db.commit()
+        
+        # Query it back
+        queried = self.db.query(AutoTrainSymbol).filter(AutoTrainSymbol.symbol == "SOL-USD").first()
+        self.assertIsNotNone(queried)
+        self.assertEqual(queried.symbol, "SOL-USD")
+        
+        # Delete it
+        self.db.delete(queried)
+        self.db.commit()
+        
+        # Verify it is deleted
+        deleted = self.db.query(AutoTrainSymbol).filter(AutoTrainSymbol.symbol == "SOL-USD").first()
+        self.assertIsNone(deleted)
+
 if __name__ == "__main__":
     unittest.main()
