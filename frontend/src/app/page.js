@@ -1245,7 +1245,7 @@ export default function Home() {
                   fontWeight: "600"
                 }}
               >
-                <Settings style={{ width: "14px" }} /> Admin Panel
+                <Shield style={{ width: "14px" }} /> Admin Panel
               </button>
             )}
 
@@ -1832,7 +1832,7 @@ export default function Home() {
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "15px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <Settings style={{ color: "#f59e0b", width: "22px", height: "22px" }} />
+                <Shield style={{ color: "#f59e0b", width: "22px", height: "22px" }} />
                 <h3 style={{ fontSize: "20px", fontWeight: "700", margin: 0, color: "#f59e0b" }}>Admin Control Panel</h3>
               </div>
               <button 
