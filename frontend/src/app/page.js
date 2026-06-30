@@ -22,7 +22,8 @@ import {
   X,
   MessageSquare,
   CornerDownRight,
-  Camera
+  Camera,
+  Settings
 } from "lucide-react";
 import { Chart, registerables } from "chart.js";
 import { TRANSLATIONS } from "./translations";
