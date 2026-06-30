@@ -1571,20 +1571,20 @@ export default function Home() {
                   <div className="stats-list">
                     <div className="stats-row">
                       <span>{t("cache_status")}</span>
-                      <span>{predictionData ? predictionData.metrics.training_status : "---"}</span>
+                      <span>{predictionData && predictionData.metrics ? predictionData.metrics.training_status : "---"}</span>
                     </div>
                     <div className="stats-row">
                       <span>{t("rmse")}</span>
-                      <span>{predictionData ? `$${predictionData.metrics.rmse.toFixed(2)}` : "---"}</span>
+                      <span>{predictionData && predictionData.metrics ? `$${predictionData.metrics.rmse.toFixed(2)}` : "---"}</span>
                     </div>
                     <div className="stats-row">
                       <span>{t("mape")}</span>
-                      <span>{predictionData ? `${predictionData.metrics.mape.toFixed(2)}%` : "---"}</span>
+                      <span>{predictionData && predictionData.metrics ? `${predictionData.metrics.mape.toFixed(2)}%` : "---"}</span>
                     </div>
                     <div className="stats-row">
                       <span>{t("directional_accuracy")}</span>
-                      <span style={{ color: predictionData && predictionData.metrics.directional_accuracy >= 55 ? "var(--accent-success)" : "inherit" }}>
-                        {predictionData ? `${predictionData.metrics.directional_accuracy.toFixed(1)}%` : "---"}
+                      <span style={{ color: predictionData && predictionData.metrics && predictionData.metrics.directional_accuracy >= 55 ? "var(--accent-success)" : "inherit" }}>
+                        {predictionData && predictionData.metrics ? `${predictionData.metrics.directional_accuracy.toFixed(1)}%` : "---"}
                       </span>
                     </div>
                     <div className="stats-row">
