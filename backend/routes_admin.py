@@ -4,9 +4,10 @@ import os
 from typing import List
 
 from backend.database import get_db
-from backend.models import User
+from backend.models import User, AutoTrainSymbol
 from backend.auth import get_current_user
 from backend.predictor import MODEL_CACHE_DIR
+from backend.schemas import AutoTrainSymbolResponse, AutoTrainSymbolAdd
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
@@ -60,3 +61,40 @@ def get_system_stats(db: Session = Depends(get_db), admin: User = Depends(check_
         "total_cached_models": len(model_files),
         "cached_models": sorted(model_files)
     }
+
+@router.get("/auto-train-symbols", response_model=List[AutoTrainSymbolResponse])
+def get_auto_train_symbols(db: Session = Depends(get_db), admin: User = Depends(check_admin)):
+    return db.query(AutoTrainSymbol).order_by(AutoTrainSymbol.symbol).all()
+
+@router.post("/auto-train-symbols", response_model=AutoTrainSymbolResponse)
+def add_auto_train_symbol(payload: AutoTrainSymbolAdd, db: Session = Depends(get_db), admin: User = Depends(check_admin)):
+    # Normalize input
+    symbol_str = payload.symbol.upper().strip()
+    
+    # Check if already exists
+    existing = db.query(AutoTrainSymbol).filter(AutoTrainSymbol.symbol == symbol_str).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Symbol already exists in auto-train list."
+        )
+        
+    new_sym = AutoTrainSymbol(symbol=symbol_str)
+    db.add(new_sym)
+    db.commit()
+    db.refresh(new_sym)
+    return new_sym
+
+@router.delete("/auto-train-symbols/{symbol}")
+def delete_auto_train_symbol(symbol: str, db: Session = Depends(get_db), admin: User = Depends(check_admin)):
+    symbol_str = symbol.upper().strip()
+    target = db.query(AutoTrainSymbol).filter(AutoTrainSymbol.symbol == symbol_str).first()
+    if not target:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Symbol not found in auto-train list."
+        )
+    db.delete(target)
+    db.commit()
+    return {"status": "success", "message": f"Successfully removed {symbol_str} from auto-train list."}
+
