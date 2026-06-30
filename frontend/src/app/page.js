@@ -138,6 +138,13 @@ export default function Home() {
     }
   }, []);
 
+  // Redirect non-premium users from sub-daily timeframes to 1d daily chart
+  useEffect(() => {
+    if (user && !user.is_premium && chartInterval !== "1d") {
+      setChartInterval("1d");
+    }
+  }, [user, chartInterval]);
+
   // Fetch comments when activeSymbol changes
   useEffect(() => {
     if (activeSymbol) {
@@ -549,6 +556,27 @@ export default function Home() {
         console.error("Profile picture upload failed:", err);
       }
     };
+  };
+
+  // API Call: Toggle Premium Status
+  const handlePremiumToggle = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/premium/toggle`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUser(data);
+      } else {
+        alert(data.detail || "Could not toggle premium status.");
+      }
+    } catch (err) {
+      console.error("Premium toggle failed:", err);
+    }
   };
 
   // API Call: Fetch Comments
@@ -1059,6 +1087,34 @@ export default function Home() {
           ))}
         </div>
 
+        {/* Conditional Sidebar Ad Banner (only shown to free tier users) */}
+        {user && !user.is_premium && (
+          <div className="glass-panel" style={{ 
+            marginTop: "10px", 
+            marginBottom: "10px",
+            padding: "15px", 
+            textAlign: "center", 
+            background: "linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.04) 100%)",
+            border: "1px solid rgba(255, 255, 255, 0.05)",
+            borderRadius: "var(--border-radius-md)",
+            position: "relative",
+            overflow: "hidden"
+          }}>
+            <div style={{ position: "absolute", top: "4px", right: "6px", fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>
+              Ad
+            </div>
+            <h4 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "6px", color: "var(--accent-primary)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+              ★ Upgrade to Premium
+            </h4>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 10px 0", lineHeight: "1.4" }}>
+              Unlock sub-daily chart predictions (15m, 1h, 4h) and enjoy an ad-free experience.
+            </p>
+            <button onClick={handlePremiumToggle} className="btn-primary" style={{ width: "100%", fontSize: "11px", height: "30px", padding: "0" }}>
+              Go Premium
+            </button>
+          </div>
+        )}
+
         {/* User profile controls */}
         <div className="user-panel">
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -1091,11 +1147,42 @@ export default function Home() {
               </div>
               <div style={{ display: "flex", flexDirection: "column" }}>
                 <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>{t("active_user")}</span>
-                <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-main)" }}>
+                <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-main)", display: "flex", alignItems: "center" }}>
                   {user ? user.username : t("session")}
+                  {user && user.is_premium && (
+                    <span style={{ 
+                      marginLeft: "6px", 
+                      fontSize: "9px", 
+                      background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", 
+                      color: "#fff", 
+                      padding: "1px 6px", 
+                      borderRadius: "10px", 
+                      fontWeight: "700",
+                      display: "inline-flex",
+                      alignItems: "center"
+                    }}>
+                      ★ {t("premium_badge")}
+                    </span>
+                  )}
                 </span>
               </div>
             </div>
+
+            {user && (
+              <button 
+                onClick={handlePremiumToggle} 
+                className="btn-secondary" 
+                style={{ 
+                  width: "100%", 
+                  justifyContent: "flex-start", 
+                  border: user.is_premium ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid rgba(255, 255, 255, 0.08)",
+                  background: user.is_premium ? "rgba(245, 158, 11, 0.05)" : "rgba(255, 255, 255, 0.02)"
+                }}
+              >
+                <span style={{ color: user.is_premium ? "#f59e0b" : "var(--text-muted)", marginRight: "8px", fontWeight: "700" }}>★</span>
+                {user.is_premium ? t("premium_downgrade") : t("premium_upgrade")}
+              </button>
+            )}
 
             <button onClick={() => setShowPasswordModal(true)} className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }}>
               <Key style={{ width: "14px" }} /> {t("change_password")}
@@ -1218,7 +1305,13 @@ export default function Home() {
                       {["15m", "1h", "4h", "1d"].map((interval) => (
                         <button
                           key={interval}
-                          onClick={() => setChartInterval(interval)}
+                          onClick={() => {
+                            if (!user?.is_premium && interval !== "1d") {
+                              alert(t("premium_only_msg"));
+                            } else {
+                              setChartInterval(interval);
+                            }
+                          }}
                           className={chartInterval === interval ? "btn-primary" : "btn-secondary"}
                           style={{
                             padding: "6px 12px",
@@ -1227,11 +1320,12 @@ export default function Home() {
                             borderRadius: "calc(var(--border-radius-md) - 2px)",
                             border: "none",
                             fontWeight: "600",
-                            textTransform: "uppercase"
+                            textTransform: "uppercase",
+                            opacity: (!user?.is_premium && interval !== "1d") ? 0.6 : 1
                           }}
                           disabled={predictLoading}
                         >
-                          {interval}
+                          {interval} {!user?.is_premium && interval !== "1d" && " 🔒"}
                         </button>
                       ))}
                     </div>
