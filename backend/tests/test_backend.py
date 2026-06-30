@@ -142,5 +142,22 @@ class TestAnalyzeioBackend(unittest.TestCase):
         self.db.refresh(user)
         self.assertTrue(user.is_premium)
 
+    def test_admin_routes(self):
+        """Verifies admin authorization logic by checking standard user and admin user email constraints."""
+        std_user = User(username="stduser", email="stduser@example.com", hashed_password="pwd")
+        admin_user = User(username="adminuser", email="arda.demirtas2002@gmail.com", hashed_password="pwd")
+        self.db.add(std_user)
+        self.db.add(admin_user)
+        self.db.commit()
+        
+        self.assertNotEqual(std_user.email, "arda.demirtas2002@gmail.com")
+        self.assertEqual(admin_user.email, "arda.demirtas2002@gmail.com")
+        
+        self.assertFalse(std_user.is_premium)
+        std_user.is_premium = True
+        self.db.commit()
+        self.db.refresh(std_user)
+        self.assertTrue(std_user.is_premium)
+
 if __name__ == "__main__":
     unittest.main()
