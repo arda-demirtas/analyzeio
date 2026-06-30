@@ -35,10 +35,45 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", current_u
             detail="Unsupported interval. Allowed: 15m, 1h, 4h, 1d"
         )
     if not current_user.is_premium and interval != "1d":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Intervals other than 1d are restricted to Premium members."
-        )
+        import yfinance as yf
+        try:
+            history_points = fetch_interval_history(symbol_upper, interval=interval)
+            if not history_points:
+                raise ValueError("No historical points returned")
+            last_point = history_points[-1]
+            try:
+                ticker = yf.Ticker(symbol_upper)
+                info = ticker.info
+                name = info.get("longName", info.get("shortName", symbol_upper))
+            except Exception:
+                name = symbol_upper
+            
+            current_price = None
+            try:
+                current_price = float(ticker.history(period="1d")["Close"].iloc[-1])
+            except Exception:
+                pass
+                
+            return {
+                "symbol": symbol_upper,
+                "name": name,
+                "last_date": last_point["date"],
+                "last_close": last_point["close"],
+                "predicted_close": None,
+                "prediction_date": None,
+                "expected_close_time": None,
+                "price_change_percent": None,
+                "current_price": current_price,
+                "metrics": None,
+                "history": history_points,
+                "fundamental_analysis": None,
+                "technical_recommendation": None
+            }
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error loading historical data: {str(e)}"
+            )
     try:
         prediction_result = get_prediction(symbol_upper, interval=interval, lang=lang)
         return prediction_result
