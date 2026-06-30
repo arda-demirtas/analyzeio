@@ -828,46 +828,8 @@ def fetch_interval_history(symbol: str, interval: str) -> List[Dict[str, Any]]:
     Downloads historical data from Yahoo Finance for a specific interval,
     calculates all technical indicators, and returns formatted history points.
     """
-    if interval == "15m":
-        range_param = "5d"
-    elif interval == "1h":
-        range_param = "30d"
-    elif interval == "1d":
-        range_param = "3mo"
-    else:
-        raise ValueError(f"Unsupported interval: {interval}")
-        
-    url = f"https://query2.finance.yahoo.com/v8/finance/chart/{symbol}?range={range_param}&interval={interval}"
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
+    df, asset_name, is_crypto, current_price = fetch_market_data(symbol, interval=interval)
     
-    r = requests.get(url, headers=headers, timeout=15)
-    if r.status_code != 200:
-        raise ValueError(f"Failed to fetch {interval} data from Yahoo Finance: {r.status_code}")
-        
-    data = r.json()
-    result = data["chart"]["result"][0]
-    timestamps = result.get("timestamp", [])
-    quote = result["indicators"]["quote"][0]
-    
-    if not timestamps:
-        raise ValueError(f"No historical data returned for symbol: {symbol} at interval {interval}")
-        
-    dates = [datetime.datetime.fromtimestamp(ts) for ts in timestamps]
-    df = pd.DataFrame({
-        "Open": quote["open"],
-        "High": quote["high"],
-        "Low": quote["low"],
-        "Close": quote["close"],
-        "Volume": quote["volume"]
-    }, index=dates)
-    df.index.name = "Date"
-    df = df.dropna()
-    
-    if df.empty:
-        raise ValueError(f"Empty data after cleaning for symbol: {symbol} at interval {interval}")
-        
     # Calculate indicators
     df["RSI"] = calculate_rsi(df["Close"])
     macd_line, signal_line, macd_hist = calculate_macd(df["Close"])
@@ -887,6 +849,8 @@ def fetch_interval_history(symbol: str, interval: str) -> List[Dict[str, Any]]:
         "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
         "BB_Upper", "BB_Lower", "EMA_20", "EMA_50"
     ])
+    
+    df = df.tail(150)
     
     history_list = []
     for idx, row in df.iterrows():
