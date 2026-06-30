@@ -1795,7 +1795,7 @@ export default function Home() {
                               let dirBadgeClass = "badge-secondary";
                               
                               if (actualVal !== null && actualVal !== undefined) {
-                                const err = Math.abs(predVal - actualVal) / actualVal;
+                                const err = actualVal !== 0 ? Math.abs(predVal - actualVal) / actualVal : 0;
                                 errorPct = `${(err * 100).toFixed(2)}%`;
                                 
                                 const predUp = predVal > lastVal;
