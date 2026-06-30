@@ -89,3 +89,11 @@ def update_profile_picture(data: ProfilePictureUpdate, current_user: User = Depe
 def get_me(current_user: User = Depends(get_current_user)):
     """Returns the currently logged-in user profile details (including avatar)."""
     return current_user
+
+@router.post("/premium/toggle", response_model=UserResponse)
+def toggle_premium(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Toggles the premium membership status of the currently authenticated user."""
+    current_user.is_premium = not current_user.is_premium
+    db.commit()
+    db.refresh(current_user)
+    return current_user
