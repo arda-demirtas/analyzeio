@@ -60,6 +60,13 @@ def main():
         sys.exit(1)
         
     commands = [
+        # Stop RAM-heavy services before build to prevent memory locks
+        "pm2 stop crypto-daemon || true",
+        "pm2 stop frontend || true",
+        "pkill -9 -f next || true",
+        "pkill -9 -f node || true",
+        "sync && echo 3 > /proc/sys/vm/drop_caches",
+        
         # 1. Update the git repository (use hard reset to avoid potential local file state issues)
         f"cd {DEST_DIR} && git fetch --all && git reset --hard origin/main",
         
@@ -69,15 +76,19 @@ def main():
         # 2. Update python dependencies
         f"cd {DEST_DIR} && venv/bin/pip install -r requirements.txt",
         
+        # 3. Run database migrations to prepare tables in PostgreSQL
+        f"cd {DEST_DIR} && DATABASE_URL=\"postgresql://analyzeio_user:p@ssword_analyze_io_99@localhost/analyzeio\" venv/bin/python -c \"from backend.database import run_migrations; run_migrations()\"",
 
-        # 3. Update node packages & build frontend
+        # 4. Update node packages & build frontend
         f"cd {DEST_DIR}/frontend && npm install",
         f"cd {DEST_DIR}/frontend && NODE_OPTIONS='--max-old-space-size=1024' npm run build",
         
-        # 4. Restart pm2 services robustly
-        "pm2 restart backend || true",
-        "pm2 restart frontend || true",
-        f"pm2 describe crypto-daemon > /dev/null && pm2 restart crypto-daemon || pm2 start {DEST_DIR}/backend/crypto_daemon.py --name \"crypto-daemon\" --cwd {DEST_DIR} --interpreter {DEST_DIR}/venv/bin/python",
+        # 5. Recreate PM2 configurations with new environment variables
+        "pm2 delete backend || true",
+        "pm2 delete crypto-daemon || true",
+        f"DATABASE_URL=\"postgresql://analyzeio_user:p@ssword_analyze_io_99@localhost/analyzeio\" pm2 start venv/bin/python --name \"backend\" --cwd {DEST_DIR} -- -m backend.main",
+        f"DATABASE_URL=\"postgresql://analyzeio_user:p@ssword_analyze_io_99@localhost/analyzeio\" pm2 start {DEST_DIR}/backend/crypto_daemon.py --name \"crypto-daemon\" --cwd {DEST_DIR} --interpreter {DEST_DIR}/venv/bin/python",
+        "pm2 start frontend || pm2 restart frontend",
         "pm2 status"
     ]
     
