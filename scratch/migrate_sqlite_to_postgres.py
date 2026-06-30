@@ -6,7 +6,7 @@ import sys
 
 # Configuration
 SQLITE_DB = "/var/www/analyzeio/backend/analyzeio.db"
-POSTGRES_DSN = "postgresql://analyzeio_user:p@ssword_analyze_io_99@localhost/analyzeio"
+POSTGRES_DSN = "postgresql://analyzeio_user:p%40ssword_analyze_io_99@localhost/analyzeio"
 
 def migrate():
     if not os.path.exists(SQLITE_DB):
