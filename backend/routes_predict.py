@@ -34,6 +34,11 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", current_u
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported interval. Allowed: 15m, 1h, 4h, 1d"
         )
+    if not current_user.is_premium and interval != "1d":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Intervals other than 1d are restricted to Premium members."
+        )
     try:
         prediction_result = get_prediction(symbol_upper, interval=interval, lang=lang)
         return prediction_result
