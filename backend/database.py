@@ -34,6 +34,19 @@ def run_migrations():
             db.execute(text("ALTER TABLE users ADD COLUMN is_premium BOOLEAN DEFAULT 0"))
             db.commit()
             print("Successfully migrated database: added is_premium to users table")
+            
+        # Ensure all tables are created
+        Base.metadata.create_all(bind=engine)
+        
+        # Populate default auto-train symbols if table is empty
+        from backend.models import AutoTrainSymbol
+        from backend.config import AUTO_TRAINED_SYMBOLS
+        count = db.query(AutoTrainSymbol).count()
+        if count == 0:
+            for sym in AUTO_TRAINED_SYMBOLS:
+                db.add(AutoTrainSymbol(symbol=sym))
+            db.commit()
+            print(f"Populated database with {len(AUTO_TRAINED_SYMBOLS)} default auto-train symbols.")
     except Exception as e:
         print(f"Migration error: {e}")
     finally:
