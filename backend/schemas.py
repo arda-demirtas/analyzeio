@@ -95,12 +95,12 @@ class PredictionResponse(BaseModel):
     name: str
     last_date: str
     last_close: float
-    predicted_close: float
-    prediction_date: str
-    expected_close_time: str
-    price_change_percent: float
+    predicted_close: Optional[float] = None
+    prediction_date: Optional[str] = None
+    expected_close_time: Optional[str] = None
+    price_change_percent: Optional[float] = None
     current_price: Optional[float] = None
-    metrics: PredictionMetrics
+    metrics: Optional[PredictionMetrics] = None
     history: List[IndicatorPoint]
     fundamental_analysis: Optional[FundamentalAnalysisResult] = None
     technical_recommendation: Optional[TechnicalRecommendation] = None
