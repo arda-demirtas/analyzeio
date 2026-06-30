@@ -63,8 +63,6 @@ def main():
         # Stop RAM-heavy services before build to prevent memory locks
         "pm2 stop crypto-daemon || true",
         "pm2 stop frontend || true",
-        "pkill -9 -f next || true",
-        "pkill -9 -f node || true",
         "sync && echo 3 > /proc/sys/vm/drop_caches",
         
         # 1. Update the git repository (use hard reset to avoid potential local file state issues)
