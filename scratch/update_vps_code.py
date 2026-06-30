@@ -72,7 +72,7 @@ def main():
 
         # 3. Update node packages & build frontend
         f"cd {DEST_DIR}/frontend && npm install",
-        f"cd {DEST_DIR}/frontend && npm run build",
+        f"cd {DEST_DIR}/frontend && NODE_OPTIONS='--max-old-space-size=1024' npm run build",
         
         # 4. Restart pm2 services
         "pm2 restart all",
