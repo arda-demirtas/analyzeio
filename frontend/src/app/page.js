@@ -517,6 +517,10 @@ export default function Home() {
       if (res.ok) {
         const data = await res.json();
         setUser(data);
+      } else if (res.status === 401) {
+        localStorage.removeItem("token");
+        setToken(null);
+        setUser(null);
       }
     } catch (err) {
       console.error("Error fetching user details:", err);
@@ -990,6 +994,7 @@ export default function Home() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     setToken(null);
+    setUser(null);
     setWatchlist([]);
     setPredictionData(null);
     setActiveSymbol("BTC-USD");
