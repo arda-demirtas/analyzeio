@@ -3,7 +3,7 @@ import secrets
 
 # JWT and Security Settings
 # In production, this should be loaded from environment variables
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", secrets.token_hex(32))
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "7b9e7d9c8b7f8e7d6c5b4a3b2a1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
