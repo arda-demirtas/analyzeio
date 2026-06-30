@@ -124,6 +124,8 @@ export default function Home() {
   const [adminStats, setAdminStats] = useState(null);
   const [adminActiveTab, setAdminActiveTab] = useState("users");
   const [adminLoading, setAdminLoading] = useState(false);
+  const [autoTrainSymbols, setAutoTrainSymbols] = useState([]);
+  const [newAutoTrainSymbol, setNewAutoTrainSymbol] = useState("");
 
   // Refs for Charts
   const priceChartRef = useRef(null);
@@ -828,10 +830,64 @@ export default function Home() {
         const statsData = await statsRes.json();
         setAdminStats(statsData);
       }
+      
+      const symbolsRes = await fetch(`${API_BASE_URL}/api/admin/auto-train-symbols`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (symbolsRes.ok) {
+        const symbolsData = await symbolsRes.json();
+        setAutoTrainSymbols(Array.isArray(symbolsData) ? symbolsData : []);
+      }
     } catch (err) {
       console.error("Error fetching admin data:", err);
     } finally {
       setAdminLoading(false);
+    }
+  };
+
+  const handleAddAutoTrainSymbol = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token || !newAutoTrainSymbol.trim()) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/auto-train-symbols`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ symbol: newAutoTrainSymbol })
+      });
+      if (res.ok) {
+        const added = await res.json();
+        setAutoTrainSymbols(prev => [...prev, added].sort((a, b) => a.symbol.localeCompare(b.symbol)));
+        setNewAutoTrainSymbol("");
+      } else {
+        const errData = await res.json();
+        alert(errData.detail || "Error adding symbol");
+      }
+    } catch (err) {
+      console.error("Error adding symbol:", err);
+    }
+  };
+
+  const handleDeleteAutoTrainSymbol = async (symbol) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    if (!confirm(`Are you sure you want to remove ${symbol} from the auto-train list?`)) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/auto-train-symbols/${symbol}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setAutoTrainSymbols(prev => prev.filter(s => s.symbol !== symbol));
+      } else {
+        const errData = await res.json();
+        alert(errData.detail || "Error deleting symbol");
+      }
+    } catch (err) {
+      console.error("Error deleting symbol:", err);
     }
   };
 
@@ -1858,6 +1914,18 @@ export default function Home() {
                 👥 User Accounts ({adminUsers.length})
               </button>
               <button 
+                onClick={() => setAdminActiveTab("auto_train")} 
+                className={adminActiveTab === "auto_train" ? "btn-primary" : "btn-secondary"}
+                style={{ 
+                  flex: 1, 
+                  background: adminActiveTab === "auto_train" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
+                  border: "none",
+                  fontWeight: "600"
+                }}
+              >
+                🤖 Auto-Train List ({autoTrainSymbols.length})
+              </button>
+              <button 
                 onClick={() => setAdminActiveTab("models")} 
                 className={adminActiveTab === "models" ? "btn-primary" : "btn-secondary"}
                 style={{ 
@@ -1926,6 +1994,74 @@ export default function Home() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              ) : adminActiveTab === "auto_train" ? (
+                <div>
+                  {/* Add symbol form */}
+                  <form onSubmit={handleAddAutoTrainSymbol} style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. SOL-USD, AAPL, Gold" 
+                      value={newAutoTrainSymbol}
+                      onChange={(e) => setNewAutoTrainSymbol(e.target.value)}
+                      style={{ 
+                        flex: 1, 
+                        background: "rgba(255, 255, 255, 0.03)", 
+                        border: "1px solid rgba(255, 255, 255, 0.08)", 
+                        borderRadius: "6px", 
+                        padding: "8px 12px", 
+                        color: "var(--text-main)",
+                        fontSize: "13px"
+                      }} 
+                    />
+                    <button 
+                      type="submit" 
+                      className="btn-primary"
+                      style={{ 
+                        background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", 
+                        border: "none", 
+                        padding: "8px 16px",
+                        fontSize: "13px",
+                        fontWeight: "600",
+                        minWidth: "120px"
+                      }}
+                    >
+                      + Add Asset
+                    </button>
+                  </form>
+
+                  <h4 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-muted)" }}>
+                    Auto-Trained Assets List ({autoTrainSymbols.length})
+                  </h4>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "10px", maxHeight: "400px", overflowY: "auto", paddingRight: "5px" }}>
+                    {autoTrainSymbols.length === 0 ? (
+                      <div style={{ gridColumn: "1 / -1", padding: "20px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
+                        No auto-trained assets found.
+                      </div>
+                    ) : (
+                      autoTrainSymbols.map((item) => (
+                        <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255, 255, 255, 0.02)", padding: "10px 12px", borderRadius: "6px", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                          <strong style={{ fontSize: "13.5px", color: "var(--text-main)" }}>{item.symbol}</strong>
+                          <button 
+                            onClick={() => handleDeleteAutoTrainSymbol(item.symbol)}
+                            style={{ 
+                              background: "none", 
+                              border: "none", 
+                              color: "var(--accent-danger)", 
+                              cursor: "pointer", 
+                              fontSize: "13px",
+                              padding: "2px 6px",
+                              borderRadius: "4px"
+                            }}
+                            title="Remove from Auto-Train List"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div>
