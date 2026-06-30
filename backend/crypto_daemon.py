@@ -9,16 +9,30 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.predictor import get_prediction
 from backend.config import MODEL_CACHE_DIR, AUTO_TRAINED_SYMBOLS
+from backend.database import SessionLocal
+from backend.models import AutoTrainSymbol
 
 def check_and_train_assets():
     """Runs daily model training sequentially for the popular cryptos, stocks, and commodities."""
     print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Starting Daily Auto-Training loop...")
+    
+    # Query database for symbols, fall back to config if empty or error
+    db = SessionLocal()
+    try:
+        db_symbols = [s.symbol for s in db.query(AutoTrainSymbol).order_by(AutoTrainSymbol.symbol).all()]
+        symbols = db_symbols if db_symbols else AUTO_TRAINED_SYMBOLS
+    except Exception as e:
+        print(f"Error loading auto-train symbols from DB: {e}")
+        symbols = AUTO_TRAINED_SYMBOLS
+    finally:
+        db.close()
+
     success_count = 0
     fail_count = 0
     
-    for idx, symbol in enumerate(AUTO_TRAINED_SYMBOLS):
+    for idx, symbol in enumerate(symbols):
         try:
-            print(f"[{idx+1}/{len(AUTO_TRAINED_SYMBOLS)}] Training/Updating cache for {symbol} (1d)...")
+            print(f"[{idx+1}/{len(symbols)}] Training/Updating cache for {symbol} (1d)...")
             get_prediction(symbol, interval="1d", force_retrain=True)
             success_count += 1
         except Exception as e:
