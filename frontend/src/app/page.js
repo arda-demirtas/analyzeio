@@ -119,6 +119,11 @@ export default function Home() {
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [accuracyLogs, setAccuracyLogs] = useState([]);
   const [accuracyLoading, setAccuracyLoading] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [adminStats, setAdminStats] = useState(null);
+  const [adminActiveTab, setAdminActiveTab] = useState("users");
+  const [adminLoading, setAdminLoading] = useState(false);
 
   // Refs for Charts
   const priceChartRef = useRef(null);
@@ -772,6 +777,80 @@ export default function Home() {
     }
   };
 
+  const getTimeStepText = (interval) => {
+    if (interval === "1d") {
+      return `60 ${t("days")}`;
+    }
+    if (interval === "4h") {
+      if (lang === "tr") return "60 Mum (240 Saat / 10 Gün)";
+      if (lang === "de") return "60 Kerzen (240 Stunden / 10 Tage)";
+      if (lang === "ru") return "60 свечей (240 часов / 10 дней)";
+      if (lang === "zh") return "60 根K线 (240 小时 / 10 天)";
+      if (lang === "es") return "60 velas (240 horas / 10 días)";
+      return "60 Candles (240 Hours / 10 Days)";
+    }
+    if (interval === "1h") {
+      if (lang === "tr") return "60 Mum (60 Saat / 2.5 Gün)";
+      if (lang === "de") return "60 Kerzen (60 Stunden / 2.5 Tage)";
+      if (lang === "ru") return "60 свечей (60 часов / 2.5 дней)";
+      if (lang === "zh") return "60 根K线 (60 小时 / 2.5 天)";
+      if (lang === "es") return "60 velas (60 horas / 2.5 días)";
+      return "60 Candles (60 Hours / 2.5 Days)";
+    }
+    if (interval === "15m") {
+      if (lang === "tr") return "60 Mum (15 Saat)";
+      if (lang === "de") return "60 Kerzen (15 Stunden)";
+      if (lang === "ru") return "60 свечей (15 часов)";
+      if (lang === "zh") return "60 根K线 (15 小时)";
+      if (lang === "es") return "60 velas (15 horas)";
+      return "60 Candles (15 Hours)";
+    }
+    return `60 ${t("days")}`;
+  };
+
+  const fetchAdminData = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setAdminLoading(true);
+    try {
+      const usersRes = await fetch(`${API_BASE_URL}/api/admin/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (usersRes.ok) {
+        const usersData = await usersRes.json();
+        setAdminUsers(usersData);
+      }
+      
+      const statsRes = await fetch(`${API_BASE_URL}/api/admin/system-stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setAdminStats(statsData);
+      }
+    } catch (err) {
+      console.error("Error fetching admin data:", err);
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const handleAdminTogglePremium = async (userId) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/toggle-premium`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        fetchAdminData();
+      }
+    } catch (err) {
+      console.error("Error toggling user premium status:", err);
+    }
+  };
+
   // API Call: Close/Delete Account
   const handleDeleteAccount = async () => {
     if (!window.confirm("WARNING: Are you absolutely sure you want to permanently close your account? This action deletes all your saved symbols and settings and cannot be undone.")) {
@@ -1146,6 +1225,26 @@ export default function Home() {
               >
                 <span style={{ color: user.is_premium ? "#f59e0b" : "var(--text-muted)", marginRight: "8px", fontWeight: "700" }}>★</span>
                 {user.is_premium ? t("premium_downgrade") : t("premium_upgrade")}
+              </button>
+            )}
+
+            {user?.email === "arda.demirtas2002@gmail.com" && (
+              <button 
+                onClick={() => {
+                  setShowAdminModal(true);
+                  fetchAdminData();
+                }} 
+                className="btn-secondary" 
+                style={{ 
+                  width: "100%", 
+                  justifyContent: "flex-start",
+                  border: "1px solid rgba(245, 158, 11, 0.4)",
+                  background: "rgba(245, 158, 11, 0.08)",
+                  color: "#f59e0b",
+                  fontWeight: "600"
+                }}
+              >
+                <Settings style={{ width: "14px" }} /> Admin Panel
               </button>
             )}
 
@@ -1593,7 +1692,7 @@ export default function Home() {
                     </div>
                     <div className="stats-row">
                       <span>{t("time_step")}</span>
-                      <span>60 {t("days")}</span>
+                      <span>{getTimeStepText(chartInterval)}</span>
                     </div>
                   </div>
                   
@@ -1720,6 +1819,148 @@ export default function Home() {
                 <button type="button" onClick={() => { setShowPasswordModal(false); setPasswordError(""); setPasswordSuccess(""); }} className="btn-secondary">{t("cancel_btn")}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Panel Modal */}
+      {showAdminModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+          <div className="glass-panel" style={{ width: "100%", maxWidth: "800px", maxHeight: "85vh", display: "flex", flexDirection: "column", padding: "25px", overflow: "hidden" }}>
+            
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "15px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <Settings style={{ color: "#f59e0b", width: "22px", height: "22px" }} />
+                <h3 style={{ fontSize: "20px", fontWeight: "700", margin: 0, color: "#f59e0b" }}>Admin Control Panel</h3>
+              </div>
+              <button 
+                onClick={() => setShowAdminModal(false)} 
+                className="btn-secondary" 
+                style={{ minWidth: "auto", padding: "6px 12px", fontSize: "12px" }}
+              >
+                ✕ Close
+              </button>
+            </div>
+            
+            {/* Tabs */}
+            <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+              <button 
+                onClick={() => setAdminActiveTab("users")} 
+                className={adminActiveTab === "users" ? "btn-primary" : "btn-secondary"}
+                style={{ 
+                  flex: 1, 
+                  background: adminActiveTab === "users" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
+                  border: "none",
+                  fontWeight: "600"
+                }}
+              >
+                👥 User Accounts ({adminUsers.length})
+              </button>
+              <button 
+                onClick={() => setAdminActiveTab("models")} 
+                className={adminActiveTab === "models" ? "btn-primary" : "btn-secondary"}
+                style={{ 
+                  flex: 1, 
+                  background: adminActiveTab === "models" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
+                  border: "none",
+                  fontWeight: "600"
+                }}
+              >
+                🧠 Model Cache ({adminStats ? adminStats.total_cached_models : 0})
+              </button>
+            </div>
+            
+            {/* Main Content Area (Scrollable) */}
+            <div style={{ flex: 1, overflowY: "auto", paddingRight: "5px" }}>
+              {adminLoading ? (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "50px 0", gap: "15px" }}>
+                  <RefreshCw className="animate-spin" style={{ color: "#f59e0b", width: "32px", height: "32px" }} />
+                  <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>Loading Admin Data...</span>
+                </div>
+              ) : adminActiveTab === "users" ? (
+                <div>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)" }}>
+                        <th style={{ padding: "10px" }}>ID</th>
+                        <th style={{ padding: "10px" }}>Username</th>
+                        <th style={{ padding: "10px" }}>Email</th>
+                        <th style={{ padding: "10px" }}>Membership</th>
+                        <th style={{ padding: "10px", textAlign: "right" }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {adminUsers.map(u => (
+                        <tr key={u.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.03)" }}>
+                          <td style={{ padding: "12px 10px", color: "var(--text-muted)" }}>{u.id}</td>
+                          <td style={{ padding: "12px 10px", fontWeight: "600" }}>{u.username}</td>
+                          <td style={{ padding: "12px 10px" }}>{u.email}</td>
+                          <td style={{ padding: "12px 10px" }}>
+                            {u.is_premium ? (
+                              <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "700" }}>
+                                ★ Premium
+                              </span>
+                            ) : (
+                              <span style={{ background: "rgba(255, 255, 255, 0.05)", color: "var(--text-muted)", padding: "2px 8px", borderRadius: "10px", fontSize: "11px" }}>
+                                Standard
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: "12px 10px", textAlign: "right" }}>
+                            <button
+                              onClick={() => handleAdminTogglePremium(u.id)}
+                              className="btn-secondary"
+                              style={{
+                                padding: "4px 10px",
+                                fontSize: "11px",
+                                minWidth: "auto",
+                                borderColor: u.is_premium ? "rgba(239, 68, 68, 0.4)" : "rgba(245, 158, 11, 0.4)",
+                                color: u.is_premium ? "var(--accent-danger)" : "#f59e0b"
+                              }}
+                            >
+                              {u.is_premium ? "Revoke Premium" : "Grant Premium"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "20px" }}>
+                    <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                      <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Total Users</span>
+                      <strong style={{ fontSize: "20px", color: "var(--text-main)" }}>{adminStats ? adminStats.total_users : 0}</strong>
+                    </div>
+                    <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                      <span style={{ fontSize: "12px", color: "#f59e0b", display: "block", marginBottom: "5px" }}>Premium Members</span>
+                      <strong style={{ fontSize: "20px", color: "#f59e0b" }}>{adminStats ? adminStats.premium_users : 0}</strong>
+                    </div>
+                  </div>
+                  
+                  <h4 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-muted)" }}>
+                    Cached Model Files ({adminStats ? adminStats.cached_models.length : 0})
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {adminStats && adminStats.cached_models.length === 0 ? (
+                      <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
+                        No trained models found in cache folder.
+                      </div>
+                    ) : (
+                      adminStats && adminStats.cached_models.map((filename, idx) => (
+                        <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255, 255, 255, 0.01)", padding: "8px 12px", borderRadius: "6px", border: "1px solid rgba(255, 255, 255, 0.03)", fontSize: "12.5px" }}>
+                          <span style={{ fontFamily: "monospace", color: "var(--text-main)" }}>{filename}</span>
+                          <span className="badge badge-success" style={{ fontSize: "10px", padding: "2px 8px" }}>Active</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
           </div>
         </div>
       )}
