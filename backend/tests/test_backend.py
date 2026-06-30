@@ -122,5 +122,25 @@ class TestAnalyzeioBackend(unittest.TestCase):
         db_log_updated = self.db.query(PredictionLog).filter(PredictionLog.symbol == "BTC-USD").first()
         self.assertEqual(db_log_updated.actual_close, 60850.0)
 
+    def test_user_premium_field(self):
+        """Verifies that the is_premium field is present and defaults to False, and can be toggled."""
+        user = User(
+            username="premiumuser",
+            email="premiumuser@example.com",
+            hashed_password="hashed_password"
+        )
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
+        
+        # Verify default value
+        self.assertFalse(user.is_premium)
+        
+        # Verify toggle
+        user.is_premium = True
+        self.db.commit()
+        self.db.refresh(user)
+        self.assertTrue(user.is_premium)
+
 if __name__ == "__main__":
     unittest.main()
