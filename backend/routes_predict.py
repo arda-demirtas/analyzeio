@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from backend.database import get_db
 from backend.models import User, Watchlist, PredictionLog
 from backend.schemas import WatchlistAdd, WatchlistResponse, PredictionResponse, IndicatorPoint, PredictionLogResponse
-from backend.auth import get_current_user
+from backend.auth import get_current_user, get_current_user_optional
 from backend.predictor import get_prediction, fetch_interval_history
 
 router = APIRouter(prefix="/api", tags=["Predictions & Watchlist"])
@@ -23,7 +23,7 @@ def normalize_symbol(symbol: str) -> str:
     return sym
 
 @router.get("/predict", response_model=PredictionResponse)
-def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", current_user: User = Depends(get_current_user)):
+def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", current_user: Optional[User] = Depends(get_current_user_optional)):
     """
     Triggers historical data loading, computes technical indicators,
     and runs LSTM model inference to predict the close price for the next candle of the selected interval.
@@ -35,7 +35,8 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", current_u
             detail="Unsupported interval. Allowed: 15m, 1h, 4h, 1d"
         )
     is_btc = symbol_upper == "BTC-USD"
-    if not current_user.is_premium and not is_btc:
+    is_premium = current_user.is_premium if current_user else False
+    if not is_premium and not is_btc:
         try:
             history_points = fetch_interval_history(symbol_upper, interval=interval)
             if not history_points:
@@ -132,7 +133,7 @@ def remove_from_watchlist(symbol: str, current_user: User = Depends(get_current_
 def get_prediction_accuracy_logs(
     symbol: str,
     interval: str = "1d",
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     """
