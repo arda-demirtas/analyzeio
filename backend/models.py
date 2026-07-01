@@ -76,3 +76,16 @@ class VerificationCode(Base):
     data = Column(String, nullable=True)     # JSON string with extra payload
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     expires_at = Column(DateTime, nullable=False)
+
+
+class MarketScreener(Base):
+    __tablename__ = "market_screeners"
+
+    id = Column(Integer, primary_key=True, index=True)
+    symbol = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=True)
+    price = Column(Float, nullable=False)
+    predicted_change = Column(Float, nullable=True)  # Percent change
+    rsi = Column(Float, nullable=True)
+    macd_signal = Column(String, nullable=True)     # "BULLISH", "BEARISH", "NEUTRAL"
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
