@@ -879,3 +879,137 @@ def fetch_interval_history(symbol: str, interval: str) -> List[Dict[str, Any]]:
         
     return history_list
 
+
+def update_screener_cache(symbol: str, db) -> None:
+    """Computes and updates the MarketScreener entry for a given symbol."""
+    from backend.models import MarketScreener, PredictionLog
+    import datetime
+
+    symbol_upper = symbol.upper().strip()
+    try:
+        # 1. Get the latest prediction log for daily interval
+        log = (
+            db.query(PredictionLog)
+            .filter(PredictionLog.symbol == symbol_upper, PredictionLog.interval == "1d")
+            .order_by(PredictionLog.prediction_date.desc())
+            .first()
+        )
+        
+        # 2. Fetch history to compute price, RSI, MACD
+        df, _, _, _ = fetch_market_data(symbol_upper, interval="1d")
+        if df.empty:
+            return
+            
+        last_row = df.iloc[-1]
+        price = float(last_row["Close"])
+        rsi = float(last_row["RSI"]) if "RSI" in last_row and not pd.isna(last_row["RSI"]) else 50.0
+        
+        # MACD Signal
+        macd_hist = float(last_row["MACD_Hist"]) if "MACD_Hist" in last_row and not pd.isna(last_row["MACD_Hist"]) else 0.0
+        macd_signal = "BULLISH" if macd_hist > 0 else "BEARISH" if macd_hist < 0 else "NEUTRAL"
+        
+        # Predicted change
+        predicted_change = 0.0
+        if log:
+            predicted_change = ((log.predicted_close - log.last_close) / log.last_close) * 100
+            
+        name = TICKER_NAMES.get(symbol_upper, symbol_upper)
+        
+        screener_entry = db.query(MarketScreener).filter(MarketScreener.symbol == symbol_upper).first()
+        if screener_entry:
+            screener_entry.price = price
+            screener_entry.predicted_change = predicted_change
+            screener_entry.rsi = rsi
+            screener_entry.macd_signal = macd_signal
+            screener_entry.name = name
+            screener_entry.updated_at = datetime.datetime.utcnow()
+        else:
+            new_entry = MarketScreener(
+                symbol=symbol_upper,
+                name=name,
+                price=price,
+                predicted_change=predicted_change,
+                rsi=rsi,
+                macd_signal=macd_signal
+            )
+            db.add(new_entry)
+        db.commit()
+    except Exception as e:
+        print(f"Error updating screener cache for {symbol}: {e}")
+
+
+def analyze_text_sentiment(title: str, summary: str = "") -> float:
+    """
+    Calculates a sentiment score between -1.0 (very bearish) and 1.0 (very bullish)
+    using key financial sentiment words.
+    """
+    pos_words = {
+        "bullish", "growth", "high", "gain", "breakout", "surpass", "profit", 
+        "positive", "strong", "rise", "soar", "rally", "jump", "buy", "upward",
+        "boğa", "yükseliş", "artış", "kâr", "güçlü", "rekor", "al", "kazanç", "pozitif"
+    }
+    neg_words = {
+        "bearish", "fall", "drop", "loss", "crash", "negative", "weak", "down", 
+        "decline", "slide", "plummet", "slump", "sell", "downward", "worry",
+        "ayı", "düşüş", "kayıp", "zayıf", "düşük", "sat", "korku", "risk", "negatif"
+    }
+    
+    score = 0.0
+    text = (title + " " + summary).lower()
+    
+    pos_count = sum(1 for w in pos_words if w in text)
+    neg_count = sum(1 for w in neg_words if w in text)
+    
+    total = pos_count + neg_count
+    if total > 0:
+        score = (pos_count - neg_count) / total
+    return score
+
+
+def fetch_symbol_news(symbol: str) -> List[Dict[str, Any]]:
+    """
+    Queries Yahoo Finance Search API to retrieve news articles for the symbol,
+    and runs NLP sentiment analysis on each article.
+    """
+    symbol_upper = symbol.upper().strip()
+    url = f"https://query2.finance.yahoo.com/v1/finance/search?q={symbol_upper}"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    
+    articles = []
+    try:
+        r = requests.get(url, headers=headers, timeout=10)
+        if r.status_code == 200:
+            data = r.json()
+            raw_news = data.get("news", [])
+            for item in raw_news:
+                title = item.get("title", "")
+                publisher = item.get("publisher", "Yahoo Finance")
+                link = item.get("link", "")
+                pub_time = item.get("providerPublishTime", 0)
+                
+                # Perform sentiment analysis
+                score = analyze_text_sentiment(title)
+                
+                # Determine rating text and color badge
+                if score >= 0.1:
+                    rating = "BULLISH"
+                elif score <= -0.1:
+                    rating = "BEARISH"
+                else:
+                    rating = "NEUTRAL"
+                    
+                articles.append({
+                    "title": title,
+                    "publisher": publisher,
+                    "link": link,
+                    "time": pub_time,
+                    "score": score,
+                    "rating": rating
+                })
+    except Exception as e:
+        print(f"Error fetching news for {symbol}: {e}")
+        
+    return articles
+
