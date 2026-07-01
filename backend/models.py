@@ -64,3 +64,15 @@ class AutoTrainSymbol(Base):
     id = Column(Integer, primary_key=True, index=True)
     symbol = Column(String, unique=True, index=True, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class VerificationCode(Base):
+    __tablename__ = "verification_codes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, index=True, nullable=False)
+    code = Column(String, nullable=False)
+    purpose = Column(String, nullable=False)  # "register" or "change_password"
+    data = Column(String, nullable=True)     # JSON string with extra payload
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
