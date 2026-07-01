@@ -186,6 +186,61 @@ export default function Home() {
     }
   };
 
+  // Helper: Calculate support and resistance levels (Swing High/Low Pivot method)
+  const calculateSupportResistance = (history) => {
+    if (!history || history.length < 10) return { supports: [], resistances: [] };
+    
+    const closes = history.map(h => h.close);
+    const highs = history.map(h => h.high !== null && h.high !== undefined ? h.high : h.close);
+    const lows = history.map(h => h.low !== null && h.low !== undefined ? h.low : h.close);
+    
+    const windowSize = 5;
+    const peaks = [];
+    const valleys = [];
+    
+    for (let i = windowSize; i < history.length - windowSize; i++) {
+      // Peak (Local Maximum)
+      const leftHighs = highs.slice(i - windowSize, i);
+      const rightHighs = highs.slice(i + 1, i + windowSize + 1);
+      if (highs[i] === Math.max(highs[i], ...leftHighs, ...rightHighs)) {
+        peaks.push(highs[i]);
+      }
+      
+      // Valley (Local Minimum)
+      const leftLows = lows.slice(i - windowSize, i);
+      const rightLows = lows.slice(i + 1, i + windowSize + 1);
+      if (lows[i] === Math.min(lows[i], ...leftLows, ...rightLows)) {
+        valleys.push(lows[i]);
+      }
+    }
+    
+    const currentPrice = closes[closes.length - 1];
+    
+    // Select up to 2 distinct supports (valleys below current price) and 2 resistances (peaks above current price)
+    let supports = [...new Set(valleys.filter(v => v < currentPrice))].sort((a, b) => b - a).slice(0, 2);
+    let resistances = [...new Set(peaks.filter(p => p > currentPrice))].sort((a, b) => a - b).slice(0, 2);
+    
+    // Fallbacks based on Pivot point calculations if not found
+    if (supports.length === 0 || resistances.length === 0) {
+      const h = highs[highs.length - 1];
+      const l = lows[lows.length - 1];
+      const c = closes[closes.length - 1];
+      const pivot = (h + l + c) / 3.0;
+      
+      if (supports.length === 0) {
+        supports = [2 * pivot - h, pivot - (h - l)];
+      }
+      if (resistances.length === 0) {
+        resistances = [2 * pivot - l, pivot + (h - l)];
+      }
+    }
+    
+    return {
+      supports: supports.sort((a, b) => a - b),
+      resistances: resistances.sort((a, b) => a - b)
+    };
+  };
+
   // Helper: Render price, RSI, and MACD charts
   const renderCharts = () => {
     destroyCharts();
@@ -276,6 +331,37 @@ export default function Home() {
         fill: false,
       }
     );
+
+    // ONLY FOR BTC-USD: Add Support and Resistance Levels
+    if (activeSymbol === "BTC-USD") {
+      const { supports, resistances } = calculateSupportResistance(history);
+      
+      supports.forEach((val, idx) => {
+        datasets.push({
+          label: `${t("support")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
+          data: Array(extendedLabels.length).fill(val),
+          borderColor: "rgba(16, 185, 129, 0.7)",
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+        });
+      });
+
+      resistances.forEach((val, idx) => {
+        datasets.push({
+          label: `${t("resistance")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
+          data: Array(extendedLabels.length).fill(val),
+          borderColor: "rgba(239, 68, 68, 0.7)",
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+        });
+      });
+    }
 
     // Price Chart
     if (ctxPrice) {
@@ -1629,6 +1715,26 @@ export default function Home() {
                           return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("bb_status_inside")}</span>;
                         })()}
                       </div>
+
+                      {activeSymbol === "BTC-USD" && (() => {
+                        const { supports, resistances } = calculateSupportResistance(activeHistory);
+                        return (
+                          <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)", border: "1px solid rgba(139, 92, 246, 0.15)" }}>
+                            <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{t("support")} / {t("resistance")}</span>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "12px", fontFamily: "monospace" }}>
+                              <span style={{ color: "#10b981", fontWeight: "700" }}>
+                                S: {supports.map(s => s.toLocaleString(undefined, { maximumFractionDigits: 1 })).join(" | ")}
+                              </span>
+                              <span style={{ color: "#ef4848", fontWeight: "700" }}>
+                                R: {resistances.map(r => r.toLocaleString(undefined, { maximumFractionDigits: 1 })).join(" | ")}
+                              </span>
+                            </div>
+                            <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px", color: "#f59e0b", borderColor: "rgba(245, 158, 11, 0.3)", background: "rgba(245, 158, 11, 0.05)" }}>
+                              Swing High/Low
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
