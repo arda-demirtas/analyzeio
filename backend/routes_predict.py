@@ -3,10 +3,13 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from backend.database import get_db
-from backend.models import User, Watchlist, PredictionLog
-from backend.schemas import WatchlistAdd, WatchlistResponse, PredictionResponse, IndicatorPoint, PredictionLogResponse
+from backend.models import User, Watchlist, PredictionLog, MarketScreener
+from backend.schemas import (
+    WatchlistAdd, WatchlistResponse, PredictionResponse, IndicatorPoint, 
+    PredictionLogResponse, MarketScreenerResponse, NewsSentimentResponse
+)
 from backend.auth import get_current_user, get_current_user_optional
-from backend.predictor import get_prediction, fetch_interval_history
+from backend.predictor import get_prediction, fetch_interval_history, fetch_symbol_news
 
 router = APIRouter(prefix="/api", tags=["Predictions & Watchlist"])
 
@@ -149,3 +152,35 @@ def get_prediction_accuracy_logs(
         .all()
     )
     return logs
+
+
+@router.get("/screener", response_model=List[MarketScreenerResponse])
+def get_market_screener(db: Session = Depends(get_db)):
+    """Returns all pre-calculated screener assets."""
+    return db.query(MarketScreener).order_by(MarketScreener.symbol).all()
+
+
+@router.get("/news/{symbol}", response_model=NewsSentimentResponse)
+def get_news_sentiment(symbol: str):
+    """Fetches articles and computes NLP sentiment analysis on the fly for the symbol."""
+    symbol_upper = normalize_symbol(symbol)
+    articles = fetch_symbol_news(symbol_upper)
+    
+    # Calculate overall sentiment score
+    sentiment_score = 0.0
+    if articles:
+        sentiment_score = sum(a["score"] for a in articles) / len(articles)
+        
+    if sentiment_score >= 0.1:
+        sentiment_class = "BULLISH"
+    elif sentiment_score <= -0.1:
+        sentiment_class = "BEARISH"
+    else:
+        sentiment_class = "NEUTRAL"
+        
+    return {
+        "symbol": symbol_upper,
+        "sentiment_score": sentiment_score,
+        "sentiment_class": sentiment_class,
+        "articles": articles
+    }
