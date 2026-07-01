@@ -1579,6 +1579,71 @@ export default function Home() {
             <div className="dashboard-grid">
               {/* Column 1: Charts */}
               <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
+                {(!user || !user.is_premium) && activeSymbol !== "BTC-USD" && (
+                  <div className="glass-panel" style={{
+                    padding: "20px",
+                    background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.03) 100%)",
+                    border: "1px solid rgba(245, 158, 11, 0.25)",
+                    borderRadius: "var(--border-radius-lg)",
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "20px",
+                    flexWrap: "wrap"
+                  }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1, minWidth: "280px" }}>
+                      <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#f59e0b", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                        ★ {lang === "tr" ? "Premium Özellikler Kilitli" : "Premium Features Locked"}
+                      </h4>
+                      <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0, lineHeight: "1.5" }}>
+                        {lang === "tr" 
+                          ? "Tüm zaman dilimlerinde (15m, 1h, 4h) LSTM yapay zeka fiyat tahminlerini görmek ve grafikte 5'er adet otomatik destek/direnç çizgilerine erişmek için premium üyeliğe yükseltin." 
+                          : "Upgrade to premium to view LSTM neural network price predictions across all timeframes (15m, 1h, 4h) and access automatic Support & Resistance overlays on all assets."}
+                      </p>
+                    </div>
+                    {user ? (
+                      <button 
+                        onClick={handlePremiumToggle} 
+                        className="btn-primary" 
+                        style={{ 
+                          background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", 
+                          borderColor: "#d97706",
+                          color: "#fff",
+                          fontWeight: "700",
+                          padding: "10px 20px",
+                          fontSize: "13px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        ★ {t("premium_upgrade")}
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                        className="btn-primary" 
+                        style={{ 
+                          background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", 
+                          borderColor: "#d97706",
+                          color: "#fff",
+                          fontWeight: "700",
+                          padding: "10px 20px",
+                          fontSize: "13px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        🔑 {lang === "tr" ? "Giriş Yap ve Yükselt" : "Login to Upgrade"}
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* Price Chart Card */}
                 <div className="glass-panel">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
