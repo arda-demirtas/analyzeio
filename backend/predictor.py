@@ -720,8 +720,7 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         "text": tech_text
     }
     
-    # 6. Format recent history for charting (2 years = 730 candles for daily, 100 for others)
-    chart_limit = 730 if interval == "1d" else 100
+    chart_limit = 730
     history_df = df.tail(chart_limit)
     history_list = []
     for idx, row in history_df.iterrows():
@@ -851,7 +850,7 @@ def fetch_interval_history(symbol: str, interval: str) -> List[Dict[str, Any]]:
         "BB_Upper", "BB_Lower", "EMA_20", "EMA_50"
     ])
     
-    chart_limit = 730 if interval == "1d" else 150
+    chart_limit = 730
     df = df.tail(chart_limit)
     
     history_list = []
