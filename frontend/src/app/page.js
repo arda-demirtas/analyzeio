@@ -498,6 +498,13 @@ export default function Home() {
                   enabled: isChartFullscreen
                 },
                 mode: "x",
+                onZoom: ({ chart }) => {
+                  const lastIndex = chart.data.labels.length - 1;
+                  if (chart.options.scales.x) {
+                    chart.options.scales.x.max = lastIndex;
+                  }
+                  chart.update("none");
+                }
               },
               pan: {
                 enabled: isChartFullscreen,
