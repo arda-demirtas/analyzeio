@@ -209,13 +209,22 @@ export default function Home() {
     };
   }, [predictionData, chartHistory]);
 
-  // Handle price chart resize on fullscreen state toggle
+  // Handle price chart resize and body overflow on fullscreen state toggle
   useEffect(() => {
+    if (isChartFullscreen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    
     if (priceChartInst.current) {
       const timer = setTimeout(() => {
         priceChartInst.current.resize();
       }, 100);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        document.body.style.overflow = "";
+      };
     }
   }, [isChartFullscreen]);
 
