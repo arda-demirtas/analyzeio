@@ -216,9 +216,9 @@ export default function Home() {
     
     const currentPrice = closes[closes.length - 1];
     
-    // Select up to 2 distinct supports (valleys below current price) and 2 resistances (peaks above current price)
-    let supports = [...new Set(valleys.filter(v => v < currentPrice))].sort((a, b) => b - a).slice(0, 2);
-    let resistances = [...new Set(peaks.filter(p => p > currentPrice))].sort((a, b) => a - b).slice(0, 2);
+    // Select up to 5 distinct supports (valleys below current price) and 5 resistances (peaks above current price)
+    let supports = [...new Set(valleys.filter(v => v < currentPrice))].sort((a, b) => b - a).slice(0, 5);
+    let resistances = [...new Set(peaks.filter(p => p > currentPrice))].sort((a, b) => a - b).slice(0, 5);
     
     // Fallbacks based on Pivot point calculations if not found
     if (supports.length === 0 || resistances.length === 0) {
@@ -340,8 +340,8 @@ export default function Home() {
         datasets.push({
           label: `${t("support")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
           data: Array(extendedLabels.length).fill(val),
-          borderColor: "rgba(16, 185, 129, 0.7)",
-          borderWidth: 1.5,
+          borderColor: "rgba(16, 185, 129, 0.28)",
+          borderWidth: 1,
           borderDash: [6, 4],
           pointRadius: 0,
           fill: false,
@@ -353,8 +353,8 @@ export default function Home() {
         datasets.push({
           label: `${t("resistance")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
           data: Array(extendedLabels.length).fill(val),
-          borderColor: "rgba(239, 68, 68, 0.7)",
-          borderWidth: 1.5,
+          borderColor: "rgba(239, 68, 68, 0.28)",
+          borderWidth: 1,
           borderDash: [6, 4],
           pointRadius: 0,
           fill: false,
