@@ -97,6 +97,7 @@ export default function Home() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [lang, setLang] = useState("en");
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   // Read initial language, history limit and register chart zoom on client mount
   useEffect(() => {
@@ -1786,132 +1787,227 @@ export default function Home() {
           ))}
         </div>
 
-        {/* User profile controls */}
-        <div className="user-panel">
-          {token && user ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", position: "relative" }}>
-                <div style={{ position: "relative", width: "40px", height: "40px", flexShrink: 0 }}>
+      </aside>
+
+      {/* Main Panel Content */}
+      <main className="main-content" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        
+        {/* Global Top Navbar */}
+        <div className="glass-panel" style={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center", 
+          padding: "10px 20px", 
+          borderRadius: "var(--border-radius-lg)",
+          zIndex: 100
+        }}>
+          {/* Left side: Terminal Logo / Welcome */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "16px", fontWeight: "700", display: "flex", alignItems: "center", gap: "6px" }}>
+              📊 {lang === "tr" ? "Piyasa Terminali" : "Market Terminal"}
+            </span>
+          </div>
+          
+          {/* Right side: Language selection & Profile */}
+          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+            {/* Language Selector */}
+            <select
+              value={lang}
+              onChange={(e) => changeLanguage(e.target.value)}
+              style={{
+                background: "rgba(255, 255, 255, 0.03)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                color: "var(--text-main)",
+                borderRadius: "6px",
+                padding: "6px 10px",
+                fontSize: "12px",
+                fontWeight: "600",
+                cursor: "pointer",
+                outline: "none",
+                backdropFilter: "blur(4px)"
+              }}
+            >
+              <option value="en" style={{ background: "#0b0f19" }}>EN</option>
+              <option value="tr" style={{ background: "#0b0f19" }}>TR</option>
+              <option value="de" style={{ background: "#0b0f19" }}>DE</option>
+              <option value="ru" style={{ background: "#0b0f19" }}>RU</option>
+              <option value="zh" style={{ background: "#0b0f19" }}>ZH</option>
+              <option value="es" style={{ background: "#0b0f19" }}>ES</option>
+            </select>
+            
+            {/* User Profile dropdown/pill */}
+            {token && user ? (
+              <div style={{ position: "relative" }}>
+                <div 
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  style={{ 
+                    display: "flex", 
+                    alignItems: "center", 
+                    gap: "8px", 
+                    background: "rgba(255, 255, 255, 0.03)", 
+                    border: "1px solid rgba(255, 255, 255, 0.08)", 
+                    borderRadius: "30px", 
+                    padding: "4px 12px 4px 4px", 
+                    cursor: "pointer",
+                    transition: "var(--transition-smooth)"
+                  }}
+                  className="profile-pill"
+                >
                   {user.profile_picture ? (
                     <img 
                       src={user.profile_picture} 
                       alt="Profile"
-                      style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover", border: "2px solid var(--accent-primary)" }}
+                      style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }}
                     />
                   ) : (
-                    <div style={{ background: "rgba(139, 92, 246, 0.2)", borderRadius: "50%", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyItems: "center", border: "1px solid rgba(255,255,255,0.1)" }}>
-                      <User style={{ width: "20px", color: "var(--accent-primary)", margin: "auto" }} />
+                    <div style={{ background: "rgba(139, 92, 246, 0.2)", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyItems: "center" }}>
+                      <User style={{ width: "16px", color: "var(--accent-primary)", margin: "auto" }} />
                     </div>
                   )}
-                  <label 
-                    htmlFor="profile-upload" 
-                    style={{ position: "absolute", bottom: "-2px", right: "-2px", background: "var(--accent-primary)", borderRadius: "50%", width: "18px", height: "18px", display: "flex", alignItems: "center", justifyItems: "center", cursor: "pointer", border: "1px solid #fff", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}
-                  >
-                    <Camera style={{ width: "10px", color: "#fff", margin: "auto" }} />
-                  </label>
-                  <input 
-                    id="profile-upload" 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleProfilePictureUpload} 
-                    style={{ display: "none" }} 
-                  />
-                </div>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>{t("active_user")}</span>
-                  <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-main)", display: "flex", alignItems: "center" }}>
+                  <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-main)" }}>
                     {user.username}
-                    {user.is_premium && (
-                      <span style={{ 
-                        marginLeft: "6px", 
-                        fontSize: "9px", 
-                        background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", 
-                        color: "#fff", 
-                        padding: "1px 6px", 
-                        borderRadius: "10px", 
-                        fontWeight: "700",
-                        display: "inline-flex",
-                        alignItems: "center"
-                      }}>
-                        ★ {t("premium_badge")}
-                      </span>
-                    )}
                   </span>
+                  {user.is_premium && (
+                    <span style={{ 
+                      fontSize: "9px", 
+                      background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", 
+                      color: "#fff", 
+                      padding: "1px 6px", 
+                      borderRadius: "10px", 
+                      fontWeight: "700"
+                    }}>
+                      ★ {t("premium_badge")}
+                    </span>
+                  )}
                 </div>
+                
+                {/* Dropdown Menu */}
+                {showProfileDropdown && (
+                  <>
+                    <div 
+                      onClick={() => setShowProfileDropdown(false)} 
+                      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }}
+                    />
+                    <div style={{ 
+                      position: "absolute", 
+                      right: 0, 
+                      top: "42px", 
+                      background: "rgba(17, 24, 39, 0.95)", 
+                      border: "1px solid rgba(255, 255, 255, 0.08)", 
+                      borderRadius: "var(--border-radius-md)", 
+                      width: "220px", 
+                      padding: "12px", 
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.5)", 
+                      display: "flex", 
+                      flexDirection: "column", 
+                      gap: "8px", 
+                      zIndex: 999,
+                      backdropFilter: "blur(16px)"
+                    }}>
+                      {/* Avatar Upload Camera button */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "8px", marginBottom: "4px" }}>
+                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>{t("active_user")}</span>
+                        <label 
+                          htmlFor="navbar-profile-upload" 
+                          style={{ marginLeft: "auto", background: "var(--accent-primary)", borderRadius: "50%", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyItems: "center", cursor: "pointer" }}
+                        >
+                          <Camera style={{ width: "10px", color: "#fff", margin: "auto" }} />
+                        </label>
+                        <input 
+                          id="navbar-profile-upload" 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={(e) => { handleProfilePictureUpload(e); setShowProfileDropdown(false); }} 
+                          style={{ display: "none" }} 
+                        />
+                      </div>
+
+                      <button 
+                        onClick={() => { handlePremiumToggle(); setShowProfileDropdown(false); }} 
+                        className="btn-secondary" 
+                        style={{ 
+                          width: "100%", 
+                          justifyContent: "flex-start", 
+                          fontSize: "12px",
+                          padding: "6px 12px",
+                          border: user.is_premium ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid rgba(255, 255, 255, 0.08)",
+                          background: user.is_premium ? "rgba(245, 158, 11, 0.05)" : "rgba(255, 255, 255, 0.02)"
+                        }}
+                      >
+                        <span style={{ color: user.is_premium ? "#f59e0b" : "var(--text-muted)", marginRight: "8px", fontWeight: "700" }}>★</span>
+                        {user.is_premium ? t("premium_downgrade") : t("premium_upgrade")}
+                      </button>
+
+                      {user.email === "arda.demirtas2002@gmail.com" && (
+                        <button 
+                          onClick={() => {
+                            setShowAdminModal(true);
+                            fetchAdminData();
+                            setShowProfileDropdown(false);
+                          }} 
+                          className="btn-secondary" 
+                          style={{ 
+                            width: "100%", 
+                            justifyContent: "flex-start",
+                            fontSize: "12px",
+                            padding: "6px 12px",
+                            border: "1px solid rgba(245, 158, 11, 0.4)",
+                            background: "rgba(245, 158, 11, 0.08)",
+                            color: "#f59e0b",
+                            fontWeight: "600"
+                          }}
+                        >
+                          <Shield style={{ width: "12px" }} /> Admin Panel
+                        </button>
+                      )}
+
+                      <button 
+                        onClick={() => { setShowPasswordModal(true); setShowProfileDropdown(false); }} 
+                        className="btn-secondary" 
+                        style={{ width: "100%", justifyContent: "flex-start", fontSize: "12px", padding: "6px 12px" }}
+                      >
+                        <Key style={{ width: "12px" }} /> {t("change_password")}
+                      </button>
+
+                      <button 
+                        onClick={() => { handleDeleteAccount(); setShowProfileDropdown(false); }} 
+                        className="btn-danger" 
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", padding: "6px 12px" }}
+                      >
+                        <UserMinus style={{ width: "12px" }} /> {t("close_account")}
+                      </button>
+
+                      <button 
+                        onClick={() => { handleLogout(); setShowProfileDropdown(false); }} 
+                        className="btn-secondary" 
+                        style={{ width: "100%", justifyContent: "flex-start", fontSize: "12px", padding: "6px 12px", borderTop: "1px solid rgba(255,255,255,0.05)", borderRadius: 0, marginTop: "4px" }}
+                      >
+                        <LogOut style={{ width: "12px" }} /> {t("sign_out")}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
-
-              <button 
-                onClick={handlePremiumToggle} 
-                className="btn-secondary" 
-                style={{ 
-                  width: "100%", 
-                  justifyContent: "flex-start", 
-                  border: user.is_premium ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid rgba(255, 255, 255, 0.08)",
-                  background: user.is_premium ? "rgba(245, 158, 11, 0.05)" : "rgba(255, 255, 255, 0.02)"
-                }}
-              >
-                <span style={{ color: user.is_premium ? "#f59e0b" : "var(--text-muted)", marginRight: "8px", fontWeight: "700" }}>★</span>
-                {user.is_premium ? t("premium_downgrade") : t("premium_upgrade")}
-              </button>
-
-              {user.email === "arda.demirtas2002@gmail.com" && (
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <button 
-                  onClick={() => {
-                    setShowAdminModal(true);
-                    fetchAdminData();
-                  }} 
-                  className="btn-secondary" 
-                  style={{ 
-                    width: "100%", 
-                    justifyContent: "flex-start",
-                    border: "1px solid rgba(245, 158, 11, 0.4)",
-                    background: "rgba(245, 158, 11, 0.08)",
-                    color: "#f59e0b",
-                    fontWeight: "600"
-                  }}
+                  onClick={() => { setAuthMode("login"); setShowAuthModal(true); }} 
+                  className="btn-primary" 
+                  style={{ height: "32px", fontSize: "12px", padding: "0 14px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
                 >
-                  <Shield style={{ width: "14px" }} /> Admin Panel
+                  <LogIn style={{ width: "14px" }} /> {t("sign_in")}
                 </button>
-              )}
-
-              <button onClick={() => setShowPasswordModal(true)} className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }}>
-                <Key style={{ width: "14px" }} /> {t("change_password")}
-              </button>
-              <button onClick={handleDeleteAccount} className="btn-danger" style={{ width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: "6px" }}>
-                <UserMinus style={{ width: "14px" }} /> {t("close_account")}
-              </button>
-              <button onClick={handleLogout} className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start", marginTop: "10px" }}>
-                <LogOut style={{ width: "14px" }} /> {t("sign_out")}
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <p style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: "1.4" }}>
-                {lang === "tr" 
-                  ? "Tahminleri kaydetmek, favorileri özelleştirmek ve yorum yazmak için giriş yapın." 
-                  : "Sign in to customize your watchlist, post comments, and view advanced predictions."}
-              </p>
-              <button 
-                onClick={() => { setAuthMode("login"); setShowAuthModal(true); }} 
-                className="btn-primary" 
-                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
-              >
-                <LogIn style={{ width: "16px" }} /> {t("sign_in")}
-              </button>
-              <button 
-                onClick={() => { setAuthMode("register"); setShowAuthModal(true); }} 
-                className="btn-secondary" 
-                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
-              >
-                <UserPlus style={{ width: "16px" }} /> {t("create_account")}
-              </button>
-            </div>
-          )}
+                <button 
+                  onClick={() => { setAuthMode("register"); setShowAuthModal(true); }} 
+                  className="btn-secondary" 
+                  style={{ height: "32px", fontSize: "12px", padding: "0 14px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+                >
+                  <UserPlus style={{ width: "14px" }} /> {t("create_account")}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </aside>
-
-      {/* Main Panel Content */}
-      <main className="main-content">
         {showScreener ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "20px", height: "100%" }}>
             {/* Screener Header */}
@@ -2241,32 +2337,8 @@ export default function Home() {
                   )}
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-                {/* Language Dropdown Selector */}
-                <select
-                  value={lang}
-                  onChange={(e) => changeLanguage(e.target.value)}
-                  style={{
-                    background: "rgba(255, 255, 255, 0.03)",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                    color: "var(--text-main)",
-                    borderRadius: "6px",
-                    padding: "6px 10px",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    outline: "none",
-                    backdropFilter: "blur(4px)"
-                  }}
-                >
-                  <option value="en" style={{ background: "#110b29", color: "#fff" }}>English</option>
-                  <option value="tr" style={{ background: "#110b29", color: "#fff" }}>Türkçe</option>
-                  <option value="de" style={{ background: "#110b29", color: "#fff" }}>Deutsch</option>
-                  <option value="ru" style={{ background: "#110b29", color: "#fff" }}>Русский</option>
-                  <option value="zh" style={{ background: "#110b29", color: "#fff" }}>中文</option>
-                  <option value="es" style={{ background: "#110b29", color: "#fff" }}>Español</option>
-                </select>
 
+              <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
                 <div className="header-price-panel">
                   <div className="asset-price">
                     ${predictionData && predictionData.current_price !== undefined && predictionData.current_price !== null 
