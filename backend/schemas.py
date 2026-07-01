@@ -166,3 +166,33 @@ class AutoTrainSymbolResponse(BaseModel):
 class AutoTrainSymbolAdd(BaseModel):
     symbol: str
 
+
+class MarketScreenerResponse(BaseModel):
+    id: int
+    symbol: str
+    name: Optional[str] = None
+    price: float
+    predicted_change: Optional[float] = None
+    rsi: Optional[float] = None
+    macd_signal: Optional[str] = None
+    updated_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+class NewsArticleResponse(BaseModel):
+    title: str
+    publisher: str
+    link: str
+    time: int
+    score: float
+    rating: str
+
+
+class NewsSentimentResponse(BaseModel):
+    symbol: str
+    sentiment_score: float
+    sentiment_class: str
+    articles: List[NewsArticleResponse]
+
