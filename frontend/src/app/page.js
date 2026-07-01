@@ -137,6 +137,12 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
+  const [isVerifyingRegister, setIsVerifyingRegister] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  
+  const [isVerifyingPasswordChange, setIsVerifyingPasswordChange] = useState(false);
+  const [passwordVerificationCode, setPasswordVerificationCode] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // App State
@@ -867,23 +873,57 @@ export default function Home() {
     }
   };
 
-  // API Call: Register
+  // API Call: Register Request
   const handleRegister = async (e) => {
     e.preventDefault();
     setAuthError("");
     setAuthLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register/request`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password })
       });
       const data = await res.json();
       if (res.ok) {
-        // Auto-login after registration
-        handleLogin(e);
+        setRegisteredEmail(email);
+        setIsVerifyingRegister(true);
       } else {
         setAuthError(data.detail || "Registration failed. Try again.");
+      }
+    } catch (err) {
+      setAuthError("Could not connect to authentication server.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // API Call: Register Confirmation
+  const handleConfirmRegister = async (e) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: registeredEmail, code: verificationCode })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem("token", data.access_token);
+        setToken(data.access_token);
+        fetchWatchlist(data.access_token);
+        fetchCurrentUser(data.access_token);
+        // Clear forms
+        setUsername("");
+        setPassword("");
+        setEmail("");
+        setVerificationCode("");
+        setRegisteredEmail("");
+        setIsVerifyingRegister(false);
+      } else {
+        setAuthError(data.detail || "Invalid or expired verification code.");
       }
     } catch (err) {
       setAuthError("Could not connect to authentication server.");
@@ -971,13 +1011,13 @@ export default function Home() {
     }
   };
 
-  // API Call: Change Password
-  const handleChangePassword = async (e) => {
+  // API Call: Change Password Request
+  const handleChangePasswordRequest = async (e) => {
     e.preventDefault();
     setPasswordError("");
     setPasswordSuccess("");
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/change-password/request`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -987,12 +1027,40 @@ export default function Home() {
       });
       const data = await res.json();
       if (res.ok) {
+        setPasswordSuccess("Verification code sent to your email.");
+        setIsVerifyingPasswordChange(true);
+      } else {
+        setPasswordError(data.detail || "Failed to initiate password change.");
+      }
+    } catch (err) {
+      setPasswordError("Connection failed.");
+    }
+  };
+
+  // API Call: Confirm Password Change
+  const handleConfirmPasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/change-password/confirm`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ code: passwordVerificationCode })
+      });
+      const data = await res.json();
+      if (res.ok) {
         setPasswordSuccess("Password updated successfully.");
         setOldPassword("");
         setNewPassword("");
+        setPasswordVerificationCode("");
+        setIsVerifyingPasswordChange(false);
         setTimeout(() => setShowPasswordModal(false), 2000);
       } else {
-        setPasswordError(data.detail || "Failed to change password.");
+        setPasswordError(data.detail || "Invalid or expired verification code.");
       }
     } catch (err) {
       setPasswordError("Connection failed.");
@@ -1242,71 +1310,119 @@ export default function Home() {
             </p>
           </div>
           
-          <form onSubmit={authMode === "login" ? handleLogin : handleRegister} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div style={{ position: "relative" }}>
-              <User style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
-              <input
-                type="text"
-                placeholder={t("username")}
-                className="input-field"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                style={{ paddingLeft: "42px" }}
-                required
-              />
-            </div>
-
-            {authMode === "register" && (
+          {isVerifyingRegister ? (
+            <form onSubmit={handleConfirmRegister} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ textAlign: "center", color: "var(--text-main)", fontSize: "14px", marginBottom: "10px", lineHeight: "1.5" }}>
+                {lang === "tr" 
+                  ? `Lütfen ${registeredEmail} adresine gönderilen 6 haneli doğrulama kodunu girin.` 
+                  : `Please enter the 6-digit verification code sent to ${registeredEmail}.`}
+              </div>
               <div style={{ position: "relative" }}>
-                <Mail style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
+                <Lock style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
                 <input
-                  type="email"
-                  placeholder={t("email")}
+                  type="text"
+                  placeholder={lang === "tr" ? "Doğrulama Kodu" : "Verification Code"}
                   className="input-field"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  value={verificationCode}
+                  onChange={e => setVerificationCode(e.target.value)}
+                  style={{ paddingLeft: "42px", letterSpacing: "4px", textAlign: "center", fontWeight: "bold" }}
+                  maxLength={6}
+                  required
+                />
+              </div>
+
+              {authError && (
+                <div style={{ color: "var(--accent-danger)", fontSize: "13px", textAlign: "center", fontWeight: "500" }}>
+                  {authError}
+                </div>
+              )}
+
+              <button type="submit" className="btn-primary" disabled={authLoading}>
+                {authLoading ? <RefreshCw className="animate-spin" style={{ width: "18px" }} /> : null}
+                {lang === "tr" ? "Doğrula ve Kaydol" : "Verify & Sign Up"}
+              </button>
+
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={() => {
+                  setIsVerifyingRegister(false);
+                  setAuthError("");
+                  setVerificationCode("");
+                }}
+              >
+                {lang === "tr" ? "Geri Dön" : "Go Back"}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={authMode === "login" ? handleLogin : handleRegister} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ position: "relative" }}>
+                <User style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
+                <input
+                  type="text"
+                  placeholder={t("username")}
+                  className="input-field"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
                   style={{ paddingLeft: "42px" }}
                   required
                 />
               </div>
-            )}
 
-            <div style={{ position: "relative" }}>
-              <Lock style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
-              <input
-                type="password"
-                placeholder={t("password")}
-                className="input-field"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                style={{ paddingLeft: "42px" }}
-                required
-              />
-            </div>
+              {authMode === "register" && (
+                <div style={{ position: "relative" }}>
+                  <Mail style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
+                  <input
+                    type="email"
+                    placeholder={t("email")}
+                    className="input-field"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    style={{ paddingLeft: "42px" }}
+                    required
+                  />
+                </div>
+              )}
 
-            {authError && (
-              <div style={{ color: "var(--accent-danger)", fontSize: "13px", textAlign: "center", fontWeight: "500" }}>
-                {authError}
+              <div style={{ position: "relative" }}>
+                <Lock style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
+                <input
+                  type="password"
+                  placeholder={t("password")}
+                  className="input-field"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  style={{ paddingLeft: "42px" }}
+                  required
+                />
               </div>
-            )}
 
-            <button type="submit" className="btn-primary" disabled={authLoading}>
-              {authLoading ? <RefreshCw className="animate-spin" style={{ width: "18px" }} /> : null}
-              {authMode === "login" ? t("sign_in") : t("create_account")}
-            </button>
-          </form>
+              {authError && (
+                <div style={{ color: "var(--accent-danger)", fontSize: "13px", textAlign: "center", fontWeight: "500" }}>
+                  {authError}
+                </div>
+              )}
 
-          <div className="auth-toggle">
-            {authMode === "login" ? (
-              <>
-                {t("auth_no_account")} <span onClick={() => { setAuthMode("register"); setAuthError(""); }}>{t("create_account")}</span>
-              </>
-            ) : (
-              <>
-                {t("auth_have_account")} <span onClick={() => { setAuthMode("login"); setAuthError(""); }}>{t("sign_in")}</span>
-              </>
-            )}
-          </div>
+              <button type="submit" className="btn-primary" disabled={authLoading}>
+                {authLoading ? <RefreshCw className="animate-spin" style={{ width: "18px" }} /> : null}
+                {authMode === "login" ? t("sign_in") : t("create_account")}
+              </button>
+            </form>
+          )}
+
+          {!isVerifyingRegister && (
+            <div className="auth-toggle">
+              {authMode === "login" ? (
+                <>
+                  {t("auth_no_account")} <span onClick={() => { setAuthMode("register"); setAuthError(""); }}>{t("create_account")}</span>
+                </>
+              ) : (
+                <>
+                  {t("auth_have_account")} <span onClick={() => { setAuthMode("login"); setAuthError(""); }}>{t("sign_in")}</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -2320,30 +2436,85 @@ export default function Home() {
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
           <div className="glass-panel" style={{ width: "90%", maxWidth: "400px" }}>
             <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px" }}>{t("update_password_title")}</h3>
-            <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-              <input
-                type="password"
-                placeholder={t("old_password")}
-                className="input-field"
-                value={oldPassword}
-                onChange={e => setOldPassword(e.target.value)}
-                required
-              />
-              <input
-                type="password"
-                placeholder={t("new_password")}
-                className="input-field"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                required
-              />
-              {passwordError && <div style={{ color: "var(--accent-danger)", fontSize: "13px" }}>{passwordError}</div>}
-              {passwordSuccess && <div style={{ color: "var(--accent-success)", fontSize: "13px" }}>{passwordSuccess}</div>}
-              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                <button type="submit" className="btn-primary">{t("confirm")}</button>
-                <button type="button" onClick={() => { setShowPasswordModal(false); setPasswordError(""); setPasswordSuccess(""); }} className="btn-secondary">{t("cancel_btn")}</button>
-              </div>
-            </form>
+            
+            {isVerifyingPasswordChange ? (
+              <form onSubmit={handleConfirmPasswordChange} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                <div style={{ fontSize: "13px", color: "var(--text-main)", lineHeight: "1.5", textAlign: "center" }}>
+                  {lang === "tr" 
+                    ? "Lütfen e-posta adresinize gönderilen 6 haneli şifre değiştirme doğrulama kodunu girin." 
+                    : "Please enter the 6-digit password change verification code sent to your email."}
+                </div>
+                <input
+                  type="text"
+                  placeholder={lang === "tr" ? "Doğrulama Kodu" : "Verification Code"}
+                  className="input-field"
+                  value={passwordVerificationCode}
+                  onChange={e => setPasswordVerificationCode(e.target.value)}
+                  style={{ textAlign: "center", letterSpacing: "4px", fontWeight: "bold" }}
+                  maxLength={6}
+                  required
+                />
+                
+                {passwordError && <div style={{ color: "var(--accent-danger)", fontSize: "13px" }}>{passwordError}</div>}
+                {passwordSuccess && <div style={{ color: "var(--accent-success)", fontSize: "13px" }}>{passwordSuccess}</div>}
+                
+                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                  <button type="submit" className="btn-primary">{lang === "tr" ? "Doğrula ve Güncelle" : "Verify & Update"}</button>
+                  <button 
+                    type="button" 
+                    onClick={() => { 
+                      setIsVerifyingPasswordChange(false); 
+                      setPasswordError(""); 
+                      setPasswordSuccess(""); 
+                      setPasswordVerificationCode("");
+                    }} 
+                    className="btn-secondary"
+                  >
+                    {lang === "tr" ? "Geri Dön" : "Go Back"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleChangePasswordRequest} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                <input
+                  type="password"
+                  placeholder={t("old_password")}
+                  className="input-field"
+                  value={oldPassword}
+                  onChange={e => setOldPassword(e.target.value)}
+                  required
+                />
+                <input
+                  type="password"
+                  placeholder={t("new_password")}
+                  className="input-field"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  required
+                />
+                
+                {passwordError && <div style={{ color: "var(--accent-danger)", fontSize: "13px" }}>{passwordError}</div>}
+                {passwordSuccess && <div style={{ color: "var(--accent-success)", fontSize: "13px" }}>{passwordSuccess}</div>}
+                
+                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                  <button type="submit" className="btn-primary">{t("confirm")}</button>
+                  <button 
+                    type="button" 
+                    onClick={() => { 
+                      setShowPasswordModal(false); 
+                      setPasswordError(""); 
+                      setPasswordSuccess(""); 
+                      setOldPassword("");
+                      setNewPassword("");
+                      setIsVerifyingPasswordChange(false);
+                    }} 
+                    className="btn-secondary"
+                  >
+                    {t("cancel_btn")}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
