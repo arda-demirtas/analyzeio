@@ -1934,39 +1934,96 @@ export default function Home() {
               </div>
 
               {/* Filtering Controls */}
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <div style={{ 
+                display: "flex", 
+                background: "rgba(0, 0, 0, 0.25)", 
+                padding: "4px", 
+                borderRadius: "30px", 
+                border: "1px solid rgba(255, 255, 255, 0.05)",
+                width: "fit-content",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "4px"
+              }}>
                 <button 
                   onClick={() => setScreenerFilter("all")} 
-                  className={screenerFilter === "all" ? "btn-primary" : "btn-secondary"}
-                  style={{ height: "30px", fontSize: "12px", padding: "0 12px" }}
+                  style={{
+                    background: screenerFilter === "all" ? "var(--accent-primary)" : "transparent",
+                    color: screenerFilter === "all" ? "#fff" : "var(--text-muted)",
+                    border: "none",
+                    padding: "6px 14px",
+                    borderRadius: "20px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "var(--transition-smooth)"
+                  }}
                 >
                   {t("screener_all")}
                 </button>
                 <button 
                   onClick={() => setScreenerFilter("bullish")} 
-                  className={screenerFilter === "bullish" ? "btn-primary" : "btn-secondary"}
-                  style={{ height: "30px", fontSize: "12px", padding: "0 12px", border: screenerFilter === "bullish" ? "1px solid var(--accent-success)" : "none" }}
+                  style={{
+                    background: screenerFilter === "bullish" ? "var(--accent-success)" : "transparent",
+                    color: screenerFilter === "bullish" ? "#fff" : "var(--text-muted)",
+                    border: "none",
+                    padding: "6px 14px",
+                    borderRadius: "20px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "var(--transition-smooth)"
+                  }}
                 >
                   {t("screener_bullish")}
                 </button>
                 <button 
                   onClick={() => setScreenerFilter("bearish")} 
-                  className={screenerFilter === "bearish" ? "btn-primary" : "btn-secondary"}
-                  style={{ height: "30px", fontSize: "12px", padding: "0 12px", border: screenerFilter === "bearish" ? "1px solid var(--accent-danger)" : "none" }}
+                  style={{
+                    background: screenerFilter === "bearish" ? "var(--accent-danger)" : "transparent",
+                    color: screenerFilter === "bearish" ? "#fff" : "var(--text-muted)",
+                    border: "none",
+                    padding: "6px 14px",
+                    borderRadius: "20px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "var(--transition-smooth)"
+                  }}
                 >
                   {t("screener_bearish")}
                 </button>
                 <button 
                   onClick={() => setScreenerFilter("oversold")} 
-                  className={screenerFilter === "oversold" ? "btn-primary" : "btn-secondary"}
-                  style={{ height: "30px", fontSize: "12px", padding: "0 12px" }}
+                  style={{
+                    background: screenerFilter === "oversold" ? "rgba(16, 185, 129, 0.2)" : "transparent",
+                    color: screenerFilter === "oversold" ? "var(--accent-success)" : "var(--text-muted)",
+                    border: "none",
+                    padding: "6px 14px",
+                    borderRadius: "20px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "var(--transition-smooth)",
+                    boxShadow: screenerFilter === "oversold" ? "inset 0 0 0 1px rgba(16, 185, 129, 0.4)" : "none"
+                  }}
                 >
                   {t("screener_oversold")}
                 </button>
                 <button 
                   onClick={() => setScreenerFilter("overbought")} 
-                  className={screenerFilter === "overbought" ? "btn-primary" : "btn-secondary"}
-                  style={{ height: "30px", fontSize: "12px", padding: "0 12px" }}
+                  style={{
+                    background: screenerFilter === "overbought" ? "rgba(239, 68, 68, 0.2)" : "transparent",
+                    color: screenerFilter === "overbought" ? "var(--accent-danger)" : "var(--text-muted)",
+                    border: "none",
+                    padding: "6px 14px",
+                    borderRadius: "20px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "var(--transition-smooth)",
+                    boxShadow: screenerFilter === "overbought" ? "inset 0 0 0 1px rgba(239, 68, 68, 0.4)" : "none"
+                  }}
                 >
                   {t("screener_overbought")}
                 </button>
