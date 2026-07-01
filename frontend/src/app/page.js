@@ -194,7 +194,7 @@ export default function Home() {
     const highs = history.map(h => h.high !== null && h.high !== undefined ? h.high : h.close);
     const lows = history.map(h => h.low !== null && h.low !== undefined ? h.low : h.close);
     
-    const windowSize = 5;
+    const windowSize = history.length > 300 ? 20 : 5;
     const peaks = [];
     const valleys = [];
     
