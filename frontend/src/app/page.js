@@ -96,11 +96,18 @@ export default function Home() {
   const [user, setUser] = useState(null);
   const [lang, setLang] = useState("en");
 
-  // Read initial language on client mount
+  // Read initial language and history limit on client mount
   useEffect(() => {
     const savedLang = localStorage.getItem("lang");
     if (savedLang) {
       setLang(savedLang);
+    }
+    const savedLimit = localStorage.getItem("historyLimit");
+    if (savedLimit) {
+      const parsed = parseInt(savedLimit, 10);
+      if (!isNaN(parsed) && parsed >= 180 && parsed <= 720) {
+        setHistoryLimit(parsed);
+      }
     }
   }, []);
 
@@ -134,6 +141,7 @@ export default function Home() {
   const [chartLoading, setChartLoading] = useState(false);
   const [chartType, setChartType] = useState("line");
   const [isChartFullscreen, setIsChartFullscreen] = useState(false);
+  const [historyLimit, setHistoryLimit] = useState(300);
 
   // Comments state variables
   const [comments, setComments] = useState([]);
@@ -198,7 +206,7 @@ export default function Home() {
     }
   }, [activeSymbol, chartInterval, token, lang]);
 
-  // 3. Render charts when predictionData or chartHistory updates
+  // 3. Render charts when predictionData, chartHistory, or historyLimit updates
   useEffect(() => {
     if (!predictionData || !chartHistory || chartHistory.length === 0) return;
     renderCharts();
@@ -207,7 +215,7 @@ export default function Home() {
     return () => {
       destroyCharts();
     };
-  }, [predictionData, chartHistory]);
+  }, [predictionData, chartHistory, historyLimit]);
 
   // Handle price chart resize and body overflow on fullscreen state toggle
   useEffect(() => {
@@ -315,7 +323,7 @@ export default function Home() {
     const ctxRsi = rsiChartRef.current?.getContext("2d");
     const ctxMacd = macdChartRef.current?.getContext("2d");
 
-    const history = chartHistory;
+    const history = chartHistory.slice(-historyLimit);
     const labels = history.map(item => item.date);
     const closePrices = history.map(item => item.close);
     const ema20Prices = history.map(item => item.ema_20);
@@ -1753,6 +1761,31 @@ export default function Home() {
                     
                     {/* Price Chart Header Actions */}
                     <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                      {/* Candle Count Selector (Slider) */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255, 255, 255, 0.03)", padding: "4px 10px", borderRadius: "var(--border-radius-md)", border: "1px solid rgba(255, 255, 255, 0.06)", height: "30px" }}>
+                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600", whiteSpace: "nowrap" }}>
+                          {lang === "tr" ? "Kapanış:" : "Candles:"} <span style={{ color: "var(--accent-primary)", fontFamily: "monospace" }}>{historyLimit}</span>
+                        </span>
+                        <input
+                          type="range"
+                          min="180"
+                          max="720"
+                          step="10"
+                          value={historyLimit}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            setHistoryLimit(val);
+                            localStorage.setItem("historyLimit", val);
+                          }}
+                          style={{
+                            width: "80px",
+                            cursor: "pointer",
+                            accentColor: "var(--accent-primary)",
+                            verticalAlign: "middle"
+                          }}
+                        />
+                      </div>
+
                       {/* Chart Type Toggle (Line vs Candle) */}
                       <div style={{ display: "flex", gap: "2px", background: "rgba(255, 255, 255, 0.03)", padding: "2px", borderRadius: "6px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
                         <button
