@@ -84,7 +84,7 @@ def main():
         # 5. Recreate PM2 configurations with new environment variables
         "pm2 delete backend || true",
         "pm2 delete crypto-daemon || true",
-        f"DATABASE_URL=\"postgresql://analyzeio_user:p%40ssword_analyze_io_99@localhost/analyzeio\" pm2 start venv/bin/python --name \"backend\" --cwd {DEST_DIR} -- -m backend.main",
+        f"DATABASE_URL=\"postgresql://analyzeio_user:p%40ssword_analyze_io_99@localhost/analyzeio\" SMTP_USER=\"arda.demirtas2002@gmail.com\" SMTP_PASSWORD=\"zptd oiru hasi wqtz\" pm2 start venv/bin/python --name \"backend\" --cwd {DEST_DIR} -- -m backend.main",
         f"DATABASE_URL=\"postgresql://analyzeio_user:p%40ssword_analyze_io_99@localhost/analyzeio\" pm2 start {DEST_DIR}/backend/crypto_daemon.py --name \"crypto-daemon\" --cwd {DEST_DIR} --interpreter {DEST_DIR}/venv/bin/python",
         "pm2 start frontend || pm2 restart frontend",
         "pm2 status"
