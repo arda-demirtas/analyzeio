@@ -96,7 +96,7 @@ export default function Home() {
   const [user, setUser] = useState(null);
   const [lang, setLang] = useState("en");
 
-  // Read initial language and history limit on client mount
+  // Read initial language, history limit and register chart zoom on client mount
   useEffect(() => {
     const savedLang = localStorage.getItem("lang");
     if (savedLang) {
@@ -109,6 +109,17 @@ export default function Home() {
         setHistoryLimit(parsed);
       }
     }
+    
+    // Dynamically register zoom plugin on the client side
+    const initZoomPlugin = async () => {
+      try {
+        const zoomPlugin = (await import("chartjs-plugin-zoom")).default;
+        Chart.register(zoomPlugin);
+      } catch (err) {
+        console.error("Zoom plugin registration failed:", err);
+      }
+    };
+    initZoomPlugin();
   }, []);
 
   const changeLanguage = (newLang) => {
@@ -206,7 +217,7 @@ export default function Home() {
     }
   }, [activeSymbol, chartInterval, token, lang]);
 
-  // 3. Render charts when predictionData, chartHistory, or historyLimit updates
+  // 3. Render charts when predictionData, chartHistory, historyLimit, or isChartFullscreen updates
   useEffect(() => {
     if (!predictionData || !chartHistory || chartHistory.length === 0) return;
     renderCharts();
@@ -215,7 +226,7 @@ export default function Home() {
     return () => {
       destroyCharts();
     };
-  }, [predictionData, chartHistory, historyLimit]);
+  }, [predictionData, chartHistory, historyLimit, isChartFullscreen]);
 
   // Handle price chart resize and body overflow on fullscreen state toggle
   useEffect(() => {
@@ -476,6 +487,23 @@ export default function Home() {
             tooltip: {
               mode: "index",
               intersect: false,
+            },
+            zoom: {
+              zoom: {
+                wheel: {
+                  enabled: isChartFullscreen,
+                  speed: 0.05,
+                },
+                pinch: {
+                  enabled: isChartFullscreen
+                },
+                mode: "x",
+              },
+              pan: {
+                enabled: isChartFullscreen,
+                mode: "x",
+                modifierKey: null,
+              }
             }
           },
           scales: {
