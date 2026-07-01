@@ -82,7 +82,9 @@ export const TRANSLATIONS = {
     table_error: "Error",
     table_direction: "Dir.",
     table_pending: "Pending",
-    table_no_logs: "No predictions logged yet for this asset."
+    table_no_logs: "No predictions logged yet for this asset.",
+    support: "Support",
+    resistance: "Resistance"
   },
   tr: {
     premium_badge: "Premium",
@@ -167,7 +169,9 @@ export const TRANSLATIONS = {
     table_error: "Hata",
     table_direction: "Yön",
     table_pending: "Beklemede",
-    table_no_logs: "Bu varlık için henüz kaydedilmiş tahmin yok."
+    table_no_logs: "Bu varlık için henüz kaydedilmiş tahmin yok.",
+    support: "Destek",
+    resistance: "Direnç"
   },
   de: {
     premium_badge: "Premium",
@@ -252,7 +256,9 @@ export const TRANSLATIONS = {
     table_error: "Fehler",
     table_direction: "Richtung",
     table_pending: "Ausstehend",
-    table_no_logs: "Noch keine Vorhersagen für dieses Asset protokolliert."
+    table_no_logs: "Noch keine Vorhersagen für dieses Asset protokolliert.",
+    support: "Unterstützung",
+    resistance: "Widerstand"
   },
   ru: {
     premium_badge: "Премиум",
@@ -329,7 +335,17 @@ export const TRANSLATIONS = {
     confirm: "Подтвердить",
     bullish: "Бычий",
     bearish: "Медвежий",
-    neutral: "Нейтрально"
+    neutral: "Нейтрально",
+    accuracy_title: "История точности прогнозов",
+    table_target_date: "Целевая дата",
+    table_predicted: "Прогноз",
+    table_actual: "Факт",
+    table_error: "Ошибка",
+    table_direction: "Напр.",
+    table_pending: "В ожидании",
+    table_no_logs: "Прогнозы для этого актива еще не зарегистрированы.",
+    support: "Поддержка",
+    resistance: "Сопротивление"
   },
   zh: {
     premium_badge: "高级版",
@@ -414,7 +430,9 @@ export const TRANSLATIONS = {
     table_error: "误差",
     table_direction: "方向",
     table_pending: "待定",
-    table_no_logs: "该资产尚无记录的预测。"
+    table_no_logs: "该资产尚无记录的预测。",
+    support: "支撑位",
+    resistance: "阻力位"
   },
   es: {
     premium_badge: "Premium",
@@ -491,6 +509,16 @@ export const TRANSLATIONS = {
     confirm: "Confirmar",
     bullish: "Alcista",
     bearish: "Bajista",
-    neutral: "Neutral"
+    neutral: "Neutral",
+    accuracy_title: "Historial de precisión de predicción",
+    table_target_date: "Fecha objetivo",
+    table_predicted: "Predicho",
+    table_actual: "Real",
+    table_error: "Error",
+    table_direction: "Dir.",
+    table_pending: "Pendiente",
+    table_no_logs: "Aún no hay predicciones registradas para este activo.",
+    support: "Soporte",
+    resistance: "Resistencia"
   }
 };
