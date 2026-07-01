@@ -25,6 +25,7 @@ def get_db():
 
 def run_migrations():
     from sqlalchemy import text, inspect
+    from backend.models import User, Watchlist, Comment, PredictionLog, AutoTrainSymbol, VerificationCode, MarketScreener
     db = SessionLocal()
     try:
         # Inspect database schema in a database-agnostic way
@@ -44,7 +45,7 @@ def run_migrations():
         Base.metadata.create_all(bind=engine)
         
         # Populate default auto-train symbols if table is empty
-        from backend.models import AutoTrainSymbol
+        from backend.models import AutoTrainSymbol, MarketScreener
         from backend.config import AUTO_TRAINED_SYMBOLS
         count = db.query(AutoTrainSymbol).count()
         if count == 0:
@@ -52,6 +53,22 @@ def run_migrations():
                 db.add(AutoTrainSymbol(symbol=sym))
             db.commit()
             print(f"Populated database with {len(AUTO_TRAINED_SYMBOLS)} default auto-train symbols.")
+
+        screener_count = db.query(MarketScreener).count()
+        if screener_count == 0:
+            from backend.predictor import TICKER_NAMES
+            for sym in AUTO_TRAINED_SYMBOLS:
+                name = TICKER_NAMES.get(sym, sym)
+                db.add(MarketScreener(
+                    symbol=sym,
+                    name=name,
+                    price=0.0,
+                    predicted_change=0.0,
+                    rsi=50.0,
+                    macd_signal="NEUTRAL"
+                ))
+            db.commit()
+            print(f"Populated database with {len(AUTO_TRAINED_SYMBOLS)} default market screener entries.")
     except Exception as e:
         print(f"Migration error: {e}")
     finally:
