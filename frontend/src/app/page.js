@@ -2641,6 +2641,29 @@ export default function Home() {
                         })()}
                       </div>
 
+                      {/* Volume Info Card */}
+                      <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
+                        <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{lang === "tr" ? "Hacim" : "Volume"}</span>
+                        <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
+                          {activeHistory[activeHistory.length - 1]?.volume?.toLocaleString("en-US") || "---"}
+                        </span>
+                        {(() => {
+                          const history = activeHistory;
+                          if (!history || history.length < 20) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+                          const lastVol = history[history.length - 1]?.volume;
+                          const last20 = history.slice(-20);
+                          const avgVol = last20.reduce((sum, item) => sum + (item.volume || 0), 0) / 20;
+                          if (!lastVol || !avgVol) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+                          
+                          if (lastVol > avgVol * 1.5) {
+                            return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Yüksek Hacim" : "High Volume"}</span>;
+                          } else if (lastVol < avgVol * 0.5) {
+                            return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Düşük Hacim" : "Low Volume"}</span>;
+                          }
+                          return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Normal Hacim" : "Normal Volume"}</span>;
+                        })()}
+                      </div>
+
                       {(() => {
                         const canShowSR = (activeSymbol === "BTC-USD") || (user && user.is_premium);
                         if (canShowSR) {
