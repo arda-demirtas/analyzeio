@@ -1802,9 +1802,10 @@ export default function Home() {
           zIndex: 100
         }}>
           {/* Left side: Terminal Logo / Welcome */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "16px", fontWeight: "700", display: "flex", alignItems: "center", gap: "6px" }}>
-              📊 {lang === "tr" ? "Piyasa Terminali" : "Market Terminal"}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Briefcase style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} />
+            <span style={{ fontSize: "16px", fontWeight: "700", display: "flex", alignItems: "center" }}>
+              {lang === "tr" ? "Piyasa Terminali" : "Market Terminal"}
             </span>
           </div>
           
