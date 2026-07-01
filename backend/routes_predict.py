@@ -186,3 +186,50 @@ def get_news_sentiment(symbol: str):
         "sentiment_class": sentiment_class,
         "articles": articles
     }
+
+
+@router.get("/market-info/{symbol}")
+def get_market_info(symbol: str):
+    """
+    Returns extra market metadata for a symbol: market cap, average volume,
+    52-week high/low, P/E ratio, sector, dividend yield, circulating supply.
+    """
+    import yfinance as yf
+    symbol_upper = normalize_symbol(symbol)
+    try:
+        ticker = yf.Ticker(symbol_upper)
+        info = ticker.info
+        
+        def safe(key, default=None):
+            val = info.get(key, default)
+            return val if val is not None else default
+
+        return {
+            "symbol": symbol_upper,
+            "market_cap": safe("marketCap"),
+            "average_volume": safe("averageVolume"),
+            "regular_market_volume": safe("regularMarketVolume"),
+            "fifty_two_week_high": safe("fiftyTwoWeekHigh"),
+            "fifty_two_week_low": safe("fiftyTwoWeekLow"),
+            "trailing_pe": safe("trailingPE"),
+            "dividend_yield": safe("dividendYield"),
+            "sector": safe("sector"),
+            "industry": safe("industry"),
+            "circulating_supply": safe("circulatingSupply"),
+            "currency": safe("currency", "USD"),
+        }
+    except Exception as e:
+        return {
+            "symbol": symbol_upper,
+            "market_cap": None,
+            "average_volume": None,
+            "regular_market_volume": None,
+            "fifty_two_week_high": None,
+            "fifty_two_week_low": None,
+            "trailing_pe": None,
+            "dividend_yield": None,
+            "sector": None,
+            "industry": None,
+            "circulating_supply": None,
+            "currency": "USD",
+        }
