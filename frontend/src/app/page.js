@@ -22,13 +22,50 @@ import {
   X,
   MessageSquare,
   CornerDownRight,
-  Camera
+  Camera,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 import { Chart, registerables } from "chart.js";
 import { TRANSLATIONS } from "./translations";
 
+// Custom plugin to draw Candlestick Wicks (High/Low shadows)
+const candlestickPlugin = {
+  id: "candlestickWicks",
+  afterDatasetsDraw(chart, args, options) {
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(0);
+    if (!meta || meta.type !== "bar" || !options || !options.enabled || !options.history) return;
+    
+    ctx.save();
+    ctx.lineWidth = 1.5;
+    
+    meta.data.forEach((bar, index) => {
+      const hPoint = options.history[index];
+      if (!hPoint) return;
+      
+      const x = bar.x;
+      const yScale = chart.scales.y;
+      
+      const highY = yScale.getPixelForValue(hPoint.high);
+      const lowY = yScale.getPixelForValue(hPoint.low);
+      
+      const isGreen = hPoint.close >= hPoint.open;
+      ctx.strokeStyle = isGreen ? "#10b981" : "#ef4848";
+      
+      // Draw wick from High to Low
+      ctx.beginPath();
+      ctx.moveTo(x, highY);
+      ctx.lineTo(x, lowY);
+      ctx.stroke();
+    });
+    
+    ctx.restore();
+  }
+};
+
 // Register all Chart.js components
-Chart.register(...registerables);
+Chart.register(...registerables, candlestickPlugin);
 
 const API_BASE_URL = typeof window !== "undefined" 
   ? (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
@@ -95,6 +132,8 @@ export default function Home() {
   const [chartInterval, setChartInterval] = useState("1d");
   const [chartHistory, setChartHistory] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
+  const [chartType, setChartType] = useState("line");
+  const [isChartFullscreen, setIsChartFullscreen] = useState(false);
 
   // Comments state variables
   const [comments, setComments] = useState([]);
@@ -169,6 +208,23 @@ export default function Home() {
       destroyCharts();
     };
   }, [predictionData, chartHistory]);
+
+  // Handle price chart resize on fullscreen state toggle
+  useEffect(() => {
+    if (priceChartInst.current) {
+      const timer = setTimeout(() => {
+        priceChartInst.current.resize();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isChartFullscreen]);
+
+  // Re-render charts when chartType changes
+  useEffect(() => {
+    if (predictionData && chartHistory && chartHistory.length > 0) {
+      renderCharts();
+    }
+  }, [chartType]);
 
   // Helper: Destroy existing charts
   const destroyCharts = () => {
@@ -260,9 +316,25 @@ export default function Home() {
     
     // Include prediction point only for daily (1d) interval
     let extendedLabels = [...labels];
-    let datasets = [
-      {
+    let datasets = [];
+    if (chartType === "candle") {
+      const candleColors = history.map(h => h.close >= h.open ? "rgba(16, 185, 129, 0.75)" : "rgba(239, 68, 68, 0.75)");
+      const candleBorderColors = history.map(h => h.close >= h.open ? "#10b981" : "#ef4848");
+      
+      datasets.push({
+        label: activeSymbol,
+        type: "bar",
+        data: history.map(h => [h.open, h.close]),
+        backgroundColor: candleColors,
+        borderColor: candleBorderColors,
+        borderWidth: 1,
+        barPercentage: 0.75,
+        categoryPercentage: 0.95
+      });
+    } else {
+      datasets.push({
         label: "Historical Close",
+        type: "line",
         data: closePrices,
         borderColor: "#8b5cf6",
         backgroundColor: "rgba(139, 92, 246, 0.05)",
@@ -270,8 +342,8 @@ export default function Home() {
         pointRadius: 0,
         tension: 0.15,
         fill: true,
-      }
-    ];
+      });
+    }
 
     if (predictionData && predictionData.predicted_close) {
       extendedLabels = [...labels, predictionData.prediction_date];
@@ -377,6 +449,10 @@ export default function Home() {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
+            candlestickWicks: {
+              enabled: chartType === "candle",
+              history: history
+            },
             legend: {
               labels: { color: "#9ca3af", font: { family: "Inter" } }
             },
@@ -1598,8 +1674,8 @@ export default function Home() {
                       </h4>
                       <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0, lineHeight: "1.5" }}>
                         {lang === "tr" 
-                          ? "Tüm zaman dilimlerinde (15m, 1h, 4h) LSTM yapay zeka fiyat tahminlerini görmek ve grafikte 5'er adet otomatik destek/direnç çizgilerine erişmek için premium üyeliğe yükseltin." 
-                          : "Upgrade to premium to view LSTM neural network price predictions across all timeframes (15m, 1h, 4h) and access automatic Support & Resistance overlays on all assets."}
+                          ? "BTC dışındaki bu sembolde LSTM yapay zeka fiyat tahminlerini görmek ve grafikteki otomatik 5'er adet destek/direnç seviyelerini açmak için Premium üyeliğe yükseltin." 
+                          : "Upgrade to Premium to view LSTM neural network price predictions and access automatic Support & Resistance overlay levels on this asset."}
                       </p>
                     </div>
                     {user ? (
@@ -1645,37 +1721,87 @@ export default function Home() {
                 )}
 
                 {/* Price Chart Card */}
-                <div className="glass-panel">
+                <div 
+                  className={isChartFullscreen ? "" : "glass-panel"}
+                  style={isChartFullscreen ? {
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "100vw",
+                    height: "100vh",
+                    zIndex: 9999,
+                    background: "#090514",
+                    padding: "30px",
+                    display: "flex",
+                    flexDirection: "column",
+                    boxSizing: "border-box"
+                  } : {}}
+                >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
                     <h3 style={{ fontSize: "18px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
                       <LineChart style={{ color: "var(--accent-primary)" }} /> {t("chart_title")}
                     </h3>
                     
-                    {/* Interval Toggles */}
-                    <div style={{ display: "flex", gap: "6px", background: "rgba(255, 255, 255, 0.03)", padding: "4px", borderRadius: "var(--border-radius-md)", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
-                      {["15m", "1h", "4h", "1d"].map((interval) => (
+                    {/* Price Chart Header Actions */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                      {/* Chart Type Toggle (Line vs Candle) */}
+                      <div style={{ display: "flex", gap: "2px", background: "rgba(255, 255, 255, 0.03)", padding: "2px", borderRadius: "6px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
                         <button
-                          key={interval}
-                          onClick={() => setChartInterval(interval)}
-                          className={chartInterval === interval ? "btn-primary" : "btn-secondary"}
-                          style={{
-                            padding: "6px 12px",
-                            fontSize: "12px",
-                            height: "auto",
-                            borderRadius: "calc(var(--border-radius-md) - 2px)",
-                            border: "none",
-                            fontWeight: "600",
-                            textTransform: "uppercase"
-                          }}
-                          disabled={predictLoading}
+                          onClick={() => setChartType("line")}
+                          className={chartType === "line" ? "btn-primary" : "btn-secondary"}
+                          style={{ padding: "4px 8px", fontSize: "11px", height: "auto", border: "none", fontWeight: "600" }}
                         >
-                          {interval}
+                          {lang === "tr" ? "Çizgi" : "Line"}
                         </button>
-                      ))}
+                        <button
+                          onClick={() => setChartType("candle")}
+                          className={chartType === "candle" ? "btn-primary" : "btn-secondary"}
+                          style={{ padding: "4px 8px", fontSize: "11px", height: "auto", border: "none", fontWeight: "600" }}
+                        >
+                          {lang === "tr" ? "Mum" : "Candle"}
+                        </button>
+                      </div>
+
+                      {/* Interval Toggles */}
+                      <div style={{ display: "flex", gap: "6px", background: "rgba(255, 255, 255, 0.03)", padding: "4px", borderRadius: "var(--border-radius-md)", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                        {["15m", "1h", "4h", "1d"].map((interval) => (
+                          <button
+                            key={interval}
+                            onClick={() => setChartInterval(interval)}
+                            className={chartInterval === interval ? "btn-primary" : "btn-secondary"}
+                            style={{
+                              padding: "6px 12px",
+                              fontSize: "12px",
+                              height: "auto",
+                              borderRadius: "calc(var(--border-radius-md) - 2px)",
+                              border: "none",
+                              fontWeight: "600",
+                              textTransform: "uppercase"
+                            }}
+                            disabled={predictLoading}
+                          >
+                            {interval}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Fullscreen Button */}
+                      <button
+                        onClick={() => setIsChartFullscreen(!isChartFullscreen)}
+                        className="btn-secondary"
+                        style={{ padding: "8px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px" }}
+                        title={isChartFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                      >
+                        {isChartFullscreen ? <Minimize2 style={{ width: "16px", height: "16px" }} /> : <Maximize2 style={{ width: "16px", height: "16px" }} />}
+                      </button>
                     </div>
                   </div>
                   
-                  <div className="chart-wrapper" style={{ position: "relative" }}>
+                  <div className="chart-wrapper" style={{ 
+                    position: "relative",
+                    height: isChartFullscreen ? "calc(100vh - 120px)" : "350px",
+                    width: "100%"
+                  }}>
                     {chartLoading && (
                       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(11, 15, 25, 0.6)", backdropFilter: "blur(2px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, borderRadius: "8px" }}>
                         <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "28px", height: "28px" }} />
