@@ -63,7 +63,17 @@ TICKER_NAMES = {
     "NVDA": "NVIDIA Corporation",
     "BTC-USDT": "Bitcoin USD",
     "ETH-USDT": "Ethereum USD",
-    "UNI7083-USD": "Uniswap USD"
+    "UNI7083-USD": "Uniswap USD",
+    "THYAO.IS": "Türk Hava Yolları",
+    "EREGL.IS": "Ereğli Demir Çelik",
+    "GARAN.IS": "Garanti BBVA",
+    "KCHOL.IS": "Koç Holding",
+    "AKBNK.IS": "Akbank",
+    "ASELS.IS": "Aselsan",
+    "TUPRS.IS": "Tüpraş",
+    "SISE.IS": "Şişecam",
+    "TCELL.IS": "Turkcell",
+    "BIMAS.IS": "BİM Birleşik Mağazalar"
 }
 
 def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, str, bool, Optional[float]]:
