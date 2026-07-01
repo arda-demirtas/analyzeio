@@ -36,7 +36,9 @@ POPULAR_STOCKS = [
     "ASML", "ORCL", "COST", "MRK", "CVX", "BAC", "ABBV", "AMD", "NFLX", "PEP",
     "KO", "TMO", "WFC", "DIS", "ADBE", "AZN", "CSCO", "QCOM", "NVO", "ACN",
     "SAP", "GE", "CAT", "AMGN", "TXN", "INTC", "IBM", "AXP", "MS", "PFE",
-    "GS", "HON", "NKE", "SBUX", "UBER", "INTU", "ISRG", "LRCX", "SYK", "BA"
+    "GS", "HON", "NKE", "SBUX", "UBER", "INTU", "ISRG", "LRCX", "SYK", "BA",
+    "THYAO.IS", "EREGL.IS", "GARAN.IS", "KCHOL.IS", "AKBNK.IS", "ASELS.IS", 
+    "TUPRS.IS", "SISE.IS", "TCELL.IS", "BIMAS.IS"
 ]
 
 AUTO_TRAINED_SYMBOLS = POPULAR_CRYPTOS + POPULAR_COMMODITIES + POPULAR_STOCKS
