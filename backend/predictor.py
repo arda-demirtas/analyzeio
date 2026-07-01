@@ -62,7 +62,8 @@ TICKER_NAMES = {
     "AMZN": "Amazon.com Inc.",
     "NVDA": "NVIDIA Corporation",
     "BTC-USDT": "Bitcoin USD",
-    "ETH-USDT": "Ethereum USD"
+    "ETH-USDT": "Ethereum USD",
+    "UNI7083-USD": "Uniswap USD"
 }
 
 def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, str, bool, Optional[float]]:
@@ -622,6 +623,14 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
     scaled_pred = model.predict(input_seq, verbose=0)
     predicted_return = float(scaler_y.inverse_transform(scaled_pred)[0][0])
     
+    # Sanity check: limit predicted daily return to realistic bounds to filter out data outliers
+    max_ret = 0.15 if is_crypto else 0.08
+    min_ret = -0.15 if is_crypto else -0.08
+    if predicted_return > max_ret:
+        predicted_return = max_ret
+    elif predicted_return < min_ret:
+        predicted_return = min_ret
+        
     # Details of the last available candle
     last_row = df.iloc[-1]
     last_close = float(last_row["Close"])
