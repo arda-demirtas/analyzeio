@@ -34,7 +34,8 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", current_u
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported interval. Allowed: 15m, 1h, 4h, 1d"
         )
-    if not current_user.is_premium and interval != "1d":
+    is_btc = symbol_upper == "BTC-USD"
+    if not current_user.is_premium and not is_btc:
         try:
             history_points = fetch_interval_history(symbol_upper, interval=interval)
             if not history_points:
