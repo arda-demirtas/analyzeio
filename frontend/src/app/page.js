@@ -1433,7 +1433,7 @@ export default function Home() {
         </button>
         <div className="mobile-navbar-logo">
           <Briefcase style={{ color: "var(--accent-primary)", width: "20px", height: "20px" }} />
-          <span className="logo-text" style={{ fontSize: "18px" }}>analyzeio</span>
+          <h1 className="logo-text" style={{ fontSize: "18px", margin: 0 }}>analyzeio</h1>
         </div>
         <div style={{ width: "40px" }} /> {/* Spacer to center the logo */}
       </header>
@@ -1443,7 +1443,7 @@ export default function Home() {
         <div className="logo-container" style={{ justifyContent: "space-between", width: "100%" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <Briefcase style={{ color: "var(--accent-primary)", width: "28px", height: "28px" }} />
-            <span className="logo-text">analyzeio</span>
+            <h1 className="logo-text" style={{ fontSize: "24px", margin: 0 }}>analyzeio</h1>
           </div>
           <button 
             type="button"
