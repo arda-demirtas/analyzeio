@@ -332,16 +332,18 @@ export default function Home() {
       }
     );
 
-    // ONLY FOR BTC-USD: Add Support and Resistance Levels
-    if (activeSymbol === "BTC-USD") {
+    // Add Support and Resistance Levels (All-symbols for premium, BTC-USD for everyone)
+    const canShowSR = (activeSymbol === "BTC-USD") || (user && user.is_premium);
+    
+    if (canShowSR) {
       const { supports, resistances } = calculateSupportResistance(history);
       
       supports.forEach((val, idx) => {
         datasets.push({
           label: `${t("support")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
           data: Array(extendedLabels.length).fill(val),
-          borderColor: "rgba(16, 185, 129, 0.28)",
-          borderWidth: 1,
+          borderColor: "rgba(16, 185, 129, 0.7)",
+          borderWidth: 1.5,
           borderDash: [6, 4],
           pointRadius: 0,
           fill: false,
@@ -353,8 +355,8 @@ export default function Home() {
         datasets.push({
           label: `${t("resistance")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
           data: Array(extendedLabels.length).fill(val),
-          borderColor: "rgba(239, 68, 68, 0.28)",
-          borderWidth: 1,
+          borderColor: "rgba(239, 68, 68, 0.7)",
+          borderWidth: 1.5,
           borderDash: [6, 4],
           pointRadius: 0,
           fill: false,
@@ -1716,24 +1718,39 @@ export default function Home() {
                         })()}
                       </div>
 
-                      {activeSymbol === "BTC-USD" && (() => {
-                        const { supports, resistances } = calculateSupportResistance(activeHistory);
-                        return (
-                          <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)", border: "1px solid rgba(139, 92, 246, 0.15)" }}>
-                            <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{t("support")} / {t("resistance")}</span>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "12px", fontFamily: "monospace" }}>
-                              <span style={{ color: "#10b981", fontWeight: "700" }}>
-                                S: {supports.map(s => s.toLocaleString(undefined, { maximumFractionDigits: 1 })).join(" | ")}
-                              </span>
-                              <span style={{ color: "#ef4848", fontWeight: "700" }}>
-                                R: {resistances.map(r => r.toLocaleString(undefined, { maximumFractionDigits: 1 })).join(" | ")}
+                      {(() => {
+                        const canShowSR = (activeSymbol === "BTC-USD") || (user && user.is_premium);
+                        if (canShowSR) {
+                          const { supports, resistances } = calculateSupportResistance(activeHistory);
+                          return (
+                            <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)", border: "1px solid rgba(139, 92, 246, 0.15)" }}>
+                              <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{t("support")} / {t("resistance")}</span>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "12px", fontFamily: "monospace" }}>
+                                <span style={{ color: "#10b981", fontWeight: "700" }}>
+                                  S: {supports.map(s => s.toLocaleString(undefined, { maximumFractionDigits: 1 })).join(" | ")}
+                                </span>
+                                <span style={{ color: "#ef4848", fontWeight: "700" }}>
+                                  R: {resistances.map(r => r.toLocaleString(undefined, { maximumFractionDigits: 1 })).join(" | ")}
+                                </span>
+                              </div>
+                              <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px", color: "#f59e0b", borderColor: "rgba(245, 158, 11, 0.3)", background: "rgba(245, 158, 11, 0.05)" }}>
+                                Swing High/Low
                               </span>
                             </div>
-                            <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px", color: "#f59e0b", borderColor: "rgba(245, 158, 11, 0.3)", background: "rgba(245, 158, 11, 0.05)" }}>
-                              Swing High/Low
-                            </span>
-                          </div>
-                        );
+                          );
+                        } else {
+                          return (
+                            <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)", border: "1px solid rgba(255, 255, 255, 0.05)", opacity: 0.7 }}>
+                              <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{t("support")} / {t("resistance")}</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-muted)", fontWeight: "600", marginTop: "4px" }}>
+                                <span>🔒</span>
+                                <span style={{ color: "#f59e0b", background: "rgba(245, 158, 11, 0.1)", padding: "1px 6px", borderRadius: "10px", fontSize: "9px" }}>
+                                  ★ {t("premium_badge")}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        }
                       })()}
                     </div>
                   </div>
