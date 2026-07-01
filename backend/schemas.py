@@ -16,6 +16,13 @@ class UserChangePassword(BaseModel):
     old_password: str
     new_password: str = Field(..., min_length=6)
 
+class VerificationConfirm(BaseModel):
+    email: EmailStr
+    code: str
+
+class CodeConfirm(BaseModel):
+    code: str
+
 class UserResponse(BaseModel):
     id: int
     username: str
