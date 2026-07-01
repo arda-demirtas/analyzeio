@@ -2720,48 +2720,58 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Market Info Panel – Market Cap, Avg Volume, 52w Range, P/E, Sector */}
+                  {/* Market Info Panel */}
                   {marketInfo && (
                     <div style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
                       <h4 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
                         📊 {lang === "tr" ? "Piyasa Bilgileri" : "Market Data"}
+                        {marketInfo.exchange_name && (
+                          <span style={{ fontSize: "11px", fontWeight: "500", color: "var(--text-muted)", marginLeft: "4px" }}>
+                            — {marketInfo.exchange_name}
+                          </span>
+                        )}
                       </h4>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px" }}>
 
-                        {/* Market Cap */}
+                        {/* Today's Volume */}
                         <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
-                          <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{lang === "tr" ? "Piyasa Değeri" : "Market Cap"}</span>
+                          <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{lang === "tr" ? "Günlük Hacim" : "Today's Volume"}</span>
                           <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
-                            {marketInfo.market_cap
-                              ? (() => {
-                                  const v = marketInfo.market_cap;
-                                  if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
-                                  if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
-                                  if (v >= 1e6) return `$${(v / 1e6).toFixed(2)}M`;
-                                  return `$${v.toLocaleString()}`;
-                                })()
-                              : "---"}
-                          </span>
-                          <span className="badge badge-info" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{marketInfo.currency || "USD"}</span>
-                        </div>
-
-                        {/* Average Volume */}
-                        <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
-                          <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{lang === "tr" ? "Ort. Hacim (10G)" : "Avg Volume (10D)"}</span>
-                          <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
-                            {marketInfo.average_volume
-                              ? (() => {
-                                  const v = marketInfo.average_volume;
-                                  if (v >= 1e9) return `${(v / 1e9).toFixed(2)}B`;
-                                  if (v >= 1e6) return `${(v / 1e6).toFixed(2)}M`;
-                                  if (v >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
-                                  return v.toLocaleString();
-                                })()
-                              : "---"}
+                            {(() => {
+                              const v = marketInfo.regular_market_volume;
+                              if (!v) return "---";
+                              if (v >= 1e9) return `${(v / 1e9).toFixed(2)}B`;
+                              if (v >= 1e6) return `${(v / 1e6).toFixed(2)}M`;
+                              if (v >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
+                              return v.toLocaleString();
+                            })()}
                           </span>
                           <span className="badge badge-info" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>
-                            {lang === "tr" ? "10 Günlük Ort." : "10-Day Avg"}
+                            {marketInfo.currency || "USD"}
                           </span>
+                        </div>
+
+                        {/* 20-Day Avg Volume */}
+                        <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
+                          <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{lang === "tr" ? "Ort. Hacim (20G)" : "Avg Volume (20D)"}</span>
+                          <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
+                            {(() => {
+                              const v = marketInfo.average_volume;
+                              if (!v) return "---";
+                              if (v >= 1e9) return `${(v / 1e9).toFixed(2)}B`;
+                              if (v >= 1e6) return `${(v / 1e6).toFixed(2)}M`;
+                              if (v >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
+                              return v.toLocaleString();
+                            })()}
+                          </span>
+                          {(() => {
+                            const cur = marketInfo.regular_market_volume;
+                            const avg = marketInfo.average_volume;
+                            if (!cur || !avg) return null;
+                            if (cur > avg * 1.5) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "▲ Yüksek" : "▲ High"}</span>;
+                            if (cur < avg * 0.5) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "▼ Düşük" : "▼ Low"}</span>;
+                            return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Normal" : "Normal"}</span>;
+                          })()}
                         </div>
 
                         {/* 52-Week Range */}
@@ -2769,61 +2779,23 @@ export default function Home() {
                           <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
                             <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{lang === "tr" ? "52 Hafta Aralığı" : "52-Week Range"}</span>
                             <span style={{ fontSize: "12px", fontWeight: "700", fontFamily: "monospace", color: "#10b981" }}>
-                              ▲ ${marketInfo.fifty_two_week_high?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
+                              ▲ {marketInfo.fifty_two_week_high?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
                             </span>
                             <span style={{ fontSize: "12px", fontWeight: "700", fontFamily: "monospace", color: "#ef4444" }}>
-                              ▼ ${marketInfo.fifty_two_week_low?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
+                              ▼ {marketInfo.fifty_two_week_low?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
                             </span>
                           </div>
                         )}
 
-                        {/* P/E Ratio */}
-                        {marketInfo.trailing_pe && (
+                        {/* Today's Range */}
+                        {(marketInfo.day_high || marketInfo.day_low) && (
                           <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
-                            <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>P/E {lang === "tr" ? "Oranı" : "Ratio"}</span>
-                            <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
-                              {marketInfo.trailing_pe?.toFixed(2)}
+                            <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{lang === "tr" ? "Günlük Aralık" : "Day Range"}</span>
+                            <span style={{ fontSize: "12px", fontWeight: "700", fontFamily: "monospace", color: "#10b981" }}>
+                              H: {marketInfo.day_high?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
                             </span>
-                            <span className={`badge ${marketInfo.trailing_pe < 15 ? "badge-success" : marketInfo.trailing_pe > 40 ? "badge-danger" : "badge-warning"}`} style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>
-                              {marketInfo.trailing_pe < 15 ? (lang === "tr" ? "Ucuz" : "Cheap") : marketInfo.trailing_pe > 40 ? (lang === "tr" ? "Pahalı" : "Expensive") : (lang === "tr" ? "Orta" : "Fair")}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Dividend Yield */}
-                        {marketInfo.dividend_yield && (
-                          <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
-                            <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{lang === "tr" ? "Temettü Verimi" : "Dividend Yield"}</span>
-                            <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace", color: "#10b981" }}>
-                              {(marketInfo.dividend_yield * 100).toFixed(2)}%
-                            </span>
-                            <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>
-                              {lang === "tr" ? "Yıllık" : "Annual"}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Sector / Industry */}
-                        {(marketInfo.sector || marketInfo.industry) && (
-                          <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
-                            <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{lang === "tr" ? "Sektör" : "Sector"}</span>
-                            <span style={{ fontSize: "13px", fontWeight: "700" }}>{marketInfo.sector || "---"}</span>
-                            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{marketInfo.industry || ""}</span>
-                          </div>
-                        )}
-
-                        {/* Circulating Supply (for crypto) */}
-                        {marketInfo.circulating_supply && (
-                          <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
-                            <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{lang === "tr" ? "Dolaşımdaki Arz" : "Circulating Supply"}</span>
-                            <span style={{ fontSize: "13px", fontWeight: "700", fontFamily: "monospace" }}>
-                              {(() => {
-                                const v = marketInfo.circulating_supply;
-                                if (v >= 1e9) return `${(v / 1e9).toFixed(2)}B`;
-                                if (v >= 1e6) return `${(v / 1e6).toFixed(2)}M`;
-                                if (v >= 1e3) return `${(v / 1e3).toFixed(2)}K`;
-                                return v.toLocaleString();
-                              })()}
+                            <span style={{ fontSize: "12px", fontWeight: "700", fontFamily: "monospace", color: "#ef4444" }}>
+                              L: {marketInfo.day_low?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
                             </span>
                           </div>
                         )}
