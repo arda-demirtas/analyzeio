@@ -24,7 +24,9 @@ import {
   CornerDownRight,
   Camera,
   Maximize2,
-  Minimize2
+  Minimize2,
+  LogIn,
+  UserPlus
 } from "lucide-react";
 import { Chart, registerables } from "chart.js";
 import { TRANSLATIONS } from "./translations";
@@ -148,7 +150,13 @@ export default function Home() {
   // App State
   const [activeSymbol, setActiveSymbol] = useState("BTC-USD");
   const [searchQuery, setSearchQuery] = useState("");
-  const [watchlist, setWatchlist] = useState([]);
+  const [watchlist, setWatchlist] = useState([
+    { id: "anon-btc", symbol: "BTC-USD" },
+    { id: "anon-eth", symbol: "ETH-USD" },
+    { id: "anon-sol", symbol: "SOL-USD" },
+    { id: "anon-aapl", symbol: "AAPL" },
+    { id: "anon-tsla", symbol: "TSLA" }
+  ]);
   const [predictionData, setPredictionData] = useState(null);
   const [predictLoading, setPredictLoading] = useState(false);
   const [predictError, setPredictError] = useState("");
@@ -177,6 +185,7 @@ export default function Home() {
   
   // Settings / Profile Modals
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -218,7 +227,7 @@ export default function Home() {
 
   // 2. Fetch Prediction data when activeSymbol, chartInterval, or lang changes
   useEffect(() => {
-    if (token && activeSymbol) {
+    if (activeSymbol) {
       loadPrediction(activeSymbol, chartInterval);
     }
   }, [activeSymbol, chartInterval, token, lang]);
@@ -681,11 +690,11 @@ export default function Home() {
 
   // API Call: Fetch Prediction Accuracy Logs
   const fetchAccuracyLogs = async (symbol, interval = chartInterval) => {
-    if (!token) return;
     setAccuracyLoading(true);
     try {
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
       const res = await fetch(`${API_BASE_URL}/api/predictions/accuracy/${symbol}?interval=${interval}`, {
-        headers: { "Authorization": `Bearer ${token}` }
+        headers
       });
       if (res.ok) {
         const data = await res.json();
@@ -704,10 +713,11 @@ export default function Home() {
     setPredictError("");
     setPredictionData(null); // Clear old prediction data to trigger loading UI immediately
     try {
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
       const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}&lang=${lang}`, {
-        headers: { "Authorization": `Bearer ${token}` }
+        headers
       });
-      if (res.status === 401) {
+      if (res.status === 401 && token) {
         handleLogout();
         return;
       }
@@ -786,7 +796,11 @@ export default function Home() {
 
   // API Call: Toggle Premium Status
   const handlePremiumToggle = async () => {
-    if (!token) return;
+    if (!token) {
+      setAuthError(lang === "tr" ? "Premium avantajlarından yararlanmak için lütfen giriş yapın veya kayıt olun." : "Please sign in or create an account to get premium benefits.");
+      setShowAuthModal(true);
+      return;
+    }
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/premium/toggle`, {
         method: "POST",
@@ -821,6 +835,11 @@ export default function Home() {
   // API Call: Post Comment/Reply
   const handlePostComment = async (e, parentId = null) => {
     if (e) e.preventDefault();
+    if (!token) {
+      setAuthError(lang === "tr" ? "Yorum yapabilmek veya yanıt yazabilmek için lütfen giriş yapın." : "Please sign in to post comments or replies.");
+      setShowAuthModal(true);
+      return;
+    }
     const content = parentId ? replyContent : newCommentContent;
     if (!content.trim()) return;
 
@@ -922,6 +941,7 @@ export default function Home() {
         setVerificationCode("");
         setRegisteredEmail("");
         setIsVerifyingRegister(false);
+        setShowAuthModal(false);
       } else {
         setAuthError(data.detail || "Invalid or expired verification code.");
       }
@@ -953,6 +973,7 @@ export default function Home() {
         setUsername("");
         setPassword("");
         setEmail("");
+        setShowAuthModal(false);
       } else {
         setAuthError(data.detail || "Invalid credentials.");
       }
@@ -967,6 +988,11 @@ export default function Home() {
   const handleAddWatchlist = async (e) => {
     e.preventDefault();
     if (!searchQuery) return;
+    if (!token) {
+      setAuthError(lang === "tr" ? "Arama yapmak veya takip listenizi özelleştirmek için giriş yapın." : "Sign in to search and customize your watchlist.");
+      setShowAuthModal(true);
+      return;
+    }
     const sym = searchQuery.toUpperCase().trim();
     setSearchQuery("");
     
@@ -994,6 +1020,11 @@ export default function Home() {
   // API Call: Remove Watchlist Item
   const handleRemoveWatchlist = async (e, symbolToRemove) => {
     e.stopPropagation(); // Prevent clicking item from changing active symbol
+    if (!token) {
+      setAuthError(lang === "tr" ? "Takip listesinden kaldırmak için giriş yapın." : "Sign in to modify your watchlist.");
+      setShowAuthModal(true);
+      return;
+    }
     try {
       const res = await fetch(`${API_BASE_URL}/api/watchlist/${symbolToRemove}`, {
         method: "DELETE",
@@ -1279,7 +1310,13 @@ export default function Home() {
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
-    setWatchlist([]);
+    setWatchlist([
+      { id: "anon-btc", symbol: "BTC-USD" },
+      { id: "anon-eth", symbol: "ETH-USD" },
+      { id: "anon-sol", symbol: "SOL-USD" },
+      { id: "anon-aapl", symbol: "AAPL" },
+      { id: "anon-tsla", symbol: "TSLA" }
+    ]);
     setPredictionData(null);
     setActiveSymbol("BTC-USD");
   };
@@ -1298,11 +1335,25 @@ export default function Home() {
     return <span className="badge badge-danger">MACD: {t("bearish")}</span>;
   };
 
-  // Render Auth UI if not logged in
-  if (!token) {
+  // Render Auth UI in overlay modal
+  const renderAuthModal = () => {
+    if (!showAuthModal) return null;
     return (
-      <div className="auth-wrapper">
-        <div className="glass-panel auth-card">
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
+        <div className="glass-panel auth-card" style={{ position: "relative", width: "90%", maxWidth: "420px" }}>
+          {/* Close button for the modal */}
+          <button 
+            onClick={() => {
+              setShowAuthModal(false);
+              setAuthError("");
+              setIsVerifyingRegister(false);
+            }}
+            style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}
+            aria-label="Close"
+          >
+            <X style={{ width: "20px", height: "20px" }} />
+          </button>
+          
           <div className="auth-header">
             <h1 className="logo-text" style={{ fontSize: "36px", marginBottom: "10px" }}>analyzeio</h1>
             <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>
@@ -1426,7 +1477,7 @@ export default function Home() {
         </div>
       </div>
     );
-  }
+  };
 
   // Helper to render nested comments
   const renderCommentNode = (comment, depth = 0) => {
@@ -1614,58 +1665,58 @@ export default function Home() {
 
         {/* User profile controls */}
         <div className="user-panel">
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", position: "relative" }}>
-              <div style={{ position: "relative", width: "40px", height: "40px", flexShrink: 0 }}>
-                {user && user.profile_picture ? (
-                  <img 
-                    src={user.profile_picture} 
-                    alt="Profile"
-                    style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover", border: "2px solid var(--accent-primary)" }}
-                  />
-                ) : (
-                  <div style={{ background: "rgba(139, 92, 246, 0.2)", borderRadius: "50%", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyItems: "center", border: "1px solid rgba(255,255,255,0.1)" }}>
-                    <User style={{ width: "20px", color: "var(--accent-primary)", margin: "auto" }} />
-                  </div>
-                )}
-                <label 
-                  htmlFor="profile-upload" 
-                  style={{ position: "absolute", bottom: "-2px", right: "-2px", background: "var(--accent-primary)", borderRadius: "50%", width: "18px", height: "18px", display: "flex", alignItems: "center", justifyItems: "center", cursor: "pointer", border: "1px solid #fff", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}
-                >
-                  <Camera style={{ width: "10px", color: "#fff", margin: "auto" }} />
-                </label>
-                <input 
-                  id="profile-upload" 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleProfilePictureUpload} 
-                  style={{ display: "none" }} 
-                />
-              </div>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>{t("active_user")}</span>
-                <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-main)", display: "flex", alignItems: "center" }}>
-                  {user ? user.username : t("session")}
-                  {user && user.is_premium && (
-                    <span style={{ 
-                      marginLeft: "6px", 
-                      fontSize: "9px", 
-                      background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", 
-                      color: "#fff", 
-                      padding: "1px 6px", 
-                      borderRadius: "10px", 
-                      fontWeight: "700",
-                      display: "inline-flex",
-                      alignItems: "center"
-                    }}>
-                      ★ {t("premium_badge")}
-                    </span>
+          {token && user ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", position: "relative" }}>
+                <div style={{ position: "relative", width: "40px", height: "40px", flexShrink: 0 }}>
+                  {user.profile_picture ? (
+                    <img 
+                      src={user.profile_picture} 
+                      alt="Profile"
+                      style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover", border: "2px solid var(--accent-primary)" }}
+                    />
+                  ) : (
+                    <div style={{ background: "rgba(139, 92, 246, 0.2)", borderRadius: "50%", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyItems: "center", border: "1px solid rgba(255,255,255,0.1)" }}>
+                      <User style={{ width: "20px", color: "var(--accent-primary)", margin: "auto" }} />
+                    </div>
                   )}
-                </span>
+                  <label 
+                    htmlFor="profile-upload" 
+                    style={{ position: "absolute", bottom: "-2px", right: "-2px", background: "var(--accent-primary)", borderRadius: "50%", width: "18px", height: "18px", display: "flex", alignItems: "center", justifyItems: "center", cursor: "pointer", border: "1px solid #fff", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}
+                  >
+                    <Camera style={{ width: "10px", color: "#fff", margin: "auto" }} />
+                  </label>
+                  <input 
+                    id="profile-upload" 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleProfilePictureUpload} 
+                    style={{ display: "none" }} 
+                  />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase" }}>{t("active_user")}</span>
+                  <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-main)", display: "flex", alignItems: "center" }}>
+                    {user.username}
+                    {user.is_premium && (
+                      <span style={{ 
+                        marginLeft: "6px", 
+                        fontSize: "9px", 
+                        background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", 
+                        color: "#fff", 
+                        padding: "1px 6px", 
+                        borderRadius: "10px", 
+                        fontWeight: "700",
+                        display: "inline-flex",
+                        alignItems: "center"
+                      }}>
+                        ★ {t("premium_badge")}
+                      </span>
+                    )}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {user && (
               <button 
                 onClick={handlePremiumToggle} 
                 className="btn-secondary" 
@@ -1679,38 +1730,60 @@ export default function Home() {
                 <span style={{ color: user.is_premium ? "#f59e0b" : "var(--text-muted)", marginRight: "8px", fontWeight: "700" }}>★</span>
                 {user.is_premium ? t("premium_downgrade") : t("premium_upgrade")}
               </button>
-            )}
 
-            {user?.email === "arda.demirtas2002@gmail.com" && (
-              <button 
-                onClick={() => {
-                  setShowAdminModal(true);
-                  fetchAdminData();
-                }} 
-                className="btn-secondary" 
-                style={{ 
-                  width: "100%", 
-                  justifyContent: "flex-start",
-                  border: "1px solid rgba(245, 158, 11, 0.4)",
-                  background: "rgba(245, 158, 11, 0.08)",
-                  color: "#f59e0b",
-                  fontWeight: "600"
-                }}
-              >
-                <Shield style={{ width: "14px" }} /> Admin Panel
+              {user.email === "arda.demirtas2002@gmail.com" && (
+                <button 
+                  onClick={() => {
+                    setShowAdminModal(true);
+                    fetchAdminData();
+                  }} 
+                  className="btn-secondary" 
+                  style={{ 
+                    width: "100%", 
+                    justifyContent: "flex-start",
+                    border: "1px solid rgba(245, 158, 11, 0.4)",
+                    background: "rgba(245, 158, 11, 0.08)",
+                    color: "#f59e0b",
+                    fontWeight: "600"
+                  }}
+                >
+                  <Shield style={{ width: "14px" }} /> Admin Panel
+                </button>
+              )}
+
+              <button onClick={() => setShowPasswordModal(true)} className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }}>
+                <Key style={{ width: "14px" }} /> {t("change_password")}
               </button>
-            )}
-
-            <button onClick={() => setShowPasswordModal(true)} className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }}>
-              <Key style={{ width: "14px" }} /> {t("change_password")}
-            </button>
-            <button onClick={handleDeleteAccount} className="btn-danger" style={{ width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: "6px" }}>
-              <UserMinus style={{ width: "14px" }} /> {t("close_account")}
-            </button>
-            <button onClick={handleLogout} className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start", marginTop: "10px" }}>
-              <LogOut style={{ width: "14px" }} /> {t("sign_out")}
-            </button>
-          </div>
+              <button onClick={handleDeleteAccount} className="btn-danger" style={{ width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: "6px" }}>
+                <UserMinus style={{ width: "14px" }} /> {t("close_account")}
+              </button>
+              <button onClick={handleLogout} className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start", marginTop: "10px" }}>
+                <LogOut style={{ width: "14px" }} /> {t("sign_out")}
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <p style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: "1.4" }}>
+                {lang === "tr" 
+                  ? "Tahminleri kaydetmek, favorileri özelleştirmek ve yorum yazmak için giriş yapın." 
+                  : "Sign in to customize your watchlist, post comments, and view advanced predictions."}
+              </p>
+              <button 
+                onClick={() => { setAuthMode("login"); setShowAuthModal(true); }} 
+                className="btn-primary" 
+                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+              >
+                <LogIn style={{ width: "16px" }} /> {t("sign_in")}
+              </button>
+              <button 
+                onClick={() => { setAuthMode("register"); setShowAuthModal(true); }} 
+                className="btn-secondary" 
+                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+              >
+                <UserPlus style={{ width: "16px" }} /> {t("create_account")}
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -2740,6 +2813,7 @@ export default function Home() {
           </div>
         </div>
       )}
+      {renderAuthModal()}
     </div>
   );
 }
