@@ -191,45 +191,87 @@ def get_news_sentiment(symbol: str):
 @router.get("/market-info/{symbol}")
 def get_market_info(symbol: str):
     """
-    Returns extra market metadata for a symbol: market cap, average volume,
-    52-week high/low, P/E ratio, sector, dividend yield, circulating supply.
+    Returns extra market metadata using Yahoo Finance v8 chart API directly
+    (same endpoint used for price history - not rate-limited on VPS).
+    Fields: 52-week range, daily volume, exchange name, currency, long name.
     """
-    import yfinance as yf
+    import requests as req_lib
     symbol_upper = normalize_symbol(symbol)
+
+    _EMPTY = {
+        "symbol": symbol_upper,
+        "market_cap": None,
+        "average_volume": None,
+        "regular_market_volume": None,
+        "fifty_two_week_high": None,
+        "fifty_two_week_low": None,
+        "trailing_pe": None,
+        "dividend_yield": None,
+        "sector": None,
+        "industry": None,
+        "circulating_supply": None,
+        "currency": "USD",
+        "exchange_name": None,
+        "long_name": None,
+        "instrument_type": None,
+        "day_high": None,
+        "day_low": None,
+    }
+
     try:
-        ticker = yf.Ticker(symbol_upper)
-        info = ticker.info
-        
-        def safe(key, default=None):
-            val = info.get(key, default)
-            return val if val is not None else default
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            )
+        }
+        # Fetch 60 days of daily data – meta block contains 52-week range & volume
+        url = (
+            f"https://query2.finance.yahoo.com/v8/finance/chart/"
+            f"{symbol_upper}?range=60d&interval=1d"
+        )
+        r = req_lib.get(url, headers=headers, timeout=12)
+        if r.status_code != 200:
+            return _EMPTY
+
+        data = r.json()
+        result = data.get("chart", {}).get("result", [])
+        if not result:
+            return _EMPTY
+
+        meta = result[0].get("meta", {})
+        quote = result[0].get("indicators", {}).get("quote", [{}])[0]
+
+        # Compute 20-day average volume from actual bars
+        volumes = [v for v in (quote.get("volume") or []) if v is not None]
+        last_20_vols = volumes[-20:] if len(volumes) >= 20 else volumes
+        avg_volume = int(sum(last_20_vols) / len(last_20_vols)) if last_20_vols else None
+
+        instrument_type = meta.get("instrumentType", "")
+        is_crypto = instrument_type == "CRYPTOCURRENCY" or symbol_upper.endswith("-USD")
+
+        # Rough market cap for crypto: price × circulating supply (not available here, skip)
+        # For equities it's not in v8; leave as None (not rate-limited fields show correctly)
 
         return {
             "symbol": symbol_upper,
-            "market_cap": safe("marketCap"),
-            "average_volume": safe("averageVolume"),
-            "regular_market_volume": safe("regularMarketVolume"),
-            "fifty_two_week_high": safe("fiftyTwoWeekHigh"),
-            "fifty_two_week_low": safe("fiftyTwoWeekLow"),
-            "trailing_pe": safe("trailingPE"),
-            "dividend_yield": safe("dividendYield"),
-            "sector": safe("sector"),
-            "industry": safe("industry"),
-            "circulating_supply": safe("circulatingSupply"),
-            "currency": safe("currency", "USD"),
-        }
-    except Exception as e:
-        return {
-            "symbol": symbol_upper,
-            "market_cap": None,
-            "average_volume": None,
-            "regular_market_volume": None,
-            "fifty_two_week_high": None,
-            "fifty_two_week_low": None,
-            "trailing_pe": None,
-            "dividend_yield": None,
+            "market_cap": None,          # Not available in v8 without .info
+            "average_volume": avg_volume,
+            "regular_market_volume": meta.get("regularMarketVolume"),
+            "fifty_two_week_high": meta.get("fiftyTwoWeekHigh"),
+            "fifty_two_week_low": meta.get("fiftyTwoWeekLow"),
+            "trailing_pe": None,         # Not in v8 chart
+            "dividend_yield": None,      # Not in v8 chart
             "sector": None,
             "industry": None,
             "circulating_supply": None,
-            "currency": "USD",
+            "currency": meta.get("currency", "USD"),
+            "exchange_name": meta.get("fullExchangeName"),
+            "long_name": meta.get("longName") or meta.get("shortName"),
+            "instrument_type": instrument_type,
+            "day_high": meta.get("regularMarketDayHigh"),
+            "day_low": meta.get("regularMarketDayLow"),
         }
+    except Exception:
+        return _EMPTY
