@@ -23,6 +23,8 @@ def normalize_symbol(symbol: str) -> str:
     elif sym.endswith("USD") and not sym.endswith("-USD") and not sym.endswith(".X"):
         if len(sym) > 3 and not "=" in sym:
             sym = sym[:-3] + "-USD"
+    if sym == "UNI-USD":
+        sym = "UNI7083-USD"
     return sym
 
 @router.get("/predict", response_model=PredictionResponse)
