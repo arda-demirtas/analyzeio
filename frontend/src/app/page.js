@@ -129,7 +129,58 @@ export default function Home() {
     localStorage.setItem("lang", newLang);
   };
 
+  const LOCAL_TRANSLATIONS = {
+    en: {
+      ai_screener: "AI Market Screener",
+      news_sentiment: "News Sentiment Analysis",
+      news_gauge: "Overall Sentiment",
+      screener_title: "AI Market Screener",
+      screener_all: "All Assets",
+      screener_bullish: "AI: Bullish",
+      screener_bearish: "AI: Bearish",
+      screener_oversold: "Oversold (RSI < 35)",
+      screener_overbought: "Overbought (RSI > 65)",
+      screener_asset: "Asset",
+      screener_price: "Price",
+      screener_pred_change: "AI Pred Change",
+      screener_rsi: "RSI (14)",
+      screener_macd: "MACD Signal",
+      news_title_sec: "Latest News & AI Sentiment",
+      news_sentiment_score: "Sentiment Score",
+      rating_bullish: "Bullish",
+      rating_bearish: "Bearish",
+      rating_neutral: "Neutral"
+    },
+    tr: {
+      ai_screener: "AI Market Tarayıcı",
+      news_sentiment: "Haber Duyarlılık Analizi",
+      news_gauge: "Genel Duyarlılık",
+      screener_title: "AI Market Tarayıcı",
+      screener_all: "Tüm Varlıklar",
+      screener_bullish: "AI: Boğa",
+      screener_bearish: "AI: Ayı",
+      screener_oversold: "Aşırı Satım (RSI < 35)",
+      screener_overbought: "Aşırı Alım (RSI > 65)",
+      screener_asset: "Varlık",
+      screener_price: "Fiyat",
+      screener_pred_change: "AI Tahmin Değişim",
+      screener_rsi: "RSI (14)",
+      screener_macd: "MACD Sinyali",
+      news_title_sec: "Son Haberler & Yapay Zeka Analizi",
+      news_sentiment_score: "Duyarlılık Skoru",
+      rating_bullish: "Boğa",
+      rating_bearish: "Ayı",
+      rating_neutral: "Yatay"
+    }
+  };
+
   const t = (key) => {
+    if (LOCAL_TRANSLATIONS[lang]?.[key]) {
+      return LOCAL_TRANSLATIONS[lang][key];
+    }
+    if (LOCAL_TRANSLATIONS["en"]?.[key]) {
+      return LOCAL_TRANSLATIONS["en"][key];
+    }
     return TRANSLATIONS[lang]?.[key] || TRANSLATIONS["en"][key] || key;
   };
 
@@ -186,6 +237,19 @@ export default function Home() {
   // Settings / Profile Modals
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  
+  // AI Market Screener State
+  const [showScreener, setShowScreener] = useState(false);
+  const [screenerData, setScreenerData] = useState([]);
+  const [screenerFilter, setScreenerFilter] = useState("all");
+  const [screenerSearch, setScreenerSearch] = useState("");
+  const [screenerType, setScreenerType] = useState("all");
+  const [screenerLoading, setScreenerLoading] = useState(false);
+
+  // News Sentiment State
+  const [newsData, setNewsData] = useState(null);
+  const [newsLoading, setNewsLoading] = useState(false);
+
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -218,12 +282,20 @@ export default function Home() {
     }
   }, []);
 
-  // Fetch comments when activeSymbol changes
+  // Fetch comments and news sentiment when activeSymbol changes
   useEffect(() => {
     if (activeSymbol) {
       fetchComments(activeSymbol);
+      fetchNewsSentiment(activeSymbol);
     }
   }, [activeSymbol]);
+
+  // Fetch market screener data when screener view is opened
+  useEffect(() => {
+    if (showScreener) {
+      fetchScreenerData();
+    }
+  }, [showScreener]);
 
   // 2. Fetch Prediction data when activeSymbol, chartInterval, or lang changes
   useEffect(() => {
@@ -829,6 +901,39 @@ export default function Home() {
       }
     } catch (err) {
       console.error("Error fetching comments:", err);
+    }
+  };
+
+  // API Call: Fetch Market Screener Data
+  const fetchScreenerData = async () => {
+    setScreenerLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/screener`);
+      if (res.ok) {
+        const data = await res.json();
+        setScreenerData(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error("Error fetching screener data:", err);
+    } finally {
+      setScreenerLoading(false);
+    }
+  };
+
+  // API Call: Fetch News Sentiment
+  const fetchNewsSentiment = async (symbol) => {
+    setNewsLoading(true);
+    setNewsData(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/news/${symbol}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNewsData(data);
+      }
+    } catch (err) {
+      console.error("Error fetching news sentiment:", err);
+    } finally {
+      setNewsLoading(false);
     }
   };
 
@@ -1640,6 +1745,24 @@ export default function Home() {
           </button>
         </form>
 
+        {/* Navigation Tabs */}
+        <div style={{ display: "flex", gap: "8px", marginTop: "5px", marginBottom: "15px" }}>
+          <button 
+            onClick={() => { setShowScreener(false); setSidebarOpen(false); }}
+            className={!showScreener ? "btn-primary" : "btn-secondary"}
+            style={{ flex: 1, height: "36px", fontSize: "13px", padding: 0, justifyContent: "center", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <LineChart style={{ width: "14px" }} /> {lang === "tr" ? "Grafik" : "Dashboard"}
+          </button>
+          <button 
+            onClick={() => { setShowScreener(true); setSidebarOpen(false); }}
+            className={showScreener ? "btn-primary" : "btn-secondary"}
+            style={{ flex: 1, height: "36px", fontSize: "13px", padding: 0, justifyContent: "center", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <PieChart style={{ width: "14px" }} /> {t("ai_screener")}
+          </button>
+        </div>
+
         {/* Watchlist */}
         <div className="watchlist-container">
           <h3 className="watchlist-title">{t("watchlist_title")}</h3>
@@ -1789,7 +1912,220 @@ export default function Home() {
 
       {/* Main Panel Content */}
       <main className="main-content">
-        {predictLoading || (!predictionData && !predictError) || (predictionData && predictionData.symbol !== activeSymbol) ? (
+        {showScreener ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px", height: "100%" }}>
+            {/* Screener Header */}
+            <div className="glass-panel" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "15px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                <h2 style={{ fontSize: "20px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+                  <PieChart style={{ color: "var(--accent-primary)", width: "22px" }} /> {t("screener_title")}
+                </h2>
+                <div style={{ position: "relative", width: "100%", maxWidth: "250px" }}>
+                  <Search style={{ position: "absolute", left: "10px", top: "10px", color: "var(--text-muted)", width: "14px" }} />
+                  <input 
+                    type="text"
+                    placeholder={lang === "tr" ? "Varlık ara..." : "Search assets..."}
+                    className="input-field"
+                    value={screenerSearch}
+                    onChange={e => setScreenerSearch(e.target.value)}
+                    style={{ paddingLeft: "32px", height: "34px", fontSize: "13px" }}
+                  />
+                </div>
+              </div>
+
+              {/* Filtering Controls */}
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <button 
+                  onClick={() => setScreenerFilter("all")} 
+                  className={screenerFilter === "all" ? "btn-primary" : "btn-secondary"}
+                  style={{ height: "30px", fontSize: "12px", padding: "0 12px" }}
+                >
+                  {t("screener_all")}
+                </button>
+                <button 
+                  onClick={() => setScreenerFilter("bullish")} 
+                  className={screenerFilter === "bullish" ? "btn-primary" : "btn-secondary"}
+                  style={{ height: "30px", fontSize: "12px", padding: "0 12px", border: screenerFilter === "bullish" ? "1px solid var(--accent-success)" : "none" }}
+                >
+                  {t("screener_bullish")}
+                </button>
+                <button 
+                  onClick={() => setScreenerFilter("bearish")} 
+                  className={screenerFilter === "bearish" ? "btn-primary" : "btn-secondary"}
+                  style={{ height: "30px", fontSize: "12px", padding: "0 12px", border: screenerFilter === "bearish" ? "1px solid var(--accent-danger)" : "none" }}
+                >
+                  {t("screener_bearish")}
+                </button>
+                <button 
+                  onClick={() => setScreenerFilter("oversold")} 
+                  className={screenerFilter === "oversold" ? "btn-primary" : "btn-secondary"}
+                  style={{ height: "30px", fontSize: "12px", padding: "0 12px" }}
+                >
+                  {t("screener_oversold")}
+                </button>
+                <button 
+                  onClick={() => setScreenerFilter("overbought")} 
+                  className={screenerFilter === "overbought" ? "btn-primary" : "btn-secondary"}
+                  style={{ height: "30px", fontSize: "12px", padding: "0 12px" }}
+                >
+                  {t("screener_overbought")}
+                </button>
+              </div>
+
+              {/* Asset Type Tabs */}
+              <div style={{ display: "flex", gap: "15px", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "10px", fontSize: "13px" }}>
+                <span 
+                  onClick={() => setScreenerType("all")}
+                  style={{ cursor: "pointer", fontWeight: "600", color: screenerType === "all" ? "var(--accent-primary)" : "var(--text-muted)" }}
+                >
+                  {lang === "tr" ? "Hepsi" : "All Types"}
+                </span>
+                <span 
+                  onClick={() => setScreenerType("crypto")}
+                  style={{ cursor: "pointer", fontWeight: "600", color: screenerType === "crypto" ? "var(--accent-primary)" : "var(--text-muted)" }}
+                >
+                  {lang === "tr" ? "Kripto" : "Cryptos"}
+                </span>
+                <span 
+                  onClick={() => setScreenerType("stock")}
+                  style={{ cursor: "pointer", fontWeight: "600", color: screenerType === "stock" ? "var(--accent-primary)" : "var(--text-muted)" }}
+                >
+                  {lang === "tr" ? "Hisseler" : "Stocks"}
+                </span>
+                <span 
+                  onClick={() => setScreenerType("commodity")}
+                  style={{ cursor: "pointer", fontWeight: "600", color: screenerType === "commodity" ? "var(--accent-primary)" : "var(--text-muted)" }}
+                >
+                  {lang === "tr" ? "Emtialar" : "Commodities"}
+                </span>
+              </div>
+            </div>
+
+            {/* Screener Results Table */}
+            <div className="glass-panel" style={{ flexGrow: 1, padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              {screenerLoading ? (
+                <div style={{ display: "flex", flexDirection: "column", padding: "40px", alignItems: "center", justifyContent: "center", gap: "10px", flexGrow: 1 }}>
+                  <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "30px" }} />
+                  <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>{t("loading")}</span>
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto", flexGrow: 1 }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13.5px", textAlign: "left" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", color: "var(--text-muted)", fontWeight: "600" }}>
+                        <th style={{ padding: "12px 16px" }}>{t("screener_asset")}</th>
+                        <th style={{ padding: "12px 16px" }}>{t("screener_price")}</th>
+                        <th style={{ padding: "12px 16px" }}>{t("screener_pred_change")}</th>
+                        <th style={{ padding: "12px 16px" }}>{t("screener_rsi")}</th>
+                        <th style={{ padding: "12px 16px" }}>{t("screener_macd")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        let filtered = screenerData;
+                        
+                        if (screenerSearch.trim()) {
+                          const q = screenerSearch.toLowerCase().trim();
+                          filtered = filtered.filter(item => 
+                            item.symbol.toLowerCase().includes(q) || 
+                            (item.name && item.name.toLowerCase().includes(q))
+                          );
+                        }
+
+                        if (screenerType === "crypto") {
+                          filtered = filtered.filter(item => item.symbol.endsWith("-USD"));
+                        } else if (screenerType === "commodity") {
+                          filtered = filtered.filter(item => item.symbol.includes("=F"));
+                        } else if (screenerType === "stock") {
+                          filtered = filtered.filter(item => !item.symbol.endsWith("-USD") && !item.symbol.includes("=F"));
+                        }
+
+                        if (screenerFilter === "bullish") {
+                          filtered = filtered.filter(item => item.predicted_change >= 0.2);
+                        } else if (screenerFilter === "bearish") {
+                          filtered = filtered.filter(item => item.predicted_change <= -0.2);
+                        } else if (screenerFilter === "oversold") {
+                          filtered = filtered.filter(item => item.rsi < 35);
+                        } else if (screenerFilter === "overbought") {
+                          filtered = filtered.filter(item => item.rsi > 65);
+                        }
+
+                        if (filtered.length === 0) {
+                          return (
+                            <tr>
+                              <td colSpan={5} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
+                                {lang === "tr" ? "Eşleşen varlık bulunamadı." : "No matching assets found."}
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        return filtered.map(item => {
+                          const isBullish = item.predicted_change >= 0.2;
+                          const isBearish = item.predicted_change <= -0.2;
+                          
+                          let sentimentBadge;
+                          if (isBullish) {
+                            sentimentBadge = <span style={{ color: "var(--accent-success)", fontWeight: "700" }}>▲ +{item.predicted_change.toFixed(2)}%</span>;
+                          } else if (isBearish) {
+                            sentimentBadge = <span style={{ color: "var(--accent-danger)", fontWeight: "700" }}>▼ {item.predicted_change.toFixed(2)}%</span>;
+                          } else {
+                            sentimentBadge = <span style={{ color: "var(--text-muted)" }}>~ {item.predicted_change?.toFixed(2)}%</span>;
+                          }
+
+                          let rsiBadge;
+                          if (item.rsi < 35) {
+                            rsiBadge = <span className="badge badge-success" style={{ padding: "2px 6px" }}>{item.rsi.toFixed(1)} ({t("oversold")})</span>;
+                          } else if (item.rsi > 65) {
+                            rsiBadge = <span className="badge badge-danger" style={{ padding: "2px 6px" }}>{item.rsi.toFixed(1)} ({t("overbought")})</span>;
+                          } else {
+                            rsiBadge = <span className="badge badge-warning" style={{ padding: "2px 6px" }}>{item.rsi.toFixed(1)}</span>;
+                          }
+
+                          const isMacdBullish = item.macd_signal === "BULLISH";
+                          const macdBadge = isMacdBullish 
+                            ? <span style={{ color: "var(--accent-success)" }}>▲ {t("macd_status_bullish")}</span> 
+                            : <span style={{ color: "var(--accent-danger)" }}>▼ {t("macd_status_bearish")}</span>;
+
+                          return (
+                            <tr 
+                              key={item.id} 
+                              onClick={() => {
+                                selectSymbol(item.symbol);
+                                setShowScreener(false);
+                              }}
+                              style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "background 0.2s" }}
+                              className="watchlist-item-row"
+                            >
+                              <td style={{ padding: "12px 16px" }}>
+                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                  <strong style={{ color: "var(--text-main)", fontSize: "14px" }}>{item.symbol}</strong>
+                                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{item.name}</span>
+                                </div>
+                              </td>
+                              <td style={{ padding: "12px 16px", fontWeight: "600", color: "var(--text-main)" }}>
+                                {item.price > 0 ? `$${item.price.toLocaleString()}` : "N/A"}
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
+                                {sentimentBadge}
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
+                                {rsiBadge}
+                              </td>
+                              <td style={{ padding: "12px 16px", fontSize: "12.5px" }}>
+                                {macdBadge}
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : predictLoading || (!predictionData && !predictError) || (predictionData && predictionData.symbol !== activeSymbol) ? (
           <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: "60vh", alignItems: "center", justifyContent: "center", gap: "20px" }}>
             <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "48px", height: "48px" }} />
             <h3 style={{ fontSize: "18px", color: "var(--text-main)", fontWeight: "600" }}>{t("loading")}</h3>
@@ -2376,6 +2712,94 @@ export default function Home() {
                     </div>
                   </div>
                 )}
+
+                {/* News Sentiment Analysis Card */}
+                <div className="glass-panel" style={{ marginTop: "10px" }}>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <MessageSquare style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} /> {t("news_sentiment")}
+                  </h3>
+                  
+                  {newsLoading ? (
+                    <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
+                      <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)" }} />
+                    </div>
+                  ) : !newsData ? (
+                    <div style={{ fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center" }}>{t("no_news")}</div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                      {/* Sentiment Meter */}
+                      <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "14px", borderRadius: "var(--border-radius-md)", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "var(--text-muted)", marginBottom: "6px" }}>
+                          <span>{t("news_gauge")}</span>
+                          <span style={{ fontWeight: "700", color: newsData.sentiment_class === "BULLISH" ? "var(--accent-success)" : newsData.sentiment_class === "BEARISH" ? "var(--accent-danger)" : "var(--text-muted)" }}>
+                            {t(`rating_${newsData.sentiment_class.toLowerCase()}`)} ({newsData.sentiment_score.toFixed(2)})
+                          </span>
+                        </div>
+                        {/* Meter Bar */}
+                        <div style={{ height: "6px", width: "100%", background: "rgba(255, 255, 255, 0.1)", borderRadius: "3px", overflow: "hidden", position: "relative" }}>
+                          <div 
+                            style={{ 
+                              height: "100%", 
+                              width: `${((newsData.sentiment_score + 1) / 2) * 100}%`, 
+                              background: newsData.sentiment_class === "BULLISH" ? "var(--accent-success)" : newsData.sentiment_class === "BEARISH" ? "var(--accent-danger)" : "var(--accent-warning)", 
+                              borderRadius: "3px",
+                              transition: "width 0.5s ease-in-out" 
+                            }} 
+                          />
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "9px", color: "var(--text-muted)", marginTop: "4px" }}>
+                          <span>{t("rating_bearish")} (-1.0)</span>
+                          <span>{t("rating_neutral")} (0.0)</span>
+                          <span>{t("rating_bullish")} (+1.0)</span>
+                        </div>
+                      </div>
+
+                      {/* Articles list */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        {newsData.articles.length === 0 ? (
+                          <div style={{ fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center" }}>{t("no_news")}</div>
+                        ) : (
+                          newsData.articles.map((art, idx) => {
+                            const formatRelativeTime = (epochSec) => {
+                              if (!epochSec) return "";
+                              const now = Math.floor(Date.now() / 1000);
+                              const diff = now - epochSec;
+                              if (diff < 60) return lang === "tr" ? "şimdi" : "just now";
+                              const mins = Math.floor(diff / 60);
+                              if (mins < 60) return lang === "tr" ? `${mins} dk önce` : `${mins}m ago`;
+                              const hours = Math.floor(mins / 60);
+                              if (hours < 24) return lang === "tr" ? `${hours} saat önce` : `${hours}h ago`;
+                              const days = Math.floor(hours / 24);
+                              return lang === "tr" ? `${days} gün önce` : `${days}d ago`;
+                            };
+
+                            return (
+                              <a 
+                                key={idx}
+                                href={art.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="watchlist-item"
+                                style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "6px", padding: "10px 14px", margin: 0 }}
+                              >
+                                <span style={{ fontSize: "13px", fontWeight: "600", color: "#fff", lineHeight: "1.4", textAlign: "left" }}>{art.title}</span>
+                                <div style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
+                                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{art.publisher} • {formatRelativeTime(art.time)}</span>
+                                  <span 
+                                    className={`badge ${art.rating === "BULLISH" ? "badge-success" : art.rating === "BEARISH" ? "badge-danger" : "badge-warning"}`} 
+                                    style={{ fontSize: "9px", padding: "2px 6px" }}
+                                  >
+                                    {t(`rating_${art.rating.toLowerCase()}`)} ({art.score > 0 ? `+${art.score.toFixed(1)}` : art.score.toFixed(1)})
+                                  </span>
+                                </div>
+                              </a>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Model Information & Metrics */}
                 <div className="glass-panel">
