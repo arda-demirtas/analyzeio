@@ -39,6 +39,13 @@ def main():
                 predicted_change = 0.0
                 if log:
                     predicted_change = ((log.predicted_close - log.last_close) / log.last_close) * 100
+                    # Clip changes to prevent outliers
+                    max_c = 15.0 if is_crypto else 8.0
+                    min_c = -15.0 if is_crypto else -8.0
+                    if predicted_change > max_c:
+                        predicted_change = max_c
+                    elif predicted_change < min_c:
+                        predicted_change = min_c
                     
                 name = TICKER_NAMES.get(sym, sym)
                 
