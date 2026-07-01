@@ -34,6 +34,15 @@ def check_and_train_assets():
         try:
             print(f"[{idx+1}/{len(symbols)}] Training/Updating cache for {symbol} (1d)...")
             get_prediction(symbol, interval="1d", force_retrain=True)
+            
+            # Update screener table
+            from backend.predictor import update_screener_cache
+            db_run = SessionLocal()
+            try:
+                update_screener_cache(symbol, db_run)
+            finally:
+                db_run.close()
+                
             success_count += 1
         except Exception as e:
             print(f"Error training {symbol}: {e}")
