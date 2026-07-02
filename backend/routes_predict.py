@@ -287,9 +287,15 @@ def search_assets(q: str):
     if not q or not q.strip():
         return []
 
+    # Clean and preprocess query (e.g. bist100 -> bist 100, bist30 -> bist 30)
+    q_query = q.strip().lower()
+    import re
+    q_query = re.sub(r"bist(\d+)", r"bist \1", q_query)
+
     url = "https://query2.finance.yahoo.com/v1/finance/search"
-    params = {"q": q, "quotesCount": 10}
+    params = {"q": q_query, "quotesCount": 10}
     headers = {
+
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) "
