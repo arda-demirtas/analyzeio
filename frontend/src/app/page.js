@@ -425,6 +425,9 @@ export default function Home() {
     const ctxRsi = rsiChartRef.current?.getContext("2d");
     const ctxMacd = macdChartRef.current?.getContext("2d");
 
+    const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+    const chartEvents = isTouchDevice ? ["click"] : ["mousemove", "mouseout", "click", "touchstart", "touchmove", "touchend"];
+
     const history = chartHistory.slice(-historyLimit);
     const labels = history.map(item => item.date);
     const closePrices = history.map(item => item.close);
@@ -565,6 +568,7 @@ export default function Home() {
           datasets: datasets
         },
         options: {
+          events: chartEvents,
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
@@ -635,6 +639,7 @@ export default function Home() {
           }]
         },
         options: {
+          events: chartEvents,
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
@@ -697,6 +702,7 @@ export default function Home() {
           ]
         },
         options: {
+          events: chartEvents,
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
@@ -2558,43 +2564,6 @@ export default function Home() {
                         <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "28px", height: "28px" }} />
                       </div>
                     )}
-                    
-                    {/* Clear Selection / Close Tooltip Details button overlay */}
-                    <button
-                      onClick={() => {
-                        [priceChartInst.current, rsiChartInst.current, macdChartInst.current].forEach(chart => {
-                          if (chart) {
-                            chart.setActiveElements([]);
-                            if (chart.tooltip) {
-                              chart.tooltip.setActiveElements([], { x: 0, y: 0 });
-                            }
-                            chart.update();
-                          }
-                        });
-                      }}
-                      className="btn-secondary"
-                      style={{
-                        position: "absolute",
-                        top: "10px",
-                        left: "10px",
-                        padding: "6px 12px",
-                        fontSize: "11px",
-                        height: "auto",
-                        borderRadius: "20px",
-                        zIndex: 9,
-                        background: "rgba(31, 41, 55, 0.85)",
-                        border: "1px solid rgba(255, 255, 255, 0.15)",
-                        color: "var(--text-main)",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        backdropFilter: "blur(4px)",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.25)"
-                      }}
-                    >
-                      ✕ {lang === "tr" ? "Seçimi Temizle" : "Clear Selection"}
-                    </button>
 
                     <canvas ref={priceChartRef} />
                   </div>
