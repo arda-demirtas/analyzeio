@@ -647,3 +647,13 @@ body {
     gap: 8px !important;
   }
 }
+
+.footer-link-item {
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.footer-link-item:hover {
+  color: var(--accent-primary);
+}
