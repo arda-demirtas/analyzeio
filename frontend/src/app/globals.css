@@ -626,3 +626,24 @@ body {
 .animate-pulse {
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Responsive Top Navbar & Buttons */
+.hide-mobile {
+  display: inline-block;
+}
+
+@media (max-width: 600px) {
+  .hide-mobile {
+    display: none !important;
+  }
+  
+  .navbar-container {
+    flex-wrap: wrap;
+    gap: 10px !important;
+    padding: 8px 12px !important;
+  }
+  
+  .navbar-right {
+    gap: 8px !important;
+  }
+}
