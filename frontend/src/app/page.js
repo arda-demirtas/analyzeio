@@ -965,7 +965,9 @@ export default function Home() {
   // API Call: Fetch Comments
   const fetchComments = async (symbol) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/comments/${symbol}`);
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const res = await fetch(`${API_BASE_URL}/api/comments/${symbol}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setComments(Array.isArray(data) ? data : []);
@@ -1065,6 +1067,44 @@ export default function Home() {
       }
     } catch (err) {
       console.error("Error deleting comment:", err);
+    }
+  };
+
+  // API Call: React (like/dislike) on Comment
+  const handleReactComment = async (commentId, reaction) => {
+    if (!token) {
+      setAuthError(lang === "tr" ? "Tepki verebilmek için lütfen giriş yapın." : "Please sign in to react to comments.");
+      setShowAuthModal(true);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/comments/${commentId}/react`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ reaction })
+      });
+      if (res.ok) {
+        setComments(prev => prev.map(c => {
+          if (c.id !== commentId) return c;
+          const wasLiked = c.user_reaction === "like";
+          const wasDisliked = c.user_reaction === "dislike";
+          if (c.user_reaction === reaction) {
+            return { ...c, user_reaction: null, likes: reaction === "like" ? c.likes - 1 : c.likes, dislikes: reaction === "dislike" ? c.dislikes - 1 : c.dislikes };
+          } else {
+            return {
+              ...c,
+              user_reaction: reaction,
+              likes: reaction === "like" ? c.likes + 1 : (wasLiked ? c.likes - 1 : c.likes),
+              dislikes: reaction === "dislike" ? c.dislikes + 1 : (wasDisliked ? c.dislikes - 1 : c.dislikes)
+            };
+          }
+        }));
+      }
+    } catch (err) {
+      console.error("Error reacting to comment:", err);
     }
   };
 
@@ -1659,6 +1699,13 @@ export default function Home() {
   const renderCommentNode = (comment, depth = 0) => {
     const replies = comments.filter(c => c.parent_id === comment.id);
     const isOwner = user && user.id === comment.user.id;
+
+    // Find parent username for @mention display
+    let parentUsername = null;
+    if (comment.parent_id) {
+      const parent = comments.find(c => c.id === comment.parent_id);
+      if (parent) parentUsername = parent.user.username;
+    }
     
     return (
       <div key={comment.id} style={{ marginLeft: depth > 0 ? `${Math.min(depth * 15, 45)}px` : "0px", borderLeft: depth > 0 ? "2px solid rgba(139, 92, 246, 0.15)" : "none", paddingLeft: depth > 0 ? "10px" : "0px", marginTop: "10px" }}>
@@ -1691,9 +1738,43 @@ export default function Home() {
             )}
           </div>
           
-          <p style={{ fontSize: "12px", color: "var(--text-main)", margin: "4px 0", whiteSpace: "pre-wrap" }}>{comment.content}</p>
+          <p style={{ fontSize: "12px", color: "var(--text-main)", margin: "4px 0", whiteSpace: "pre-wrap" }}>
+            {parentUsername && (
+              <span style={{ color: "var(--accent-primary)", fontWeight: "700", marginRight: "4px" }}>@{parentUsername}</span>
+            )}
+            {comment.content}
+          </p>
           
-          <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+          <div style={{ display: "flex", gap: "8px", marginTop: "6px", alignItems: "center" }}>
+            {/* Like button */}
+            <button 
+              onClick={() => handleReactComment(comment.id, "like")}
+              style={{ 
+                background: "none", border: "none", cursor: "pointer", padding: "2px 6px",
+                display: "flex", alignItems: "center", gap: "3px", fontSize: "11px", fontWeight: "600",
+                color: comment.user_reaction === "like" ? "var(--accent-success)" : "var(--text-muted)",
+                borderRadius: "4px",
+                transition: "all 0.2s"
+              }}
+            >
+              👍 {comment.likes > 0 && <span>{comment.likes}</span>}
+            </button>
+            
+            {/* Dislike button */}
+            <button 
+              onClick={() => handleReactComment(comment.id, "dislike")}
+              style={{ 
+                background: "none", border: "none", cursor: "pointer", padding: "2px 6px",
+                display: "flex", alignItems: "center", gap: "3px", fontSize: "11px", fontWeight: "600",
+                color: comment.user_reaction === "dislike" ? "var(--accent-danger)" : "var(--text-muted)",
+                borderRadius: "4px",
+                transition: "all 0.2s"
+              }}
+            >
+              👎 {comment.dislikes > 0 && <span>{comment.dislikes}</span>}
+            </button>
+
+            {/* Reply button */}
             <button 
               onClick={() => {
                 if (replyingToId === comment.id) {
@@ -1703,7 +1784,7 @@ export default function Home() {
                   setReplyContent("");
                 }
               }}
-              style={{ background: "none", border: "none", color: "var(--accent-primary)", fontSize: "11px", fontWeight: "600", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "4px" }}
+              style={{ background: "none", border: "none", color: "var(--accent-primary)", fontSize: "11px", fontWeight: "600", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "4px", marginLeft: "4px" }}
             >
               <CornerDownRight style={{ width: "10px" }} /> {t("reply_btn")}
             </button>
@@ -1751,6 +1832,7 @@ export default function Home() {
       </div>
     );
   };
+
 
   // Render Dashboard if logged in
   const activeHistory = (predictionData && chartHistory && chartHistory.length > 0) ? chartHistory : (predictionData ? predictionData.history : []);
