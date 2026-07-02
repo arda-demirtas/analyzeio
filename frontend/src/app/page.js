@@ -239,6 +239,15 @@ export default function Home() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   
+  // Basic Pages Modals State
+  const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactSubject, setContactSubject] = useState("");
+  const [contactMessage, setContactMessage] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactStatus, setContactStatus] = useState("");
+
   // AI Market Screener State
   const [showScreener, setShowScreener] = useState(false);
   const [screenerData, setScreenerData] = useState([]);
@@ -1848,6 +1857,34 @@ export default function Home() {
           ))}
         </div>
 
+        {/* Sidebar Footer - Basic Pages Links */}
+        <div style={{ 
+          borderTop: "1px solid rgba(255, 255, 255, 0.05)", 
+          paddingTop: "12px", 
+          marginTop: "auto", 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: "6px",
+          alignItems: "center"
+        }}>
+          <div style={{ display: "flex", gap: "8px", fontSize: "11px", color: "var(--text-muted)", flexWrap: "wrap", justifyContent: "center" }}>
+            <span onClick={() => setShowAboutModal(true)} style={{ cursor: "pointer", transition: "color 0.2s" }} className="footer-link-item">
+              {lang === "tr" ? "Hakkımızda" : "About Us"}
+            </span>
+            <span>•</span>
+            <span onClick={() => setShowPrivacyModal(true)} style={{ cursor: "pointer", transition: "color 0.2s" }} className="footer-link-item">
+              {lang === "tr" ? "Gizlilik" : "Privacy"}
+            </span>
+            <span>•</span>
+            <span onClick={() => setShowContactModal(true)} style={{ cursor: "pointer", transition: "color 0.2s" }} className="footer-link-item">
+              {lang === "tr" ? "İletişim" : "Contact"}
+            </span>
+          </div>
+          <span style={{ fontSize: "9px", color: "var(--text-dark)", textAlign: "center" }}>
+            &copy; {new Date().getFullYear()} analyzeio
+          </span>
+        </div>
+
       </aside>
 
       {/* Main Panel Content */}
@@ -3308,6 +3345,182 @@ export default function Home() {
                   >
                     {t("cancel_btn")}
                   </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* About Us Modal */}
+      {showAboutModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+          <div className="glass-panel" style={{ width: "90%", maxWidth: "500px", maxHeight: "80vh", overflowY: "auto", position: "relative" }}>
+            <button 
+              onClick={() => setShowAboutModal(false)} 
+              style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}
+            >
+              ✕
+            </button>
+            <h3 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "15px", color: "var(--accent-primary)" }}>
+              {lang === "tr" ? "Hakkımızda" : "About Us"}
+            </h3>
+            <div style={{ fontSize: "14px", lineHeight: "1.6", color: "var(--text-main)", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <p>
+                {lang === "tr" 
+                  ? "analyzeio, hisse senetleri ve kripto para birimleri için LSTM (Long Short-Term Memory) tabanlı derin öğrenme modelleri sunan gelişmiş bir piyasa tahmin ve teknik analiz platformudur."
+                  : "analyzeio is an advanced market prediction and technical analysis platform offering LSTM (Long Short-Term Memory) deep learning models for stocks and cryptocurrencies."}
+              </p>
+              <p>
+                {lang === "tr"
+                  ? "Sistemimiz, her bir varlık için son 60 günlük veriyi indirir, RSI, MACD, Bollinger Bantları ve EMA gibi 19 temel teknik göstergeyi gerçek zamanlı hesaplar ve yapay sinir ağımızı optimize ederek bir sonraki işlem gününün kapanış fiyatını tahmin eder."
+                  : "Our system downloads the latest 60 days of daily price action for each asset, computes 19 key technical indicators (including RSI, MACD, Bollinger Bands, and EMAs) in real-time, and optimizes our neural network to predict the next trading day's close."}
+              </p>
+              <p>
+                {lang === "tr"
+                  ? "Tahmin doğruluğunu şeffaf bir şekilde ölçmek için geriye dönük test (backtest) hata oranlarını (RMSE, MAPE) ve yönsel isabet oranlarını sürekli olarak güncelliyor ve kullanıcılarımıza sunuyoruz."
+                  : "We continuously calculate and show backtest error metrics (RMSE, MAPE) and directional accuracy logs, offering complete transparency into our predictive accuracy."}
+              </p>
+            </div>
+            <button 
+              onClick={() => setShowAboutModal(false)} 
+              className="btn-primary" 
+              style={{ marginTop: "20px", width: "100%" }}
+            >
+              {lang === "tr" ? "Kapat" : "Close"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Privacy Policy Modal */}
+      {showPrivacyModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+          <div className="glass-panel" style={{ width: "90%", maxWidth: "550px", maxHeight: "80vh", overflowY: "auto", position: "relative" }}>
+            <button 
+              onClick={() => setShowPrivacyModal(false)} 
+              style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}
+            >
+              ✕
+            </button>
+            <h3 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "15px", color: "var(--accent-primary)" }}>
+              {lang === "tr" ? "Gizlilik Politikası" : "Privacy Policy"}
+            </h3>
+            <div style={{ fontSize: "13px", lineHeight: "1.6", color: "var(--text-main)", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <p><strong>1. {lang === "tr" ? "Veri Güvenliği" : "Data Security"}</strong></p>
+              <p>
+                {lang === "tr"
+                  ? "Kullanıcı hesaplarının güvenliği için e-posta adresleri ve şifreler veritabanımızda tek yönlü kriptografik hashing (bcrypt) ile şifrelenmiş olarak saklanır. Şifreleriniz kesinlikle düz metin olarak kaydedilmez."
+                  : "For account security, email addresses and passwords are stored in our database encrypted using secure one-way cryptographic hashing (bcrypt). We never store passwords in plaintext."}
+              </p>
+              <p><strong>2. {lang === "tr" ? "Toplanan Veriler" : "Data Collection"}</strong></p>
+              <p>
+                {lang === "tr"
+                  ? "Sadece hesabınızı doğrulamak, şifre sıfırlama işlemlerini gerçekleştirmek ve izleme listenizi (watchlist) saklamak amacıyla gerekli olan minimum bilgileri (kullanıcı adı, e-posta) topluyoruz."
+                  : "We collect only the minimum required information (username, email) necessary to verify your account, perform password resets, and store your watchlist."}
+              </p>
+              <p><strong>3. {lang === "tr" ? "Çerezler (Cookies)" : "Cookies"}</strong></p>
+              <p>
+                {lang === "tr"
+                  ? "Çerezler, yalnızca oturum açma durumunuzu güvenli bir şekilde doğrulamak amacıyla (JWT token saklama için) tarayıcınızda geçici olarak tutulur. Reklam veya izleme çerezleri kullanılmaz."
+                  : "Cookies are used temporarily in your browser solely for secure authentication (JWT token storage). We do not use advertising or tracking cookies."}
+              </p>
+              <p><strong>4. {lang === "tr" ? "Üçüncü Taraf Verileri" : "Third Party Data"}</strong></p>
+              <p>
+                {lang === "tr"
+                  ? "Piyasa verileri Yahoo Finance API'si aracılığıyla çekilmekte olup kullanıcı bilgileriniz hiçbir üçüncü taraf veri sağlayıcısı ile paylaşılmaz."
+                  : "Market data is retrieved via the Yahoo Finance API, and your user information is never shared with any third-party data providers."}
+              </p>
+            </div>
+            <button 
+              onClick={() => setShowPrivacyModal(false)} 
+              className="btn-primary" 
+              style={{ marginTop: "20px", width: "100%" }}
+            >
+              {lang === "tr" ? "Kapat" : "Close"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Contact Us Modal */}
+      {showContactModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+          <div className="glass-panel" style={{ width: "90%", maxWidth: "450px", position: "relative" }}>
+            <button 
+              onClick={() => { setShowContactModal(false); setContactStatus(""); }} 
+              style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}
+            >
+              ✕
+            </button>
+            <h3 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "15px", color: "var(--accent-primary)" }}>
+              {lang === "tr" ? "İletişime Geçin" : "Contact Us"}
+            </h3>
+            
+            {contactStatus ? (
+              <div style={{ textAlign: "center", padding: "20px 0" }}>
+                <span style={{ fontSize: "40px" }}>✉️</span>
+                <p style={{ color: "var(--accent-success)", fontWeight: "600", fontSize: "15px", marginTop: "10px" }}>{contactStatus}</p>
+                <button 
+                  onClick={() => { setShowContactModal(false); setContactStatus(""); }} 
+                  className="btn-primary" 
+                  style={{ marginTop: "15px", width: "100%" }}
+                >
+                  {lang === "tr" ? "Tamam" : "Okay"}
+                </button>
+              </div>
+            ) : (
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setContactStatus(lang === "tr" ? "Mesajınız başarıyla iletildi. En kısa sürede geri dönüş yapacağız!" : "Your message has been sent successfully. We will get back to you shortly!");
+                  setContactEmail("");
+                  setContactSubject("");
+                  setContactMessage("");
+                }} 
+                style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+              >
+                <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "5px" }}>
+                  {lang === "tr" 
+                    ? "Sorularınız, iş ortaklığı teklifleriniz veya geri bildirimleriniz için bize yazın." 
+                    : "Write to us for questions, partnership proposals, or feedback."}
+                </div>
+                
+                <input 
+                  type="email" 
+                  placeholder={lang === "tr" ? "E-posta Adresiniz" : "Your Email Address"}
+                  className="input-field"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  required
+                />
+                
+                <input 
+                  type="text" 
+                  placeholder={lang === "tr" ? "Konu" : "Subject"}
+                  className="input-field"
+                  value={contactSubject}
+                  onChange={(e) => setContactSubject(e.target.value)}
+                  required
+                />
+                
+                <textarea 
+                  placeholder={lang === "tr" ? "Mesajınız..." : "Your Message..."}
+                  className="input-field"
+                  rows="4"
+                  value={contactMessage}
+                  onChange={(e) => setContactMessage(e.target.value)}
+                  style={{ resize: "none" }}
+                  required
+                />
+                
+                <button type="submit" className="btn-primary" style={{ marginTop: "5px" }}>
+                  {lang === "tr" ? "Gönder" : "Send Message"}
+                </button>
+                
+                <div style={{ fontSize: "11px", color: "var(--text-dark)", textAlign: "center", marginTop: "5px" }}>
+                  {lang === "tr" ? "Doğrudan Destek: " : "Direct Support: "} 
+                  <a href="mailto:support@analyzeio.com" style={{ color: "var(--accent-primary)", textDecoration: "none" }}>support@analyzeio.com</a>
                 </div>
               </form>
             )}
