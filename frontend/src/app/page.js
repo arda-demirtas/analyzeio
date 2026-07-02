@@ -286,6 +286,37 @@ export default function Home() {
     }
   }, []);
 
+  // Clear chart tooltips on outside clicks/touches
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      const isClickInsideChart = 
+        priceChartRef.current?.contains(e.target) || 
+        rsiChartRef.current?.contains(e.target) || 
+        macdChartRef.current?.contains(e.target);
+
+      if (!isClickInsideChart) {
+        [priceChartInst.current, rsiChartInst.current, macdChartInst.current].forEach(chart => {
+          if (chart) {
+            chart.setActiveElements([]);
+            if (chart.tooltip) {
+              chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+            }
+            chart.update();
+          }
+        });
+      }
+    };
+
+    window.addEventListener("click", handleOutsideClick);
+    window.addEventListener("touchstart", handleOutsideClick);
+
+    return () => {
+      window.removeEventListener("click", handleOutsideClick);
+      window.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, []);
+
+
   // Fetch comments and news sentiment when activeSymbol changes
   useEffect(() => {
     if (activeSymbol) {
