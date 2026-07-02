@@ -339,16 +339,21 @@ export default function Home() {
     }
   }, [activeSymbol, chartInterval, token, lang]);
 
-  // 3. Render charts when predictionData, chartHistory, historyLimit, or isChartFullscreen updates
+  // 3. Render charts when predictionData, chartHistory, historyLimit, isChartFullscreen, or showScreener updates
   useEffect(() => {
+    if (showScreener) return;
     if (!predictionData || !chartHistory || chartHistory.length === 0) return;
-    renderCharts();
+    
+    const timer = setTimeout(() => {
+      renderCharts();
+    }, 50);
     
     // Cleanup on unmount or update
     return () => {
+      clearTimeout(timer);
       destroyCharts();
     };
-  }, [predictionData, chartHistory, historyLimit, isChartFullscreen]);
+  }, [predictionData, chartHistory, historyLimit, isChartFullscreen, showScreener]);
 
   // Handle price chart resize and body overflow on fullscreen state toggle
   useEffect(() => {
