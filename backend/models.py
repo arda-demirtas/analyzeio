@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Float
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Float, UniqueConstraint
 from sqlalchemy.orm import relationship
 from backend.database import Base
 
@@ -42,6 +42,22 @@ class Comment(Base):
     parent_id = Column(Integer, ForeignKey("comments.id", ondelete="CASCADE"), nullable=True)
 
     # Relationships
+    user = relationship("User")
+    reactions = relationship("CommentReaction", back_populates="comment", cascade="all, delete-orphan")
+
+
+class CommentReaction(Base):
+    __tablename__ = "comment_reactions"
+    __table_args__ = (UniqueConstraint("comment_id", "user_id", name="uq_comment_user_reaction"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    comment_id = Column(Integer, ForeignKey("comments.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    reaction = Column(String, nullable=False)  # "like" or "dislike"
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    comment = relationship("Comment", back_populates="reactions")
     user = relationship("User")
 
 
