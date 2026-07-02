@@ -202,6 +202,10 @@ export default function Home() {
   // App State
   const [activeSymbol, setActiveSymbol] = useState("BTC-USD");
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionIndex, setSuggestionIndex] = useState(-1);
+
   const [watchlist, setWatchlist] = useState([
     { id: "anon-btc", symbol: "BTC-USD" },
     { id: "anon-eth", symbol: "ETH-USD" },
@@ -234,7 +238,166 @@ export default function Home() {
     setPredictError("");
     setPredictLoading(true);
   };
-  
+
+  // --- Symbol Autocomplete Catalog ---
+  const SYMBOL_CATALOG = [
+    // Crypto
+    { symbol: "BTC-USD",  name: "Bitcoin",       category: "Crypto" },
+    { symbol: "ETH-USD",  name: "Ethereum",      category: "Crypto" },
+    { symbol: "SOL-USD",  name: "Solana",        category: "Crypto" },
+    { symbol: "BNB-USD",  name: "BNB",           category: "Crypto" },
+    { symbol: "XRP-USD",  name: "XRP",           category: "Crypto" },
+    { symbol: "ADA-USD",  name: "Cardano",       category: "Crypto" },
+    { symbol: "AVAX-USD", name: "Avalanche",     category: "Crypto" },
+    { symbol: "DOGE-USD", name: "Dogecoin",      category: "Crypto" },
+    { symbol: "SHIB-USD", name: "Shiba Inu",     category: "Crypto" },
+    { symbol: "DOT-USD",  name: "Polkadot",      category: "Crypto" },
+    { symbol: "LINK-USD", name: "Chainlink",     category: "Crypto" },
+    { symbol: "LTC-USD",  name: "Litecoin",      category: "Crypto" },
+    { symbol: "BCH-USD",  name: "Bitcoin Cash",  category: "Crypto" },
+    { symbol: "NEAR-USD", name: "NEAR Protocol", category: "Crypto" },
+    { symbol: "UNI7083-USD", name: "Uniswap",   category: "Crypto" },
+    { symbol: "MATIC-USD",name: "Polygon",       category: "Crypto" },
+    { symbol: "ICP-USD",  name: "Internet Computer", category: "Crypto" },
+    { symbol: "ETC-USD",  name: "Ethereum Classic", category: "Crypto" },
+    { symbol: "FIL-USD",  name: "Filecoin",      category: "Crypto" },
+    { symbol: "XLM-USD",  name: "Stellar",       category: "Crypto" },
+    { symbol: "HBAR-USD", name: "Hedera",        category: "Crypto" },
+    { symbol: "ATOM-USD", name: "Cosmos",        category: "Crypto" },
+    { symbol: "APT-USD",  name: "Aptos",         category: "Crypto" },
+    { symbol: "VET-USD",  name: "VeChain",       category: "Crypto" },
+    { symbol: "RNDR-USD", name: "Render",        category: "Crypto" },
+    { symbol: "PEPE-USD", name: "Pepe",          category: "Crypto" },
+    { symbol: "OP-USD",   name: "Optimism",      category: "Crypto" },
+    { symbol: "STX-USD",  name: "Stacks",        category: "Crypto" },
+    { symbol: "GRT-USD",  name: "The Graph",     category: "Crypto" },
+    { symbol: "LDO-USD",  name: "Lido DAO",      category: "Crypto" },
+    { symbol: "INJ-USD",  name: "Injective",     category: "Crypto" },
+    { symbol: "THETA-USD",name: "Theta Network", category: "Crypto" },
+    { symbol: "IMX-USD",  name: "Immutable",     category: "Crypto" },
+    { symbol: "EGLD-USD", name: "MultiversX",    category: "Crypto" },
+    { symbol: "FTM-USD",  name: "Fantom",        category: "Crypto" },
+    { symbol: "ALGO-USD", name: "Algorand",      category: "Crypto" },
+    { symbol: "MKR-USD",  name: "Maker",         category: "Crypto" },
+    { symbol: "FLOW-USD", name: "Flow",          category: "Crypto" },
+    { symbol: "MNT-USD",  name: "Mantle",        category: "Crypto" },
+    { symbol: "AAVE-USD", name: "Aave",          category: "Crypto" },
+    { symbol: "SEI-USD",  name: "Sei",           category: "Crypto" },
+    { symbol: "AR-USD",   name: "Arweave",       category: "Crypto" },
+    { symbol: "WIF-USD",  name: "dogwifhat",     category: "Crypto" },
+    { symbol: "BONK-USD", name: "Bonk",          category: "Crypto" },
+    { symbol: "FLOKI-USD",name: "Floki",         category: "Crypto" },
+    { symbol: "QNT-USD",  name: "Quant",         category: "Crypto" },
+    { symbol: "GALA-USD", name: "Gala",          category: "Crypto" },
+    { symbol: "MANA-USD", name: "Decentraland",  category: "Crypto" },
+    { symbol: "AXS-USD",  name: "Axie Infinity", category: "Crypto" },
+    { symbol: "SAND-USD", name: "The Sandbox",   category: "Crypto" },
+    { symbol: "JUP-USD",  name: "Jupiter",       category: "Crypto" },
+    { symbol: "PYTH-USD", name: "Pyth Network",  category: "Crypto" },
+    { symbol: "CHZ-USD",  name: "Chiliz",        category: "Crypto" },
+    { symbol: "DYDX-USD", name: "dYdX",          category: "Crypto" },
+    { symbol: "ENS-USD",  name: "Ethereum Name Service", category: "Crypto" },
+    { symbol: "LRC-USD",  name: "Loopring",      category: "Crypto" },
+    { symbol: "ONE-USD",  name: "Harmony",       category: "Crypto" },
+    { symbol: "CRO-USD",  name: "Cronos",        category: "Crypto" },
+    { symbol: "TIA-USD",  name: "Celestia",      category: "Crypto" },
+    { symbol: "MINA-USD", name: "Mina Protocol", category: "Crypto" },
+    // Commodities
+    { symbol: "GC=F",     name: "Gold Futures",  category: "Commodity" },
+    { symbol: "SI=F",     name: "Silver Futures",category: "Commodity" },
+    // US Stocks
+    { symbol: "AAPL",  name: "Apple",            category: "Stock" },
+    { symbol: "MSFT",  name: "Microsoft",        category: "Stock" },
+    { symbol: "GOOGL", name: "Alphabet / Google",category: "Stock" },
+    { symbol: "AMZN",  name: "Amazon",           category: "Stock" },
+    { symbol: "NVDA",  name: "NVIDIA",           category: "Stock" },
+    { symbol: "META",  name: "Meta Platforms",   category: "Stock" },
+    { symbol: "TSLA",  name: "Tesla",            category: "Stock" },
+    { symbol: "BRK-B", name: "Berkshire Hathaway", category: "Stock" },
+    { symbol: "LLY",   name: "Eli Lilly",        category: "Stock" },
+    { symbol: "AVGO",  name: "Broadcom",         category: "Stock" },
+    { symbol: "JPM",   name: "JPMorgan Chase",   category: "Stock" },
+    { symbol: "V",     name: "Visa",             category: "Stock" },
+    { symbol: "UNH",   name: "UnitedHealth",     category: "Stock" },
+    { symbol: "TSM",   name: "Taiwan Semiconductor", category: "Stock" },
+    { symbol: "WMT",   name: "Walmart",          category: "Stock" },
+    { symbol: "XOM",   name: "ExxonMobil",       category: "Stock" },
+    { symbol: "MA",    name: "Mastercard",       category: "Stock" },
+    { symbol: "PG",    name: "Procter & Gamble", category: "Stock" },
+    { symbol: "JNJ",   name: "Johnson & Johnson",category: "Stock" },
+    { symbol: "HD",    name: "Home Depot",       category: "Stock" },
+    { symbol: "ASML",  name: "ASML Holding",     category: "Stock" },
+    { symbol: "ORCL",  name: "Oracle",           category: "Stock" },
+    { symbol: "COST",  name: "Costco",           category: "Stock" },
+    { symbol: "MRK",   name: "Merck",            category: "Stock" },
+    { symbol: "CVX",   name: "Chevron",          category: "Stock" },
+    { symbol: "BAC",   name: "Bank of America",  category: "Stock" },
+    { symbol: "ABBV",  name: "AbbVie",           category: "Stock" },
+    { symbol: "AMD",   name: "AMD",              category: "Stock" },
+    { symbol: "NFLX",  name: "Netflix",          category: "Stock" },
+    { symbol: "PEP",   name: "PepsiCo",          category: "Stock" },
+    { symbol: "KO",    name: "Coca-Cola",        category: "Stock" },
+    { symbol: "TMO",   name: "Thermo Fisher",    category: "Stock" },
+    { symbol: "WFC",   name: "Wells Fargo",      category: "Stock" },
+    { symbol: "DIS",   name: "Walt Disney",      category: "Stock" },
+    { symbol: "ADBE",  name: "Adobe",            category: "Stock" },
+    { symbol: "AZN",   name: "AstraZeneca",      category: "Stock" },
+    { symbol: "CSCO",  name: "Cisco",            category: "Stock" },
+    { symbol: "QCOM",  name: "Qualcomm",         category: "Stock" },
+    { symbol: "NVO",   name: "Novo Nordisk",     category: "Stock" },
+    { symbol: "ACN",   name: "Accenture",        category: "Stock" },
+    { symbol: "SAP",   name: "SAP",              category: "Stock" },
+    { symbol: "GE",    name: "GE Aerospace",     category: "Stock" },
+    { symbol: "CAT",   name: "Caterpillar",      category: "Stock" },
+    { symbol: "AMGN",  name: "Amgen",            category: "Stock" },
+    { symbol: "TXN",   name: "Texas Instruments",category: "Stock" },
+    { symbol: "INTC",  name: "Intel",            category: "Stock" },
+    { symbol: "IBM",   name: "IBM",              category: "Stock" },
+    { symbol: "AXP",   name: "American Express", category: "Stock" },
+    { symbol: "MS",    name: "Morgan Stanley",   category: "Stock" },
+    { symbol: "PFE",   name: "Pfizer",           category: "Stock" },
+    { symbol: "GS",    name: "Goldman Sachs",    category: "Stock" },
+    { symbol: "HON",   name: "Honeywell",        category: "Stock" },
+    { symbol: "NKE",   name: "Nike",             category: "Stock" },
+    { symbol: "SBUX",  name: "Starbucks",        category: "Stock" },
+    { symbol: "UBER",  name: "Uber",             category: "Stock" },
+    { symbol: "INTU",  name: "Intuit",           category: "Stock" },
+    { symbol: "ISRG",  name: "Intuitive Surgical",category: "Stock" },
+    { symbol: "LRCX",  name: "Lam Research",     category: "Stock" },
+    { symbol: "SYK",   name: "Stryker",          category: "Stock" },
+    { symbol: "BA",    name: "Boeing",           category: "Stock" },
+    // BIST (Turkish Stocks)
+    { symbol: "THYAO.IS", name: "Türk Hava Yolları", category: "BIST" },
+    { symbol: "EREGL.IS", name: "Ereğli Demir Çelik", category: "BIST" },
+    { symbol: "GARAN.IS", name: "Garanti BBVA",        category: "BIST" },
+    { symbol: "KCHOL.IS", name: "Koç Holding",         category: "BIST" },
+    { symbol: "AKBNK.IS", name: "Akbank",              category: "BIST" },
+    { symbol: "ASELS.IS", name: "Aselsan",             category: "BIST" },
+    { symbol: "TUPRS.IS", name: "Tüpraş",              category: "BIST" },
+    { symbol: "SISE.IS",  name: "Şişecam",             category: "BIST" },
+    { symbol: "TCELL.IS", name: "Turkcell",            category: "BIST" },
+    { symbol: "BIMAS.IS", name: "BİM Mağazaları",      category: "BIST" },
+  ];
+
+  // Filter suggestions whenever searchQuery changes
+  useEffect(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    const results = SYMBOL_CATALOG.filter(item =>
+      item.symbol.toLowerCase().includes(q) ||
+      item.name.toLowerCase().includes(q) ||
+      item.category.toLowerCase().includes(q)
+    ).slice(0, 8); // max 8 suggestions
+    setSearchSuggestions(results);
+    setShowSuggestions(results.length > 0);
+    setSuggestionIndex(-1);
+  }, [searchQuery]);
+
+
   // Settings / Profile Modals
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -1880,18 +2043,100 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Search Input */}
+        {/* Search Input with Autocomplete */}
         <form onSubmit={handleAddWatchlist} style={{ display: "flex", gap: "8px" }}>
           <div style={{ position: "relative", flexGrow: 1 }}>
-            <Search style={{ position: "absolute", left: "12px", top: "12px", color: "var(--text-muted)", width: "16px" }} />
+            <Search style={{ position: "absolute", left: "12px", top: "12px", color: "var(--text-muted)", width: "16px", zIndex: 1 }} />
             <input
               type="text"
               placeholder={t("search_placeholder")}
               className="input-field"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
+              onFocus={() => searchSuggestions.length > 0 && setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              onKeyDown={e => {
+                if (!showSuggestions) return;
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setSuggestionIndex(i => Math.min(i + 1, searchSuggestions.length - 1));
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setSuggestionIndex(i => Math.max(i - 1, -1));
+                } else if (e.key === "Enter" && suggestionIndex >= 0) {
+                  e.preventDefault();
+                  const chosen = searchSuggestions[suggestionIndex];
+                  setSearchQuery(chosen.symbol);
+                  setShowSuggestions(false);
+                  selectSymbol(chosen.symbol);
+                  setSidebarOpen(false);
+                } else if (e.key === "Escape") {
+                  setShowSuggestions(false);
+                }
+              }}
               style={{ paddingLeft: "36px", paddingRight: "10px", height: "40px" }}
             />
+            {/* Autocomplete Dropdown */}
+            {showSuggestions && (
+              <div style={{
+                position: "absolute",
+                top: "calc(100% + 4px)",
+                left: 0,
+                right: 0,
+                background: "rgba(15, 10, 30, 0.98)",
+                border: "1px solid rgba(139, 92, 246, 0.3)",
+                borderRadius: "10px",
+                zIndex: 9999,
+                overflow: "hidden",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                backdropFilter: "blur(12px)"
+              }}>
+                {searchSuggestions.map((item, idx) => {
+                  const catColors = { Crypto: "#f59e0b", Stock: "#3b82f6", BIST: "#10b981", Commodity: "#f97316" };
+                  const isHighlighted = idx === suggestionIndex;
+                  return (
+                    <div
+                      key={item.symbol}
+                      onMouseDown={() => {
+                        setSearchQuery(item.symbol);
+                        setShowSuggestions(false);
+                        selectSymbol(item.symbol);
+                        setSidebarOpen(false);
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "9px 14px",
+                        cursor: "pointer",
+                        background: isHighlighted ? "rgba(139, 92, 246, 0.15)" : "transparent",
+                        borderBottom: idx < searchSuggestions.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                        transition: "background 0.15s"
+                      }}
+                      onMouseEnter={() => setSuggestionIndex(idx)}
+                    >
+                      <Search style={{ width: "12px", color: "var(--text-muted)", flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-main)" }}>{item.symbol}</div>
+                        <div style={{ fontSize: "11px", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</div>
+                      </div>
+                      <span style={{
+                        fontSize: "9px",
+                        fontWeight: "700",
+                        padding: "2px 6px",
+                        borderRadius: "4px",
+                        background: `${catColors[item.category] || "#6b7280"}20`,
+                        color: catColors[item.category] || "#6b7280",
+                        border: `1px solid ${catColors[item.category] || "#6b7280"}40`,
+                        flexShrink: 0
+                      }}>
+                        {item.category.toUpperCase()}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
           <button type="submit" className="btn-primary" style={{ width: "40px", height: "40px", padding: 0 }}>
             <Plus style={{ width: "18px" }} />
