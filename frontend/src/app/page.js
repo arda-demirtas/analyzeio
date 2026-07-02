@@ -398,7 +398,7 @@ export default function Home() {
     { symbol: "^AXJO",    name: "ASX 200 (Australia)", category: "Index" },
     { symbol: "^KS11",    name: "KOSPI (Seoul)",       category: "Index" },
     { symbol: "^SSMI",    name: "SMI (Switzerland)",   category: "Index" },
-    { symbol: "^XU100.IS",name: "BIST 100 (Istanbul)", category: "Index" },
+    { symbol: "XU100.IS", name: "BIST 100 (Istanbul)", category: "Index" },
     { symbol: "^TWII",    name: "Taiwan Weighted",     category: "Index" },
     // Popular ETFs
     { symbol: "SPY",  name: "SPDR S&P 500 ETF",        category: "ETF" },
