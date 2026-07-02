@@ -1812,7 +1812,7 @@ export default function Home() {
       <main className="main-content" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
         
         {/* Global Top Navbar */}
-        <div className="glass-panel" style={{ 
+        <div className="glass-panel navbar-container" style={{ 
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
@@ -1823,13 +1823,13 @@ export default function Home() {
           {/* Left side: Terminal Logo / Welcome */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Briefcase style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} />
-            <span style={{ fontSize: "16px", fontWeight: "700", display: "flex", alignItems: "center" }}>
+            <span className="hide-mobile" style={{ fontSize: "16px", fontWeight: "700", display: "flex", alignItems: "center" }}>
               {lang === "tr" ? "Piyasa Terminali" : "Market Terminal"}
             </span>
           </div>
           
           {/* Right side: Language selection & Profile */}
-          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+          <div className="navbar-right" style={{ display: "flex", alignItems: "center", gap: "15px" }}>
             {/* Language Selector */}
             <select
               value={lang}
@@ -2009,20 +2009,20 @@ export default function Home() {
                 )}
               </div>
             ) : (
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <button 
                   onClick={() => { setAuthMode("login"); setShowAuthModal(true); }} 
                   className="btn-primary" 
-                  style={{ height: "32px", fontSize: "12px", padding: "0 14px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+                  style={{ height: "32px", fontSize: "12px", padding: "0 10px", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}
                 >
-                  <LogIn style={{ width: "14px" }} /> {t("sign_in")}
+                  <LogIn style={{ width: "14px" }} /> <span className="hide-mobile">{t("sign_in")}</span>
                 </button>
                 <button 
                   onClick={() => { setAuthMode("register"); setShowAuthModal(true); }} 
                   className="btn-secondary" 
-                  style={{ height: "32px", fontSize: "12px", padding: "0 14px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+                  style={{ height: "32px", fontSize: "12px", padding: "0 10px", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}
                 >
-                  <UserPlus style={{ width: "14px" }} /> {t("create_account")}
+                  <UserPlus style={{ width: "14px" }} /> <span className="hide-mobile">{t("create_account")}</span>
                 </button>
               </div>
             )}
@@ -2558,6 +2558,44 @@ export default function Home() {
                         <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "28px", height: "28px" }} />
                       </div>
                     )}
+                    
+                    {/* Clear Selection / Close Tooltip Details button overlay */}
+                    <button
+                      onClick={() => {
+                        [priceChartInst.current, rsiChartInst.current, macdChartInst.current].forEach(chart => {
+                          if (chart) {
+                            chart.setActiveElements([]);
+                            if (chart.tooltip) {
+                              chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+                            }
+                            chart.update();
+                          }
+                        });
+                      }}
+                      className="btn-secondary"
+                      style={{
+                        position: "absolute",
+                        top: "10px",
+                        left: "10px",
+                        padding: "6px 12px",
+                        fontSize: "11px",
+                        height: "auto",
+                        borderRadius: "20px",
+                        zIndex: 9,
+                        background: "rgba(31, 41, 55, 0.85)",
+                        border: "1px solid rgba(255, 255, 255, 0.15)",
+                        color: "var(--text-main)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        backdropFilter: "blur(4px)",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.25)"
+                      }}
+                    >
+                      ✕ {lang === "tr" ? "Seçimi Temizle" : "Clear Selection"}
+                    </button>
+
                     <canvas ref={priceChartRef} />
                   </div>
                 </div>
