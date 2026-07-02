@@ -2177,8 +2177,8 @@ export default function Home() {
               </div>
             )}
           </div>
-          <button type="submit" className="btn-primary" style={{ width: "40px", height: "40px", padding: 0 }}>
-            <Plus style={{ width: "18px" }} />
+          <button type="submit" className="btn-primary" style={{ width: "40px", height: "40px", padding: 0 }} aria-label="Search">
+            <Search style={{ width: "18px" }} />
           </button>
         </form>
 
