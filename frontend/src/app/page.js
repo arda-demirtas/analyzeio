@@ -1397,18 +1397,15 @@ export default function Home() {
     }
   };
 
-  // API Call: Add Watchlist Item
-  const handleAddWatchlist = async (e) => {
-    e.preventDefault();
-    if (!searchQuery) return;
+  // API Call: Add Watchlist Item Helper
+  const addSymbolToWatchlist = async (symbolToAdd) => {
+    if (!symbolToAdd) return;
     if (!token) {
       setAuthError(lang === "tr" ? "Arama yapmak veya takip listenizi özelleştirmek için giriş yapın." : "Sign in to search and customize your watchlist.");
       setShowAuthModal(true);
       return;
     }
-    const sym = searchQuery.toUpperCase().trim();
-    setSearchQuery("");
-    
+    const sym = symbolToAdd.toUpperCase().trim();
     try {
       const res = await fetch(`${API_BASE_URL}/api/watchlist`, {
         method: "POST",
@@ -1420,8 +1417,13 @@ export default function Home() {
       });
       const data = await res.json();
       if (res.ok) {
-        setWatchlist([...watchlist, data]);
+        if (!watchlist.some(w => w.symbol === data.symbol)) {
+          setWatchlist([...watchlist, data]);
+        }
         selectSymbol(data.symbol);
+        setSearchQuery("");
+        setShowSuggestions(false);
+        setSidebarOpen(false);
       } else {
         alert(data.detail || "Could not add symbol to watchlist.");
       }
@@ -1429,6 +1431,32 @@ export default function Home() {
       console.error(err);
     }
   };
+
+  // API Call: Search Submit (Enter/Search click) for Dynamic Autocomplete
+  const handleSearchSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(searchQuery)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.length > 0) {
+          setSearchSuggestions(data);
+          setShowSuggestions(true);
+        } else {
+          // If no search results, fall back to adding raw query
+          await addSymbolToWatchlist(searchQuery);
+        }
+      } else {
+        await addSymbolToWatchlist(searchQuery);
+      }
+    } catch (err) {
+      console.error("Search submit error:", err);
+      await addSymbolToWatchlist(searchQuery);
+    }
+  };
+
 
   // API Call: Remove Watchlist Item
   const handleRemoveWatchlist = async (e, symbolToRemove) => {
@@ -2078,7 +2106,7 @@ export default function Home() {
         </div>
 
         {/* Search Input with Autocomplete */}
-        <form onSubmit={handleAddWatchlist} style={{ display: "flex", gap: "8px" }}>
+        <form onSubmit={handleSearchSubmit} style={{ display: "flex", gap: "8px" }}>
           <div style={{ position: "relative", flexGrow: 1 }}>
             <Search style={{ position: "absolute", left: "12px", top: "12px", color: "var(--text-muted)", width: "16px", zIndex: 1 }} />
             <input
@@ -2100,10 +2128,8 @@ export default function Home() {
                 } else if (e.key === "Enter" && suggestionIndex >= 0) {
                   e.preventDefault();
                   const chosen = searchSuggestions[suggestionIndex];
-                  setSearchQuery(chosen.symbol);
                   setShowSuggestions(false);
-                  selectSymbol(chosen.symbol);
-                  setSidebarOpen(false);
+                  addSymbolToWatchlist(chosen.symbol);
                 } else if (e.key === "Escape") {
                   setShowSuggestions(false);
                 }
@@ -2132,10 +2158,7 @@ export default function Home() {
                     <div
                       key={item.symbol}
                       onMouseDown={() => {
-                        setSearchQuery(item.symbol);
-                        setShowSuggestions(false);
-                        selectSymbol(item.symbol);
-                        setSidebarOpen(false);
+                        addSymbolToWatchlist(item.symbol);
                       }}
                       style={{
                         display: "flex",
@@ -2176,6 +2199,7 @@ export default function Home() {
             <Plus style={{ width: "18px" }} />
           </button>
         </form>
+
 
         {/* Navigation Tabs */}
         <div style={{ display: "flex", gap: "8px", marginTop: "5px", marginBottom: "15px" }}>
