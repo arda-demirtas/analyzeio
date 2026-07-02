@@ -709,25 +709,7 @@ export default function Home() {
       });
     }
 
-    if (predictionData && predictionData.predicted_close) {
-      extendedLabels = [...labels, predictionData.prediction_date];
-      const predictedPrices = Array(labels.length).fill(null);
-      predictedPrices[labels.length - 1] = closePrices[closePrices.length - 1];
-      predictedPrices.push(predictionData.predicted_close);
-      
-      datasets.push({
-        label: "LSTM Prediction",
-        data: predictedPrices,
-        borderColor: "#10b981",
-        backgroundColor: "rgba(16, 185, 129, 0.05)",
-        borderWidth: 2.5,
-        borderDash: [5, 5],
-        pointRadius: 6,
-        pointBackgroundColor: "#10b981",
-        pointBorderColor: "#fff",
-        tension: 0.15,
-      });
-    }
+
 
     datasets.push(
       {
