@@ -553,29 +553,25 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
     # 2. Split data into train (80%) and test (20%) for evaluation
     split_idx = int(len(df) * 0.8)
     df_train = df.iloc[:split_idx]
-    df_test = df.iloc[split_idx - seq_length:]  # overlap for sequences
-    
-    # Fit train scalers for evaluation
+    df_test = df.iloc[split_idx - seq_length:]  # overlap for sequences needed to build sequences
+
+    # Fit scalers ONLY on train data — test data must never influence the scaler
     x_train, y_train, scaler_x_train, scaler_y_train = prepare_lstm_data(df_train, seq_length)
-    # Scale test data using train scalers
+    # Scale test data using the train scalers (no fit, only transform — no data leakage)
     x_test, y_test, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x_train, scaler_y_train)
-    
-    # Fit full scalers for final prediction
-    x_all, y_all, scaler_x, scaler_y = prepare_lstm_data(df, seq_length)
-    
+
     # 3. Check if cached model exists for this specific interval
     cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.keras")
     model_loaded = False
-    
-    # Check modification time to enforce 24 hour cache
+
     # Check modification time to enforce 24 hour cache (skipped if force_retrain is True)
     if not force_retrain and os.path.exists(cache_path):
         mtime = datetime.datetime.fromtimestamp(os.path.getmtime(cache_path))
         last_candle_time = df.index[-1]
-        
+
         # Cache is valid if it's less than 24h old OR if it was trained after the last completed candle in df started (handles weekends/closures)
         is_cache_valid = (datetime.datetime.now() - mtime < datetime.timedelta(hours=24)) or (mtime > last_candle_time)
-        
+
         if is_cache_valid:
             try:
                 model = tf.keras.models.load_model(cache_path)
@@ -583,10 +579,10 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
                 training_status = f"Loaded cached model ({interval} last 24h/weekend)"
             except Exception:
                 pass  # If load fails, we will re-train
-                
+
     if not model_loaded:
         is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
-        
+
         if is_auto_trained_asset and not force_retrain:
             # Standard user request: do NOT train on the fly. Try loading stale/older cached model
             if os.path.exists(cache_path):
@@ -596,42 +592,38 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
                     training_status = f"Loaded cached model ({interval} - Stale/Fallback)"
                 except Exception:
                     pass
-            
+
             # If still not loaded (e.g. no cache file exists yet), raise error
             if not model_loaded:
                 raise ValueError(f"Model for {symbol} is currently being initialized/trained on the server. Please try again in a few minutes.")
         else:
-            # Either daemon is training, or it is a non-popular pair: run training on the fly
-            # Train base model on 80% split with early stopping
+            # Train model ONLY on the 80% train split — test data is never used for training
             model = train_lstm_model(x_train, y_train, seq_length, use_early_stopping=True)
-            
-            # Evaluate on 20% test data to get honest out-of-sample metrics
+
+            # Evaluate on the held-out 20% test data (out-of-sample, read-only — no fine-tuning)
             metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
-            
-            # Fine-tune the same model weights on the test data (latest market data)
-            x_test_full, y_test_full, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x, scaler_y)
-            
-            # Train for 20 epochs without validation split to absorb the latest price action
-            model.fit(x_test_full, y_test_full, epochs=20, batch_size=32, verbose=0)
+
+            # Save the model trained purely on train data
             model.save(cache_path)
-            training_status = f"Trained & fine-tuned model ({interval} timeframe)"
-            
-    # If the model was loaded (either cache hit or stale fallback), run evaluation
+            training_status = f"Trained model on 80% train data ({interval} timeframe)"
+
+    # If the model was loaded (either cache hit or stale fallback), run evaluation on test set
     if model_loaded:
-        # Use full scalers to scale the test set for evaluation of the loaded model
-        x_test_full, y_test_full, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x, scaler_y)
-        metrics = evaluate_model_performance(model, x_test_full, y_test_full, scaler_y, df_test, seq_length)
-        
+        # Evaluate using train scalers (consistent with how the model was originally trained)
+        metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
+
     metrics["training_status"] = training_status
-    
-    # 5. Predict the next close price
+
+    # 5. Predict the next close price using the last seq_length candles
+    # Scale using train scaler — this is correct because the model was trained with those scale parameters
     last_features = df[FEATURES].iloc[-seq_length:].values
-    scaled_last_features = scaler_x.transform(last_features)
-    
-    # Shape for prediction: (1, seq_length, 16)
+    scaled_last_features = scaler_x_train.transform(last_features)
+
+    # Shape for prediction: (1, seq_length, num_features)
     input_seq = np.array([scaled_last_features])
     scaled_pred = model.predict(input_seq, verbose=0)
-    predicted_return = float(scaler_y.inverse_transform(scaled_pred)[0][0])
+    predicted_return = float(scaler_y_train.inverse_transform(scaled_pred)[0][0])
+
     
     # Sanity check: limit predicted daily return to realistic bounds to filter out data outliers
     max_ret = 0.15 if is_crypto else 0.08
