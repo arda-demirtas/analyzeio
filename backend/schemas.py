@@ -136,9 +136,15 @@ class CommentResponse(BaseModel):
     created_at: datetime.datetime
     parent_id: Optional[int] = None
     user: CommentUser
+    likes: int = 0
+    dislikes: int = 0
+    user_reaction: Optional[str] = None  # "like", "dislike", or None
 
     class Config:
         from_attributes = True
+
+class CommentReactRequest(BaseModel):
+    reaction: str  # "like" or "dislike"
 
 class PredictionLogResponse(BaseModel):
     id: int
