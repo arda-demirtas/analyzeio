@@ -377,6 +377,40 @@ export default function Home() {
     { symbol: "SISE.IS",  name: "Şişecam",             category: "BIST" },
     { symbol: "TCELL.IS", name: "Turkcell",            category: "BIST" },
     { symbol: "BIMAS.IS", name: "BİM Mağazaları",      category: "BIST" },
+    // World Indices (Borsa Endeksleri)
+    { symbol: "^GSPC",    name: "S&P 500",             category: "Index" },
+    { symbol: "^IXIC",    name: "NASDAQ Composite",    category: "Index" },
+    { symbol: "^DJI",     name: "Dow Jones Industrial",category: "Index" },
+    { symbol: "^NYA",     name: "NYSE Composite",      category: "Index" },
+    { symbol: "^RUT",     name: "Russell 2000",        category: "Index" },
+    { symbol: "^VIX",     name: "VIX Volatility Index",category: "Index" },
+    { symbol: "^FTSE",    name: "FTSE 100 (London)",   category: "Index" },
+    { symbol: "^GDAXI",   name: "DAX (Frankfurt)",     category: "Index" },
+    { symbol: "^FCHI",    name: "CAC 40 (Paris)",      category: "Index" },
+    { symbol: "^IBEX",    name: "IBEX 35 (Madrid)",    category: "Index" },
+    { symbol: "^AEX",     name: "AEX (Amsterdam)",     category: "Index" },
+    { symbol: "^STOXX50E",name: "Euro Stoxx 50",       category: "Index" },
+    { symbol: "^N225",    name: "Nikkei 225 (Tokyo)",  category: "Index" },
+    { symbol: "^HSI",     name: "Hang Seng (Hong Kong)",category: "Index" },
+    { symbol: "^BSESN",   name: "BSE Sensex (Mumbai)", category: "Index" },
+    { symbol: "^NSEI",    name: "NIFTY 50 (India)",    category: "Index" },
+    { symbol: "^BVSP",    name: "Bovespa (Brazil)",    category: "Index" },
+    { symbol: "^AXJO",    name: "ASX 200 (Australia)", category: "Index" },
+    { symbol: "^KS11",    name: "KOSPI (Seoul)",       category: "Index" },
+    { symbol: "^SSMI",    name: "SMI (Switzerland)",   category: "Index" },
+    { symbol: "^XU100.IS",name: "BIST 100 (Istanbul)", category: "Index" },
+    { symbol: "^TWII",    name: "Taiwan Weighted",     category: "Index" },
+    // Popular ETFs
+    { symbol: "SPY",  name: "SPDR S&P 500 ETF",        category: "ETF" },
+    { symbol: "QQQ",  name: "Invesco NASDAQ 100 ETF",  category: "ETF" },
+    { symbol: "DIA",  name: "SPDR Dow Jones ETF",      category: "ETF" },
+    { symbol: "IWM",  name: "iShares Russell 2000 ETF",category: "ETF" },
+    { symbol: "GLD",  name: "SPDR Gold ETF",           category: "ETF" },
+    { symbol: "SLV",  name: "iShares Silver ETF",      category: "ETF" },
+    { symbol: "TLT",  name: "iShares 20+ Year Treasury",category: "ETF" },
+    { symbol: "XLE",  name: "Energy Select SPDR ETF",  category: "ETF" },
+    { symbol: "XLF",  name: "Financial Select SPDR ETF",category: "ETF" },
+    { symbol: "XLK",  name: "Technology Select SPDR ETF",category: "ETF" },
   ];
 
   // Filter suggestions whenever searchQuery changes
@@ -2092,7 +2126,7 @@ export default function Home() {
                 backdropFilter: "blur(12px)"
               }}>
                 {searchSuggestions.map((item, idx) => {
-                  const catColors = { Crypto: "#f59e0b", Stock: "#3b82f6", BIST: "#10b981", Commodity: "#f97316" };
+                  const catColors = { Crypto: "#f59e0b", Stock: "#3b82f6", BIST: "#10b981", Commodity: "#f97316", Index: "#a855f7", ETF: "#06b6d4" };
                   const isHighlighted = idx === suggestionIndex;
                   return (
                     <div
