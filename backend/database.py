@@ -25,7 +25,7 @@ def get_db():
 
 def run_migrations():
     from sqlalchemy import text, inspect
-    from backend.models import User, Watchlist, Comment, PredictionLog, AutoTrainSymbol, VerificationCode, MarketScreener
+    from backend.models import User, Watchlist, Comment, PredictionLog, AutoTrainSymbol, VerificationCode, MarketScreener, CommentReaction
     db = SessionLocal()
     try:
         # Inspect database schema in a database-agnostic way
