@@ -5,7 +5,7 @@ from backend.database import get_db
 from backend.models import User, Comment, CommentReaction
 from backend.schemas import CommentCreate, CommentResponse, CommentReactRequest
 from backend.auth import get_current_user, oauth2_scheme
-from jose import jwt, JWTError
+import jwt
 from backend.config import SECRET_KEY, ALGORITHM
 
 router = APIRouter(prefix="/comments", tags=["Comments"])
@@ -50,7 +50,7 @@ def _get_optional_user_id(token: Optional[str], db: Session) -> Optional[int]:
             return None
         user = db.query(User).filter(User.username == username).first()
         return user.id if user else None
-    except JWTError:
+    except jwt.PyJWTError:
         return None
 
 
