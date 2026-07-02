@@ -126,7 +126,11 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
             "Volume": quote["volume"]
         }, index=dates)
         df.index.name = "Date"
-        df = df.dropna()
+        # Safely fill missing volume with 0 (e.g. indices like VIX that have no volume)
+        df["Volume"] = df["Volume"].fillna(0)
+        # Drop rows where core price information is missing
+        df = df.dropna(subset=["Open", "High", "Low", "Close"])
+
         
     except Exception as e:
         raise ValueError(f"No historical data found or failed to parse for symbol: {symbol}. Error: {e}")
@@ -187,7 +191,8 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
     df["Daily_Return"] = df["Close"].pct_change()
     df["Return_3"] = df["Close"].pct_change(3)
     df["Return_7"] = df["Close"].pct_change(7)
-    df["Volume_Change"] = df["Volume"].pct_change()
+    df["Volume_Change"] = df["Volume"].pct_change().fillna(0)
+
     
     # Replace all infinite values (inf, -inf) with NaN
     df = df.replace([np.inf, -np.inf], np.nan)
