@@ -275,3 +275,74 @@ def get_market_info(symbol: str):
         }
     except Exception:
         return _EMPTY
+
+
+@router.get("/search")
+def search_assets(q: str):
+    """
+    Proxies a search query to Yahoo Finance search endpoint
+    and returns mapped symbol suggestions.
+    """
+    import requests as req_lib
+    if not q or not q.strip():
+        return []
+
+    url = "https://query2.finance.yahoo.com/v1/finance/search"
+    params = {"q": q, "quotesCount": 10}
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36"
+        )
+    }
+    try:
+        r = req_lib.get(url, params=params, headers=headers, timeout=10)
+        if r.status_code != 200:
+            return []
+
+        data = r.json()
+        quotes = data.get("quotes", [])
+
+        results = []
+        for quote in quotes:
+            symbol = quote.get("symbol")
+            if not symbol:
+                continue
+
+            # Map type
+            qtype = quote.get("quoteType", "")
+            category = "Stock"
+            if qtype:
+                qtype_upper = qtype.upper()
+                if qtype_upper == "CRYPTOCURRENCY":
+                    category = "Crypto"
+                elif qtype_upper == "INDEX":
+                    category = "Index"
+                elif qtype_upper == "ETF":
+                    category = "ETF"
+                elif qtype_upper == "EQUITY":
+                    if symbol.endswith(".IS"):
+                        category = "BIST"
+                    else:
+                        category = "Stock"
+                elif qtype_upper == "FUTURE":
+                    if symbol in ["GC=F", "SI=F"]:
+                        category = "Commodity"
+                    else:
+                        category = "Future"
+                else:
+                    category = qtype.replace("_", " ").title()
+
+            # Name
+            name = quote.get("longname") or quote.get("shortname") or symbol
+
+            results.append({
+                "symbol": symbol,
+                "name": name,
+                "category": category
+            })
+        return results
+    except Exception:
+        return []
+
