@@ -4097,33 +4097,64 @@ export default function Home() {
                     Auto-Trained Assets List ({autoTrainSymbols.length})
                   </h4>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "10px", maxHeight: "400px", overflowY: "auto", paddingRight: "5px" }}>
-                    {autoTrainSymbols.length === 0 ? (
-                      <div style={{ gridColumn: "1 / -1", padding: "20px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
-                        No auto-trained assets found.
-                      </div>
-                    ) : (
-                      autoTrainSymbols.map((item) => (
-                        <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255, 255, 255, 0.02)", padding: "10px 12px", borderRadius: "6px", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
-                          <strong style={{ fontSize: "13.5px", color: "var(--text-main)" }}>{item.symbol}</strong>
-                          <button 
-                            onClick={() => handleDeleteAutoTrainSymbol(item.symbol)}
-                            style={{ 
-                              background: "none", 
-                              border: "none", 
-                              color: "var(--accent-danger)", 
-                              cursor: "pointer", 
-                              fontSize: "13px",
-                              padding: "2px 6px",
-                              borderRadius: "4px"
-                            }}
-                            title="Remove from Auto-Train List"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))
-                    )}
+                  <div style={{ overflowX: "auto", maxHeight: "400px" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)" }}>
+                          <th style={{ padding: "10px" }}>Asset Symbol</th>
+                          <th style={{ padding: "10px" }}>Model Status</th>
+                          <th style={{ padding: "10px" }}>Last Trained At</th>
+                          <th style={{ padding: "10px", textAlign: "right" }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {autoTrainSymbols.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
+                              No auto-trained assets found.
+                            </td>
+                          </tr>
+                        ) : (
+                          autoTrainSymbols.map((item) => (
+                            <tr key={item.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.03)" }}>
+                              <td style={{ padding: "12px 10px" }}>
+                                <strong style={{ fontSize: "13.5px", color: "var(--text-main)" }}>{item.symbol}</strong>
+                              </td>
+                              <td style={{ padding: "12px 10px" }}>
+                                {item.model_exists ? (
+                                  <span style={{ background: "rgba(16, 185, 129, 0.15)", color: "var(--accent-success)", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "700" }}>
+                                    ✓ Trained
+                                  </span>
+                                ) : (
+                                  <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "700" }}>
+                                    ⏳ Pending Data
+                                  </span>
+                                )}
+                              </td>
+                              <td style={{ padding: "12px 10px", color: "var(--text-muted)", fontFamily: "monospace" }}>
+                                {item.last_trained_at || "Never (Needs 1st run)"}
+                              </td>
+                              <td style={{ padding: "12px 10px", textAlign: "right" }}>
+                                <button 
+                                  onClick={() => handleDeleteAutoTrainSymbol(item.symbol)}
+                                  className="btn-secondary"
+                                  style={{ 
+                                    padding: "4px 8px", 
+                                    fontSize: "11px",
+                                    minWidth: "auto",
+                                    borderColor: "rgba(239, 68, 68, 0.4)",
+                                    color: "var(--accent-danger)"
+                                  }}
+                                  title="Remove from Auto-Train List"
+                                >
+                                  Remove
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               ) : (
