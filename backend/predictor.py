@@ -550,7 +550,38 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
     df, asset_name, is_crypto, current_price = fetch_market_data(symbol, interval=interval)
     if current_price is None and not df.empty:
         current_price = float(df["Close"].iloc[-1])
-    
+
+    # For daily intervals, ensure the last row matches the expected last completed day's date
+    if interval == "1d" and not df.empty:
+        now_utc = datetime.datetime.utcnow()
+        if is_crypto:
+            # Expected last completed daily candle date is yesterday (UTC)
+            expected_last_date = now_utc.date() - datetime.timedelta(days=1)
+        else:
+            # Expected last completed daily candle date is today (if past market close) or yesterday/previous weekday (if before market close)
+            if symbol.endswith(".IS"):
+                close_hour_utc = 15  # BIST closes at 18:00 TRT (15:00 UTC)
+            else:
+                close_hour_utc = 20  # US markets close at 16:00 EST (20:00 UTC)
+
+            if now_utc.hour >= close_hour_utc:
+                target_completed_date = now_utc.date()
+            else:
+                target_completed_date = now_utc.date() - datetime.timedelta(days=1)
+
+            while target_completed_date.weekday() in [5, 6]:
+                target_completed_date -= datetime.timedelta(days=1)
+            expected_last_date = target_completed_date
+
+        # Check the date of the last valid row in cleaned data
+        last_row_date = df.index[-1].date()
+        if last_row_date < expected_last_date:
+            lang_msg = {
+                "tr": f"{symbol} için en son kapanış verisi ({expected_last_date.strftime('%Y-%m-%d')}) henüz Yahoo Finance sunucularında mevcut değil. Tahmin beklemede.",
+                "en": f"Latest completed daily data for {symbol} ({expected_last_date.strftime('%Y-%m-%d')}) is not yet available on Yahoo Finance. Prediction is pending."
+            }
+            raise ValueError(lang_msg.get(lang, lang_msg["en"]))
+
     # Ensure there is enough data
     if len(df) < seq_length + 50:
         raise ValueError(f"Insufficient data for symbol {symbol} at interval {interval}. Needed: {seq_length + 50}, Got: {len(df)}")
