@@ -3560,76 +3560,87 @@ export default function Home() {
                       <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
                         <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)" }} />
                       </div>
-                    ) : accuracyLogs.length === 0 ? (
-                      <div style={{ fontSize: "13px", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", padding: "15px" }}>
-                        {t("table_no_logs")}
-                      </div>
-                    ) : (
-                      <div style={{ overflowX: "auto" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
-                          <thead>
-                            <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)", textAlign: "left" }}>
-                              <th style={{ padding: "8px 4px" }}>{t("table_target_date")}</th>
-                              <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_predicted")}</th>
-                              <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_actual")}</th>
-                              <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_error")}</th>
-                              <th style={{ padding: "8px 4px", textAlign: "center" }}>{t("table_direction")}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {accuracyLogs.map(log => {
-                              const actualVal = log.actual_close;
-                              const predVal = log.predicted_close;
-                              const lastVal = log.last_close;
-                              
-                              let errorPct = "---";
-                              let dirCorr = "---";
-                              let dirBadgeClass = "badge-secondary";
-                              
-                              if (actualVal !== null && actualVal !== undefined) {
-                                const err = actualVal !== 0 ? Math.abs(predVal - actualVal) / actualVal : 0;
-                                errorPct = `${(err * 100).toFixed(2)}%`;
-                                
-                                const predUp = predVal > lastVal;
-                                const actualUp = actualVal > lastVal;
-                                const matched = predUp === actualUp;
-                                
-                                dirCorr = matched ? "✓" : "✗";
-                                dirBadgeClass = matched ? "badge-success" : "badge-danger";
-                              }
-                              
-                              return (
-                                <tr key={log.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.03)" }}>
-                                  <td style={{ padding: "8px 4px", whiteSpace: "nowrap" }}>
-                                    {log.prediction_date}
-                                  </td>
-                                  <td style={{ padding: "8px 4px", textAlign: "right", fontWeight: "600" }}>
-                                    {predVal !== null && predVal !== undefined ? `$${predVal.toFixed(2)}` : "---"}
-                                  </td>
-                                  <td style={{ padding: "8px 4px", textAlign: "right" }}>
-                                    {actualVal !== null && actualVal !== undefined ? `$${actualVal.toFixed(2)}` : (
-                                      <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic" }}>
-                                        {t("table_pending")}
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td style={{ padding: "8px 4px", textAlign: "right" }}>
-                                    {errorPct}
-                                  </td>
-                                  <td style={{ padding: "8px 4px", textAlign: "center" }}>
-                                    {actualVal !== null ? (
-                                      <span className={`badge ${dirBadgeClass}`} style={{ fontSize: "10px", padding: "1px 6px" }}>
-                                        {dirCorr}
-                                      </span>
-                                    ) : "---"}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
+                                        ) : (() => {
+                      const filteredAccuracyLogs = accuracyLogs.filter((log, idx) => {
+                        if (idx === 0 && log.actual_close === null && accuracyLogs.length > 1) {
+                          if (log.predicted_close === accuracyLogs[1].predicted_close) {
+                            return false;
+                          }
+                        }
+                        return true;
+                      });
+
+                      return filteredAccuracyLogs.length === 0 ? (
+                        <div style={{ fontSize: "13px", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", padding: "15px" }}>
+                          {t("table_no_logs")}
+                        </div>
+                      ) : (
+                        <div style={{ overflowX: "auto" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                            <thead>
+                              <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)", textAlign: "left" }}>
+                                <th style={{ padding: "8px 4px" }}>{t("table_target_date")}</th>
+                                <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_predicted")}</th>
+                                <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_actual")}</th>
+                                <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_error")}</th>
+                                <th style={{ padding: "8px 4px", textAlign: "center" }}>{t("table_direction")}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {filteredAccuracyLogs.map(log => {
+                                const actualVal = log.actual_close;
+                                const predVal = log.predicted_close;
+                                const lastVal = log.last_close;
+
+                                let errorPct = "---";
+                                let dirCorr = "---";
+                                let dirBadgeClass = "badge-secondary";
+
+                                if (actualVal !== null && actualVal !== undefined) {
+                                  const err = actualVal !== 0 ? Math.abs(predVal - actualVal) / actualVal : 0;
+                                  errorPct = `${(err * 100).toFixed(2)}%`;
+
+                                  const predUp = predVal > lastVal;
+                                  const actualUp = actualVal > lastVal;
+                                  const matched = predUp === actualUp;
+
+                                  dirCorr = matched ? "✓" : "✗";
+                                  dirBadgeClass = matched ? "badge-success" : "badge-danger";
+                                }
+
+                                return (
+                                  <tr key={log.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.03)" }}>
+                                    <td style={{ padding: "8px 4px", whiteSpace: "nowrap" }}>
+                                      {log.prediction_date}
+                                    </td>
+                                    <td style={{ padding: "8px 4px", textAlign: "right", fontWeight: "600" }}>
+                                      {predVal !== null && predVal !== undefined ? `$${predVal.toFixed(2)}` : "---"}
+                                    </td>
+                                    <td style={{ padding: "8px 4px", textAlign: "right" }}>
+                                      {actualVal !== null && actualVal !== undefined ? `$${actualVal.toFixed(2)}` : (
+                                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic" }}>
+                                          {t("table_pending")}
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td style={{ padding: "8px 4px", textAlign: "right" }}>
+                                      {errorPct}
+                                    </td>
+                                    <td style={{ padding: "8px 4px", textAlign: "center" }}>
+                                      {actualVal !== null ? (
+                                        <span className={`badge ${dirBadgeClass}`} style={{ fontSize: "10px", padding: "1px 6px" }}>
+                                          {dirCorr}
+                                        </span>
+                                      ) : "---"}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
