@@ -82,7 +82,7 @@ def get_auto_train_symbols(db: Session = Depends(get_db), admin: User = Depends(
             "symbol": s.symbol,
             "created_at": s.created_at,
             "last_trained_at": last_trained,
-            "model_exists": exists
+            "is_trained": exists
         })
     return results
 
