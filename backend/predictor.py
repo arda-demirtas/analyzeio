@@ -552,6 +552,8 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         current_price = float(df["Close"].iloc[-1])
 
     # For daily intervals, ensure the last row matches the expected last completed day's date
+    is_pending_data = False
+    pending_error_msg = None
     if interval == "1d" and not df.empty:
         now_utc = datetime.datetime.utcnow()
         if is_crypto:
@@ -576,105 +578,109 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         # Check the date of the last valid row in cleaned data
         last_row_date = df.index[-1].date()
         if last_row_date < expected_last_date:
+            is_pending_data = True
             lang_msg = {
                 "tr": f"{symbol} için en son kapanış verisi ({expected_last_date.strftime('%Y-%m-%d')}) henüz Yahoo Finance sunucularında mevcut değil. Tahmin beklemede.",
                 "en": f"Latest completed daily data for {symbol} ({expected_last_date.strftime('%Y-%m-%d')}) is not yet available on Yahoo Finance. Prediction is pending."
             }
-            raise ValueError(lang_msg.get(lang, lang_msg["en"]))
+            pending_error_msg = lang_msg.get(lang, lang_msg["en"])
 
-    # Ensure there is enough data
-    if len(df) < seq_length + 50:
-        raise ValueError(f"Insufficient data for symbol {symbol} at interval {interval}. Needed: {seq_length + 50}, Got: {len(df)}")
-    
-    # 2. Split data into train (80%) and test (20%) for evaluation
-    split_idx = int(len(df) * 0.8)
-    df_train = df.iloc[:split_idx]
-    df_test = df.iloc[split_idx - seq_length:]  # overlap for sequences needed to build sequences
+    predicted_close = None
+    change_percent = None
+    metrics = None
+    training_status = ""
 
-    # Fit scalers ONLY on train data — test data must never influence the scaler
-    x_train, y_train, scaler_x_train, scaler_y_train = prepare_lstm_data(df_train, seq_length)
-    # Scale test data using the train scalers (no fit, only transform — no data leakage)
-    x_test, y_test, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x_train, scaler_y_train)
+    if not is_pending_data:
+        # 2. Split data into train (80%) and test (20%) for evaluation
+        split_idx = int(len(df) * 0.8)
+        df_train = df.iloc[:split_idx]
+        df_test = df.iloc[split_idx - seq_length:]  # overlap for sequences needed to build sequences
 
-    # 3. Check if cached model exists for this specific interval
-    cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.keras")
-    model_loaded = False
+        # Fit scalers ONLY on train data — test data must never influence the scaler
+        x_train, y_train, scaler_x_train, scaler_y_train = prepare_lstm_data(df_train, seq_length)
+        # Scale test data using the train scalers (no fit, only transform — no data leakage)
+        x_test, y_test, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x_train, scaler_y_train)
 
-    # Check modification time to enforce 24 hour cache (skipped if force_retrain is True)
-    if not force_retrain and os.path.exists(cache_path):
-        mtime = datetime.datetime.fromtimestamp(os.path.getmtime(cache_path))
-        last_candle_time = df.index[-1]
+        # 3. Check if cached model exists for this specific interval
+        cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.keras")
+        model_loaded = False
 
-        # Cache is valid if it's less than 24h old OR if it was trained after the last completed candle in df started (handles weekends/closures)
-        is_cache_valid = (datetime.datetime.now() - mtime < datetime.timedelta(hours=24)) or (mtime > last_candle_time)
+        # Check modification time to enforce 24 hour cache (skipped if force_retrain is True)
+        if not force_retrain and os.path.exists(cache_path):
+            mtime = datetime.datetime.fromtimestamp(os.path.getmtime(cache_path))
+            last_candle_time = df.index[-1]
 
-        if is_cache_valid:
-            try:
-                model = tf.keras.models.load_model(cache_path)
-                model_loaded = True
-                training_status = f"Loaded cached model ({interval} last 24h/weekend)"
-            except Exception:
-                pass  # If load fails, we will re-train
+            # Cache is valid if it's less than 24h old OR if it was trained after the last completed candle in df started (handles weekends/closures)
+            is_cache_valid = (datetime.datetime.now() - mtime < datetime.timedelta(hours=24)) or (mtime > last_candle_time)
 
-    if not model_loaded:
-        is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
-
-        if is_auto_trained_asset and not force_retrain:
-            # Standard user request: do NOT train on the fly. Try loading stale/older cached model
-            if os.path.exists(cache_path):
+            if is_cache_valid:
                 try:
                     model = tf.keras.models.load_model(cache_path)
                     model_loaded = True
-                    training_status = f"Loaded cached model ({interval} - Stale/Fallback)"
+                    training_status = f"Loaded cached model ({interval} last 24h/weekend)"
                 except Exception:
-                    pass
+                    pass  # If load fails, we will re-train
 
-            # If still not loaded (e.g. no cache file exists yet), raise error
-            if not model_loaded:
-                raise ValueError(f"Model for {symbol} is currently being initialized/trained on the server. Please try again in a few minutes.")
-        else:
-            # Train model ONLY on the 80% train split — test data is never used for training
-            model = train_lstm_model(x_train, y_train, seq_length, use_early_stopping=True)
+        if not model_loaded:
+            is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
 
-            # Evaluate on the held-out 20% test data (out-of-sample, read-only — no fine-tuning)
+            if is_auto_trained_asset and not force_retrain:
+                # Standard user request: do NOT train on the fly. Try loading stale/older cached model
+                if os.path.exists(cache_path):
+                    try:
+                        model = tf.keras.models.load_model(cache_path)
+                        model_loaded = True
+                        training_status = f"Loaded cached model ({interval} - Stale/Fallback)"
+                    except Exception:
+                        pass
+
+                # If still not loaded (e.g. no cache file exists yet), raise error
+                if not model_loaded:
+                    raise ValueError(f"Model for {symbol} is currently being initialized/trained on the server. Please try again in a few minutes.")
+            else:
+                # Train model ONLY on the 80% train split — test data is never used for training
+                model = train_lstm_model(x_train, y_train, seq_length, use_early_stopping=True)
+
+                # Evaluate on the held-out 20% test data (out-of-sample, read-only — no fine-tuning)
+                metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
+
+                # Save the model trained purely on train data
+                model.save(cache_path)
+                training_status = f"Trained model on 80% train data ({interval} timeframe)"
+
+        # If the model was loaded (either cache hit or stale fallback), run evaluation on test set
+        if model_loaded:
+            # Evaluate using train scalers (consistent with how the model was originally trained)
             metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
 
-            # Save the model trained purely on train data
-            model.save(cache_path)
-            training_status = f"Trained model on 80% train data ({interval} timeframe)"
+        metrics["training_status"] = training_status
 
-    # If the model was loaded (either cache hit or stale fallback), run evaluation on test set
-    if model_loaded:
-        # Evaluate using train scalers (consistent with how the model was originally trained)
-        metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
+        # 5. Predict the next close price using the last seq_length candles
+        # Scale using train scaler — this is correct because the model was trained with those scale parameters
+        last_features = df[FEATURES].iloc[-seq_length:].values
+        scaled_last_features = scaler_x_train.transform(last_features)
 
-    metrics["training_status"] = training_status
+        # Shape for prediction: (1, seq_length, num_features)
+        input_seq = np.array([scaled_last_features])
+        scaled_pred = model.predict(input_seq, verbose=0)
+        predicted_return = float(scaler_y_train.inverse_transform(scaled_pred)[0][0])
 
-    # 5. Predict the next close price using the last seq_length candles
-    # Scale using train scaler — this is correct because the model was trained with those scale parameters
-    last_features = df[FEATURES].iloc[-seq_length:].values
-    scaled_last_features = scaler_x_train.transform(last_features)
+        # Sanity check: limit predicted daily return to realistic bounds to filter out data outliers
+        max_ret = 0.15 if is_crypto else 0.08
+        min_ret = -0.15 if is_crypto else -0.08
+        if predicted_return > max_ret:
+            predicted_return = max_ret
+        elif predicted_return < min_ret:
+            predicted_return = min_ret
 
-    # Shape for prediction: (1, seq_length, num_features)
-    input_seq = np.array([scaled_last_features])
-    scaled_pred = model.predict(input_seq, verbose=0)
-    predicted_return = float(scaler_y_train.inverse_transform(scaled_pred)[0][0])
-
-    
-    # Sanity check: limit predicted daily return to realistic bounds to filter out data outliers
-    max_ret = 0.15 if is_crypto else 0.08
-    min_ret = -0.15 if is_crypto else -0.08
-    if predicted_return > max_ret:
-        predicted_return = max_ret
-    elif predicted_return < min_ret:
-        predicted_return = min_ret
-        
     # Details of the last available candle
     last_row = df.iloc[-1]
     last_close = float(last_row["Close"])
-    
-    # Reconstruct predicted absolute price
-    predicted_close = last_close * (1 + predicted_return)
+
+    if not is_pending_data:
+        # Reconstruct predicted absolute price
+        predicted_close = last_close * (1 + predicted_return)
+
     
     # Calculate expected close time of the predicted candle using UTC explicitly
     if interval == "1d":
@@ -718,10 +724,27 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         pred_date_str = pred_time.strftime("%Y-%m-%d %H:%M")
         expected_close_time = f"{pred_date_str} (TRT)"
         
-    change_percent = ((predicted_close - last_close) / last_close) * 100
+    if not is_pending_data:
+        change_percent = ((predicted_close - last_close) / last_close) * 100
+    else:
+        change_percent = None
     
     # Calculate threshold-filtered technical recommendation (0.2% threshold)
-    if change_percent > 0.2:
+    if is_pending_data:
+        tech_signal = "HOLD"
+        if lang == "tr":
+            tech_text = "Veri eksikliği nedeniyle işlem tavsiyesi beklemede. Yeni günlük mum kapanışı bekleniyor."
+        elif lang == "de":
+            tech_text = "Handelsempfehlung steht wegen fehlender Daten aus. Warten auf den neuen Tagesschluss."
+        elif lang == "ru":
+            tech_text = "Торговая рекомендация отложена из-за отсутствия данных. Ожидание нового дневного закрытия."
+        elif lang == "zh":
+            tech_text = "由于数据缺失，交易建议待定。等待新的日线收盘。"
+        elif lang == "es":
+            tech_text = "Recomendación comercial pendiente por falta de datos. Esperando el nuevo cierre diario."
+        else:
+            tech_text = "Trading recommendation is pending due to missing data. Waiting for the new daily candle close."
+    elif change_percent > 0.2:
         tech_signal = "STRONG_BUY"
         if lang == "tr":
             tech_text = "Model, yüksek güvenilirlikli yukarı yönlü ivme öngörüyor (>0.2%). Long (Alış) pozisyonu açılması önerilir."
@@ -827,30 +850,31 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
                 db_session.commit()
                 
         # B. Save or update the active prediction log to avoid duplicates on the same target candle date
-        existing_log = (
-            db_session.query(PredictionLog)
-            .filter(
-                PredictionLog.symbol == symbol,
-                PredictionLog.interval == interval,
-                PredictionLog.prediction_date == pred_date_str
+        if not is_pending_data:
+            existing_log = (
+                db_session.query(PredictionLog)
+                .filter(
+                    PredictionLog.symbol == symbol,
+                    PredictionLog.interval == interval,
+                    PredictionLog.prediction_date == pred_date_str
+                )
+                .first()
             )
-            .first()
-        )
-        if existing_log:
-            existing_log.predicted_close = predicted_close
-            existing_log.last_close = last_close
-            existing_log.created_at = datetime.datetime.utcnow()
-        else:
-            new_log = PredictionLog(
-                symbol=symbol,
-                interval=interval,
-                prediction_date=pred_date_str,
-                predicted_close=predicted_close,
-                last_close=last_close,
-                actual_close=None
-            )
-            db_session.add(new_log)
-        db_session.commit()
+            if existing_log:
+                existing_log.predicted_close = predicted_close
+                existing_log.last_close = last_close
+                existing_log.created_at = datetime.datetime.utcnow()
+            else:
+                new_log = PredictionLog(
+                    symbol=symbol,
+                    interval=interval,
+                    prediction_date=pred_date_str,
+                    predicted_close=predicted_close,
+                    last_close=last_close,
+                    actual_close=None
+                )
+                db_session.add(new_log)
+            db_session.commit()
     except Exception as db_err:
         print(f"Database logging error in get_prediction: {db_err}")
     finally:
