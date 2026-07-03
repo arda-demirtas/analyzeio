@@ -64,7 +64,28 @@ def get_system_stats(db: Session = Depends(get_db), admin: User = Depends(check_
 
 @router.get("/auto-train-symbols", response_model=List[AutoTrainSymbolResponse])
 def get_auto_train_symbols(db: Session = Depends(get_db), admin: User = Depends(check_admin)):
-    return db.query(AutoTrainSymbol).order_by(AutoTrainSymbol.symbol).all()
+    symbols = db.query(AutoTrainSymbol).order_by(AutoTrainSymbol.symbol).all()
+    results = []
+    import datetime
+    for s in symbols:
+        cache_path = os.path.join(MODEL_CACHE_DIR, f"{s.symbol}_1d_model.keras")
+        last_trained = None
+        exists = False
+        if os.path.exists(cache_path):
+            mtime = os.path.getmtime(cache_path)
+            dt = datetime.datetime.fromtimestamp(mtime)
+            last_trained = dt.strftime("%Y-%m-%d %H:%M:%S")
+            exists = True
+            
+        results.append({
+            "id": s.id,
+            "symbol": s.symbol,
+            "created_at": s.created_at,
+            "last_trained_at": last_trained,
+            "model_exists": exists
+        })
+    return results
+
 
 @router.post("/auto-train-symbols", response_model=AutoTrainSymbolResponse)
 def add_auto_train_symbol(payload: AutoTrainSymbolAdd, db: Session = Depends(get_db), admin: User = Depends(check_admin)):
