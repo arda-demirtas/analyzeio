@@ -2762,12 +2762,28 @@ export default function Home() {
             </p>
           </div>
         ) : predictError ? (
-          <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: "60vh", alignItems: "center", justifyContent: "center", color: "var(--accent-danger)", gap: "10px" }}>
-            <span style={{ fontSize: "18px", fontWeight: "600" }}>{t("error_title")}</span>
-            <span style={{ textAlign: "center", maxWidth: "400px" }}>{predictError}</span>
-            <button onClick={() => loadPrediction(activeSymbol, chartInterval)} className="btn-secondary" style={{ marginTop: "10px" }}>
-              <RefreshCw style={{ width: "14px" }} /> {t("try_again")}
-            </button>
+          <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: "60vh", alignItems: "center", justifyContent: "center", gap: "15px" }}>
+            {predictError.toLowerCase().includes("beklemede") || predictError.toLowerCase().includes("pending") ? (
+              <>
+                <div className="badge badge-warning" style={{ fontSize: "14px", padding: "6px 16px", borderRadius: "20px" }}>
+                  ⏳ {lang === "tr" ? "Tahmin Beklemede" : "Prediction Pending"}
+                </div>
+                <p style={{ textAlign: "center", maxWidth: "450px", color: "var(--text-muted)", fontSize: "14px", lineHeight: "1.6" }}>
+                  {predictError}
+                </p>
+                <button onClick={() => loadPrediction(activeSymbol, chartInterval)} className="btn-primary" style={{ marginTop: "10px" }}>
+                  <RefreshCw style={{ width: "14px" }} /> {lang === "tr" ? "Yeniden Sorgula" : "Query Again"}
+                </button>
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: "18px", fontWeight: "600", color: "var(--accent-danger)" }}>{t("error_title")}</span>
+                <span style={{ textAlign: "center", maxWidth: "400px", color: "var(--accent-danger)" }}>{predictError}</span>
+                <button onClick={() => loadPrediction(activeSymbol, chartInterval)} className="btn-secondary" style={{ marginTop: "10px" }}>
+                  <RefreshCw style={{ width: "14px" }} /> {t("try_again")}
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <>
