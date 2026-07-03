@@ -3314,7 +3314,20 @@ export default function Home() {
               <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
                 {/* Prediction Highlight Card */}
                 <div className="glass-panel prediction-card" style={{ minHeight: "220px", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-                  {predictionData && predictionData.predicted_close === null ? (
+                  {predictionData && predictionData.prediction_status === "pending_data" ? (
+                    <div style={{ textAlign: "center", padding: "15px" }}>
+                      <span style={{ fontSize: "28px", display: "block", marginBottom: "8px" }}>⏳</span>
+                      <h4 style={{ fontSize: "14px", fontWeight: "700", color: "#f59e0b", marginBottom: "6px" }}>
+                        {lang === "tr" ? "Tahmin Beklemede" : "Prediction Pending"}
+                      </h4>
+                      <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 12px 0", lineHeight: "1.5" }}>
+                        {predictionData.prediction_error || (lang === "tr" ? "En son günlük mum verisi bekleniyor." : "Waiting for the latest daily candle data.")}
+                      </p>
+                      <button onClick={() => loadPrediction(activeSymbol, chartInterval)} className="btn-secondary" style={{ fontSize: "11px", height: "30px", padding: "0 15px", marginTop: "5px" }}>
+                        <RefreshCw style={{ width: "10px", marginRight: "5px" }} /> {lang === "tr" ? "Yeniden Sorgula" : "Query Again"}
+                      </button>
+                    </div>
+                  ) : predictionData && predictionData.predicted_close === null ? (
                     <div style={{ textAlign: "center", padding: "10px" }}>
                       <span style={{ fontSize: "28px", display: "block", marginBottom: "8px" }}>🔒</span>
                       <h4 style={{ fontSize: "14px", fontWeight: "700", color: "#f59e0b", marginBottom: "6px" }}>
