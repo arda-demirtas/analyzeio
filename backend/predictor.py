@@ -619,30 +619,27 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.keras")
         model_loaded = False
 
-        # Check modification time to verify model contains the latest completed candle
+        # Check if cached model exists and is up to date relative to the latest completed candle start
         if not force_retrain and os.path.exists(cache_path):
-            mtime = os.path.getmtime(cache_path)
-            model_time_utc = datetime.datetime.utcfromtimestamp(mtime)
-            
-            last_candle_start = df.index[-1]
-            if interval == "1d":
-                if is_crypto:
-                    completion_time_utc = last_candle_start + datetime.timedelta(days=1)
-                elif symbol.endswith(".IS"):
-                    completion_time_utc = last_candle_start + datetime.timedelta(hours=15)
-                else:
-                    completion_time_utc = last_candle_start + datetime.timedelta(hours=20)
-            elif interval == "15m":
-                completion_time_utc = last_candle_start + datetime.timedelta(minutes=15)
-            elif interval == "1h":
-                completion_time_utc = last_candle_start + datetime.timedelta(hours=1)
-            elif interval == "4h":
-                completion_time_utc = last_candle_start + datetime.timedelta(hours=4)
-            else:
-                completion_time_utc = last_candle_start
-                
-            # Cache is valid if it was trained after the last candle completed
-            is_cache_valid = model_time_utc > completion_time_utc
+            meta_path = cache_path.replace(".keras", "_meta.json")
+            is_cache_valid = False
+
+            if os.path.exists(meta_path):
+                try:
+                    import json
+                    with open(meta_path, "r", encoding="utf-8") as f:
+                        meta_data = json.load(f)
+                    
+                    last_trained_str = meta_data.get("last_candle_start")
+                    if last_trained_str:
+                        last_trained_candle_start = datetime.datetime.strptime(last_trained_str, "%Y-%m-%d %H:%M:%S")
+                        last_candle_start = df.index[-1]
+                        
+                        # Cache is valid if the last completed candle start is NOT newer than the trained one
+                        if last_candle_start <= last_trained_candle_start:
+                            is_cache_valid = True
+                except Exception as meta_err:
+                    print(f"Error reading model metadata: {meta_err}")
 
             if is_cache_valid:
                 try:
@@ -678,6 +675,18 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
                 # Save the model trained purely on train data
                 model.save(cache_path)
                 training_status = f"Trained model on 80% train data ({interval} timeframe)"
+
+                # Save model metadata containing the start time of the last completed candle
+                try:
+                    import json
+                    meta_path = cache_path.replace(".keras", "_meta.json")
+                    last_candle_start = df.index[-1]
+                    with open(meta_path, "w", encoding="utf-8") as f:
+                        json.dump({
+                            "last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S")
+                        }, f)
+                except Exception as meta_err:
+                    print(f"Error saving model metadata for {symbol}: {meta_err}")
 
         # If the model was loaded (either cache hit or stale fallback), run evaluation on test set
         if model_loaded:
