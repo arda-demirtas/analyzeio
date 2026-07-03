@@ -109,8 +109,14 @@ class PredictionResponse(BaseModel):
     current_price: Optional[float] = None
     metrics: Optional[PredictionMetrics] = None
     history: List[IndicatorPoint]
+    prediction_status: Optional[str] = None
+    prediction_error: Optional[str] = None
     fundamental_analysis: Optional[FundamentalAnalysisResult] = None
     technical_recommendation: Optional[TechnicalRecommendation] = None
+
+
+
+
 
 # Profile & Comments schemas
 class ProfilePictureUpdate(BaseModel):
