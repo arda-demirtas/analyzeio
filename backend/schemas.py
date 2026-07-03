@@ -170,6 +170,8 @@ class AutoTrainSymbolResponse(BaseModel):
     id: int
     symbol: str
     created_at: datetime.datetime
+    last_trained_at: Optional[str] = None
+    model_exists: Optional[bool] = False
 
     class Config:
         from_attributes = True
