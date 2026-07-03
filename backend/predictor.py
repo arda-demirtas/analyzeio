@@ -158,14 +158,28 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
     # For daily data, exclude today's incomplete candle if market is active
     if interval == "1d":
         last_row_date_str = df.index[-1].strftime("%Y-%m-%d")
+        now_utc = datetime.datetime.utcnow()
+        current_hour_utc = now_utc.hour
+        
         if is_crypto:
-            today_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+            today_str = now_utc.strftime("%Y-%m-%d")
+            # Close at 00:00 UTC. If before 23:00 UTC, exclude active daily candle.
+            close_hour_utc = 23
+        elif symbol.endswith(".IS"):
+            # BIST: Turkey is UTC+3
+            today_trt = (now_utc + datetime.timedelta(hours=3)).date()
+            today_str = today_trt.strftime("%Y-%m-%d")
+            # Close at 15:00 UTC (18:00 TRT). If before 15:00 UTC, exclude active daily candle.
+            close_hour_utc = 15
         else:
-            today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+            # US Markets: Eastern time is UTC-4 (approximate DST, safe for daily rollover checks)
+            today_est = (now_utc - datetime.timedelta(hours=4)).date()
+            today_str = today_est.strftime("%Y-%m-%d")
+            # Close at 20:00 UTC (16:00 EST). If before 20:00 UTC, exclude active daily candle.
+            close_hour_utc = 20
             
         if last_row_date_str == today_str:
-            current_hour = datetime.datetime.now().hour
-            if is_crypto or current_hour < 23:
+            if current_hour_utc < close_hour_utc:
                 df = df.iloc[:-1]
         
     # Calculate indicators
