@@ -1445,6 +1445,16 @@ export default function Home() {
       return;
     }
     const sym = symbolToAdd.toUpperCase().trim();
+    
+    // If symbol is already in watchlist, directly select it and clear search query without showing an alert
+    if (watchlist.some(w => w.symbol === sym)) {
+      selectSymbol(sym);
+      setSearchQuery("");
+      setShowSuggestions(false);
+      setSidebarOpen(false);
+      return;
+    }
+    
     try {
       const res = await fetch(`${API_BASE_URL}/api/watchlist`, {
         method: "POST",
