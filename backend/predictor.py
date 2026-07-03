@@ -645,34 +645,36 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
     # Reconstruct predicted absolute price
     predicted_close = last_close * (1 + predicted_return)
     
-    # Calculate expected close time of the predicted candle
+    # Calculate expected close time of the predicted candle using UTC explicitly
     if interval == "1d":
         last_date_str = last_row.name.strftime("%Y-%m-%d")
-        now = datetime.datetime.now()
+        now_utc = datetime.datetime.utcnow()
         if is_crypto:
-            if now.hour < 3:
-                pred_date = now - datetime.timedelta(days=1)
-            else:
-                pred_date = now
-            close_time = pred_date + datetime.timedelta(days=1)
+            # Daily crypto candle closes at 00:00 UTC
+            pred_date = now_utc.date()
+            close_time = datetime.datetime.combine(pred_date, datetime.time.min) + datetime.timedelta(days=1)
             expected_close_time = f"{close_time.strftime('%Y-%m-%d')} 03:00 (TRT)"
         else:
-            if now.weekday() == 5:    # Saturday -> Monday
-                pred_date = now + datetime.timedelta(days=2)
-            elif now.weekday() == 6:  # Sunday -> Monday
-                pred_date = now + datetime.timedelta(days=1)
-            else:
-                if now.hour >= 23:
-                    pred_date = now + datetime.timedelta(days=1)
-                    if pred_date.weekday() == 5:
-                        pred_date += datetime.timedelta(days=2)
-                else:
-                    pred_date = now
-                    
+            # Determine close hour in UTC
             if symbol.endswith(".IS"):
-                expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} 18:00 (TRT)"
+                close_hour_utc = 15  # BIST closes at 18:00 TRT (15:00 UTC)
+                close_time_str = "18:00 (TRT)"
             else:
-                expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} 23:00 (TRT)"
+                close_hour_utc = 20  # US markets close at 16:00 EST (20:00 UTC)
+                close_time_str = "23:00 (TRT)"
+
+            # If current UTC hour is past market close, target is the next day
+            if now_utc.hour >= close_hour_utc:
+                pred_date = now_utc.date() + datetime.timedelta(days=1)
+            else:
+                pred_date = now_utc.date()
+
+            # Skip weekends (Saturday=5, Sunday=6)
+            while pred_date.weekday() in [5, 6]:
+                pred_date += datetime.timedelta(days=1)
+
+            expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} {close_time_str}"
+
         pred_date_str = pred_date.strftime("%Y-%m-%d")
     else:
         last_date_str = last_row.name.strftime("%Y-%m-%d %H:%M")
