@@ -496,6 +496,41 @@ export default function Home() {
   const [autoTrainSymbols, setAutoTrainSymbols] = useState([]);
   const [newAutoTrainSymbol, setNewAutoTrainSymbol] = useState("");
 
+  const getPredictionHeader = () => {
+    if (chartInterval === "1d") {
+      return t("prediction_header");
+    }
+    if (lang === "tr") {
+      if (chartInterval === "15m") return "Sonraki 15 Dakikalık Tahmini Kapanış";
+      if (chartInterval === "1h") return "Sonraki 1 Saatlik Tahmini Kapanış";
+      if (chartInterval === "4h") return "Sonraki 4 Saatlik Tahmini Kapanış";
+    }
+    if (lang === "de") {
+      if (chartInterval === "15m") return "Prognostizierter Schlusskurs für die nächsten 15 Min.";
+      if (chartInterval === "1h") return "Prognostizierter Schlusskurs für die nächste Stunde";
+      if (chartInterval === "4h") return "Prognostizierter Schlusskurs für die nächsten 4 Stunden";
+    }
+    if (lang === "ru") {
+      if (chartInterval === "15m") return "Прогноз закрытия на следующие 15 минут";
+      if (chartInterval === "1h") return "Прогноз закрытия на следующий 1 час";
+      if (chartInterval === "4h") return "Прогноз закрытия на следующие 4 часа";
+    }
+    if (lang === "zh") {
+      if (chartInterval === "15m") return "未来 15 分钟预测收盘价";
+      if (chartInterval === "1h") return "未来 1 小时预测收盘价";
+      if (chartInterval === "4h") return "未来 4 小时预测收盘价";
+    }
+    if (lang === "es") {
+      if (chartInterval === "15m") return "Próximos 15 Minutos Cierre Previsto";
+      if (chartInterval === "1h") return "Próxima 1 Hora Cierre Previsto";
+      if (chartInterval === "4h") return "Próximas 4 Horas Cierre Previsto";
+    }
+    if (chartInterval === "15m") return "Next 15 Minutes Predicted Close";
+    if (chartInterval === "1h") return "Next Hour Predicted Close";
+    if (chartInterval === "4h") return "Next 4 Hours Predicted Close";
+    return t("prediction_header");
+  };
+
   // Refs for Charts
   const priceChartRef = useRef(null);
   const rsiChartRef = useRef(null);
@@ -3342,7 +3377,7 @@ export default function Home() {
                     </div>
                   ) : (
                     <>
-                      <span className="prediction-label">{t("prediction_header")}</span>
+                      <span className="prediction-label">{getPredictionHeader()}</span>
                       <div className="prediction-value">
                         ${predictionData ? predictionData.predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"}
                       </div>
