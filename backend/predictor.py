@@ -619,19 +619,36 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.keras")
         model_loaded = False
 
-        # Check modification time to enforce 24 hour cache (skipped if force_retrain is True)
+        # Check modification time to verify model contains the latest completed candle
         if not force_retrain and os.path.exists(cache_path):
-            mtime = datetime.datetime.fromtimestamp(os.path.getmtime(cache_path))
-            last_candle_time = df.index[-1]
-
-            # Cache is valid if it's less than 24h old OR if it was trained after the last completed candle in df started (handles weekends/closures)
-            is_cache_valid = (datetime.datetime.now() - mtime < datetime.timedelta(hours=24)) or (mtime > last_candle_time)
+            mtime = os.path.getmtime(cache_path)
+            model_time_utc = datetime.datetime.utcfromtimestamp(mtime)
+            
+            last_candle_start = df.index[-1]
+            if interval == "1d":
+                if is_crypto:
+                    completion_time_utc = last_candle_start + datetime.timedelta(days=1)
+                elif symbol.endswith(".IS"):
+                    completion_time_utc = last_candle_start + datetime.timedelta(hours=15)
+                else:
+                    completion_time_utc = last_candle_start + datetime.timedelta(hours=20)
+            elif interval == "15m":
+                completion_time_utc = last_candle_start + datetime.timedelta(minutes=15)
+            elif interval == "1h":
+                completion_time_utc = last_candle_start + datetime.timedelta(hours=1)
+            elif interval == "4h":
+                completion_time_utc = last_candle_start + datetime.timedelta(hours=4)
+            else:
+                completion_time_utc = last_candle_start
+                
+            # Cache is valid if it was trained after the last candle completed
+            is_cache_valid = model_time_utc > completion_time_utc
 
             if is_cache_valid:
                 try:
                     model = tf.keras.models.load_model(cache_path)
                     model_loaded = True
-                    training_status = f"Loaded cached model ({interval} last 24h/weekend)"
+                    training_status = f"Loaded cached model ({interval} - fully up-to-date)"
                 except Exception:
                     pass  # If load fails, we will re-train
 
