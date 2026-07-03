@@ -413,23 +413,45 @@ export default function Home() {
     { symbol: "XLK",  name: "Technology Select SPDR ETF",category: "ETF" },
   ];
 
-  // Filter suggestions whenever searchQuery changes
-  useEffect(() => {
-    const q = searchQuery.trim().toLowerCase();
+  // Helper: Triggers autocomplete search (merges static catalog & dynamic API search results)
+  const triggerSearch = async (queryVal) => {
+    const q = queryVal.trim().toLowerCase();
     if (!q) {
       setSearchSuggestions([]);
       setShowSuggestions(false);
       return;
     }
-    const results = SYMBOL_CATALOG.filter(item =>
+
+    // 1. Get static matches instantly
+    const staticMatches = SYMBOL_CATALOG.filter(item =>
       item.symbol.toLowerCase().includes(q) ||
       item.name.toLowerCase().includes(q) ||
       item.category.toLowerCase().includes(q)
-    ).slice(0, 8); // max 8 suggestions
-    setSearchSuggestions(results);
-    setShowSuggestions(results.length > 0);
+    );
+
+    setSearchSuggestions(staticMatches.slice(0, 8));
+    setShowSuggestions(staticMatches.length > 0);
     setSuggestionIndex(-1);
-  }, [searchQuery]);
+
+    // 2. Fetch dynamic matches from API and merge them
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(q)}`);
+      if (res.ok) {
+        const dynamicMatches = await res.json();
+        const merged = [...staticMatches];
+        dynamicMatches.forEach(item => {
+          if (!merged.some(m => m.symbol.toUpperCase() === item.symbol.toUpperCase())) {
+            merged.push(item);
+          }
+        });
+        const finalResults = merged.slice(0, 8);
+        setSearchSuggestions(finalResults);
+        setShowSuggestions(finalResults.length > 0);
+      }
+    } catch (err) {
+      console.error("Dynamic search error:", err);
+    }
+  };
 
 
   // Settings / Profile Modals
@@ -1418,25 +1440,7 @@ export default function Home() {
   const handleSearchSubmit = async (e) => {
     if (e) e.preventDefault();
     if (!searchQuery.trim()) return;
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(searchQuery)}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.length > 0) {
-          setSearchSuggestions(data);
-          setShowSuggestions(true);
-        } else {
-          // If no search results, fall back to adding raw query
-          await addSymbolToWatchlist(searchQuery);
-        }
-      } else {
-        await addSymbolToWatchlist(searchQuery);
-      }
-    } catch (err) {
-      console.error("Search submit error:", err);
-      await addSymbolToWatchlist(searchQuery);
-    }
+    await triggerSearch(searchQuery);
   };
 
 
@@ -2096,8 +2100,11 @@ export default function Home() {
               placeholder={t("search_placeholder")}
               className="input-field"
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              onFocus={() => searchSuggestions.length > 0 && setShowSuggestions(true)}
+              onChange={e => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(false);
+              }}
+              onFocus={() => triggerSearch(searchQuery)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
               onKeyDown={e => {
                 if (!showSuggestions) return;
