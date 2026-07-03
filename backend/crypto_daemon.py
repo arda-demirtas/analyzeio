@@ -33,7 +33,7 @@ def check_and_train_assets():
     for idx, symbol in enumerate(symbols):
         try:
             print(f"[{idx+1}/{len(symbols)}] Training/Updating cache for {symbol} (1d)...")
-            get_prediction(symbol, interval="1d", force_retrain=True)
+            get_prediction(symbol, interval="1d", force_retrain=False)
             
             # Update screener table
             from backend.predictor import update_screener_cache
