@@ -4121,7 +4121,7 @@ export default function Home() {
                                 <strong style={{ fontSize: "13.5px", color: "var(--text-main)" }}>{item.symbol}</strong>
                               </td>
                               <td style={{ padding: "12px 10px" }}>
-                                {item.model_exists ? (
+                                {item.is_trained ? (
                                   <span style={{ background: "rgba(16, 185, 129, 0.15)", color: "var(--accent-success)", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "700" }}>
                                     ✓ Trained
                                   </span>
