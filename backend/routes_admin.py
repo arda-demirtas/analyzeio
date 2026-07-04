@@ -119,3 +119,29 @@ def delete_auto_train_symbol(symbol: str, db: Session = Depends(get_db), admin: 
     db.commit()
     return {"status": "success", "message": f"Successfully removed {symbol_str} from auto-train list."}
 
+
+@router.get("/mock-trading")
+def get_admin_mock_trading(admin: User = Depends(check_admin)):
+    """Returns the current state of mock trading for admin."""
+    from backend.mock_trading import get_mock_trading_state
+    return get_mock_trading_state()
+
+
+@router.post("/mock-trading/reset")
+def reset_admin_mock_trading(admin: User = Depends(check_admin)):
+    """Resets the mock trading simulation balance to $2000."""
+    from backend.mock_trading import save_mock_trading_state, log_mock_event
+    import datetime
+    reset_state = {
+        "balance": 2000.0,
+        "position": None,
+        "logs": [
+            {
+                "timestamp": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+                "event": "Mock trading system reset to $2,000.00 cash by Admin."
+            }
+        ]
+    }
+    save_mock_trading_state(reset_state)
+    return reset_state
+
