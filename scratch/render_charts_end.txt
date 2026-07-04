@@ -1,0 +1,70 @@
+Line 1091:       macdChartInst.current = new Chart(ctxMacd, {
+Line 1092:         type: "bar",
+Line 1093:         data: {
+Line 1094:           labels: labels,
+Line 1095:           datasets: [
+Line 1096:             {
+Line 1097:               type: "line",
+Line 1098:               label: "MACD",
+Line 1099:               data: macdValues,
+Line 1100:               borderColor: "#3b82f6",
+Line 1101:               borderWidth: 1.5,
+Line 1102:               pointRadius: 0,
+Line 1103:               tension: 0.1,
+Line 1104:             },
+Line 1105:             {
+Line 1106:               type: "line",
+Line 1107:               label: "Signal",
+Line 1108:               data: signalValues,
+Line 1109:               borderColor: "#ec4899",
+Line 1110:               borderWidth: 1.5,
+Line 1111:               pointRadius: 0,
+Line 1112:               tension: 0.1,
+Line 1113:             },
+Line 1114:             {
+Line 1115:               label: "Histogram",
+Line 1116:               data: histValues,
+Line 1117:               backgroundColor: histValues.map(h => h >= 0 ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.4)"),
+Line 1118:               borderWidth: 0,
+Line 1119:               barPercentage: 0.8
+Line 1120:             }
+Line 1121:           ]
+Line 1122:         },
+Line 1123:         options: {
+Line 1124:           events: chartEvents,
+Line 1125:           responsive: true,
+Line 1126:           maintainAspectRatio: false,
+Line 1127:           plugins: {
+Line 1128:             legend: { display: false }
+Line 1129:           },
+Line 1130:           scales: {
+Line 1131:             x: {
+Line 1132:               grid: { display: false },
+Line 1133:               ticks: { display: false }
+Line 1134:             },
+Line 1135:             y: {
+Line 1136:               grid: { color: "rgba(255, 255, 255, 0.05)" },
+Line 1137:               ticks: { color: "#9ca3af", maxTicksLimit: 5 }
+Line 1138:             }
+Line 1139:           }
+Line 1140:         }
+Line 1141:       });
+Line 1142:     }
+Line 1143:   };
+Line 1144: 
+Line 1145:   // API Call: Fetch Watchlist
+Line 1146:   const fetchWatchlist = async (authToken) => {
+Line 1147:     try {
+Line 1148:       const res = await fetch(`${API_BASE_URL}/api/watchlist`, {
+Line 1149:         headers: { "Authorization": `Bearer ${authToken}` }
+Line 1150:       });
+Line 1151:       if (res.status === 401) {
+Line 1152:         handleLogout();
+Line 1153:         return;
+Line 1154:       }
+Line 1155:       const data = await res.json();
+Line 1156:       setWatchlist(Array.isArray(data) ? data : []);
+Line 1157:       
+Line 1158:       // Populate standard items if user's watchlist is empty
+Line 1159:       if (Array.isArray(data) && data.length === 0) {
+Line 1160:         initializeDefaultWatchlist(authToken);
