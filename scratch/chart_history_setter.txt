@@ -1,0 +1,2 @@
+Line 221:   const [chartHistory, setChartHistory] = useState([]);
+Line 1424:         setChartHistory(data.history);
