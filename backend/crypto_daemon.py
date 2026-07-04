@@ -63,6 +63,14 @@ def check_and_train_assets(symbols_to_train=None):
             
     print(f"[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Auto-training cycle completed. Success: {success_count}, Failed/Pending: {fail_count}")
     cleanup_old_models()
+    
+    # Run daily mock trading choice and execution
+    try:
+        from backend.mock_trading import run_mock_trading_daily_buy
+        run_mock_trading_daily_buy()
+    except Exception as mock_err:
+        print(f"Error executing daily mock buy: {mock_err}")
+        
     return pending_symbols
 
 def cleanup_old_models():
@@ -104,6 +112,27 @@ def main():
     print("Daily Asset Auto-Training Daemon Started!")
     print("====================================================")
     
+    # Start background mock trading monitoring thread (runs every 5 minutes)
+    try:
+        import threading
+        from backend.mock_trading import check_mock_trading_rule
+        
+        def run_mock_trading_monitor():
+            print("[Mock Trading] Background monitor thread started.")
+            # Sleep 15 seconds initially to let startup settle
+            time.sleep(15)
+            while True:
+                try:
+                    check_mock_trading_rule()
+                except Exception as monitor_err:
+                    print(f"[Mock Trading Monitor Error] {monitor_err}")
+                time.sleep(300)
+                
+        monitor_thread = threading.Thread(target=run_mock_trading_monitor, daemon=True)
+        monitor_thread.start()
+    except Exception as thread_err:
+        print(f"Error starting mock trading monitor thread: {thread_err}")
+        
     # 1. Warm up cache immediately on startup (returns pending list if any)
     pending_symbols = check_and_train_assets()
     
