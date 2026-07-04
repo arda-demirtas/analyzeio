@@ -24,14 +24,12 @@ try:
     # 1. Test ETH-USD
     print("Direct Prediction for ETH-USD...")
     res_eth = get_prediction("ETH-USD", interval="1d", model_type="xgboost", is_daemon=True)
-    print("ETH-USD Predicted Close (XGBoost):", res_eth.get("predicted_close"))
-    print("ETH-USD LR Predicted Close:", res_eth.get("lr_predicted_close"))
-    
-    # 2. Test AAPL
-    print("\\nDirect Prediction for AAPL...")
-    res_aapl = get_prediction("AAPL", interval="1d", model_type="xgboost", is_daemon=True)
-    print("AAPL Predicted Close (XGBoost):", res_aapl.get("predicted_close"))
-    print("AAPL LR Predicted Close:", res_aapl.get("lr_predicted_close"))
+    print("XGBoost prediction:", res_eth.get("xgb_predicted_close"))
+    print("XGBoost metrics:", res_eth.get("xgb_metrics"))
+    print("LSTM prediction:", res_eth.get("lstm_predicted_close"))
+    print("LSTM metrics:", res_eth.get("lstm_metrics"))
+    print("Linear Regression prediction:", res_eth.get("lr_predicted_close"))
+    print("Linear Regression metrics:", res_eth.get("lr_metrics"))
 except Exception as e:
     print('Direct call failed:', e)
 """
