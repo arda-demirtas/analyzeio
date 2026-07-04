@@ -1,0 +1,80 @@
+Line 881:         hidden: true,
+Line 882:       }
+Line 883:     );
+Line 884: 
+Line 885:     // Add Prediction Point
+Line 886:     if (predictionData && predictionData.prediction_date && predictionData.predicted_close !== null && !isPendingData) {
+Line 887:       const predLabel = predictionData.model_type === "xgboost" 
+Line 888:         ? (lang === "tr" ? "XGBoost Tahmini" : "XGBoost Prediction") 
+Line 889:         : (lang === "tr" ? "LSTM Tahmini" : "LSTM Prediction");
+Line 890:         
+Line 891:       const lastClosePrice = closePrices[closePrices.length - 1];
+Line 892:       const isUp = predictionData.predicted_close >= lastClosePrice;
+Line 893:       const predColor = isUp ? "rgba(16, 185, 129, 0.95)" : "rgba(239, 68, 68, 0.95)";
+Line 894:       
+Line 895:       const predDataPoints = Array(labels.length - 1).fill(null);
+Line 896:       predDataPoints.push(lastClosePrice);
+Line 897:       predDataPoints.push(predictionData.predicted_close);
+Line 898:       
+Line 899:       datasets.push({
+Line 900:         label: predLabel,
+Line 901:         type: "line",
+Line 902:         data: predDataPoints,
+Line 903:         borderColor: predColor,
+Line 904:         borderWidth: 2.5,
+Line 905:         borderDash: [5, 5],
+Line 906:         pointRadius: 6,
+Line 907:         pointHoverRadius: 8,
+Line 908:         pointBackgroundColor: predColor,
+Line 909:         pointBorderColor: "#ffffff",
+Line 910:         pointBorderWidth: 1.5,
+Line 911:         fill: false,
+Line 912:         tension: 0,
+Line 913:       });
+Line 914:     }
+Line 915: 
+Line 916:     // Add Linear Regression Prediction Line (boydan boya)
+Line 917:     const hasLrHistory = history.some(h => h.lr_predicted_close !== null);
+Line 918:     if (predictionData && (hasLrHistory || (predictionData.lr_predicted_close !== null && !isPendingData))) {
+Line 919:       const lrLabel = lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction";
+Line 920:       const lrColor = "rgba(59, 130, 246, 0.9)"; // Sleek blue for LR
+Line 921:       
+Line 922:       const lrDataPoints = history.map(h => h.lr_predicted_close);
+Line 923:       if (predictionData.lr_predicted_close !== null && !isPendingData) {
+Line 924:         lrDataPoints.push(predictionData.lr_predicted_close);
+Line 925:       } else {
+Line 926:         lrDataPoints.push(null);
+Line 927:       }
+Line 928:       
+Line 929:       datasets.push({
+Line 930:         label: lrLabel,
+Line 931:         type: "line",
+Line 932:         data: lrDataPoints,
+Line 933:         borderColor: lrColor,
+Line 934:         borderWidth: 2,
+Line 935:         borderDash: [4, 4],
+Line 936:         pointRadius: (ctx) => {
+Line 937:           return ctx.dataIndex === lrDataPoints.length - 1 ? 6 : 0;
+Line 938:         },
+Line 939:         pointHoverRadius: (ctx) => {
+Line 940:           return ctx.dataIndex === lrDataPoints.length - 1 ? 8 : 0;
+Line 941:         },
+Line 942:         pointBackgroundColor: lrColor,
+Line 943:         pointBorderColor: "#ffffff",
+Line 944:         pointBorderWidth: 1.5,
+Line 945:         fill: false,
+Line 946:         tension: 0.1,
+Line 947:         hidden: true,
+Line 948:       });
+Line 949:     }
+Line 950: 
+Line 951:     // Add Support and Resistance Levels (All-symbols for premium, BTC-USD for everyone)
+Line 952:     const canShowSR = (activeSymbol === "BTC-USD") || (user && user.is_premium);
+Line 953:     
+Line 954:     if (canShowSR) {
+Line 955:       const { supports, resistances } = calculateSupportResistance(history);
+Line 956:       
+Line 957:       supports.forEach((val, idx) => {
+Line 958:         datasets.push({
+Line 959:           label: `${t("support")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
+Line 960:           data: Array(extendedLabels.length).fill(val),
