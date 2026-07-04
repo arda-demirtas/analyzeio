@@ -495,6 +495,7 @@ export default function Home() {
   const [adminLoading, setAdminLoading] = useState(false);
   const [autoTrainSymbols, setAutoTrainSymbols] = useState([]);
   const [newAutoTrainSymbol, setNewAutoTrainSymbol] = useState("");
+  const [modelType, setModelType] = useState("xgboost");
 
   const getPredictionHeader = () => {
     if (chartInterval === "1d") {
@@ -595,12 +596,19 @@ export default function Home() {
     }
   }, [showScreener]);
 
-  // 2. Fetch Prediction data when activeSymbol, chartInterval, or lang changes
+  // 2. Fetch Prediction data when activeSymbol, chartInterval, modelType, or lang changes
   useEffect(() => {
     if (activeSymbol) {
-      loadPrediction(activeSymbol, chartInterval);
+      let currentModelType = modelType;
+      // Enforce Linear Regression only for BTC-USD
+      if (modelType === "linear_regression" && activeSymbol !== "BTC-USD") {
+        currentModelType = "xgboost";
+        setModelType("xgboost");
+        return;
+      }
+      loadPrediction(activeSymbol, chartInterval, currentModelType);
     }
-  }, [activeSymbol, chartInterval, token, lang]);
+  }, [activeSymbol, chartInterval, modelType, token, lang]);
 
   // 3. Render charts when predictionData, chartHistory, historyLimit, isChartFullscreen, or showScreener updates
   useEffect(() => {
@@ -737,6 +745,10 @@ export default function Home() {
     
     // Include prediction point only for daily (1d) interval
     let extendedLabels = [...labels];
+    const isPendingData = predictionData && predictionData.prediction_status === "pending_data";
+    if (predictionData && predictionData.prediction_date && !isPendingData) {
+      extendedLabels.push(predictionData.prediction_date);
+    }
     let datasets = [];
     if (chartType === "candle") {
       const candleColors = history.map(h => h.close >= h.open ? "rgba(16, 185, 129, 0.75)" : "rgba(239, 68, 68, 0.75)");
@@ -806,6 +818,39 @@ export default function Home() {
         fill: false,
       }
     );
+
+    // Add Prediction Point
+    if (predictionData && predictionData.prediction_date && predictionData.predicted_close !== null && !isPendingData) {
+      const predLabel = predictionData.model_type === "xgboost" 
+        ? (lang === "tr" ? "XGBoost Tahmini" : "XGBoost Prediction") 
+        : predictionData.model_type === "lstm" 
+        ? (lang === "tr" ? "LSTM Tahmini" : "LSTM Prediction") 
+        : (lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction");
+        
+      const lastClosePrice = closePrices[closePrices.length - 1];
+      const isUp = predictionData.predicted_close >= lastClosePrice;
+      const predColor = isUp ? "rgba(16, 185, 129, 0.95)" : "rgba(239, 68, 68, 0.95)";
+      
+      const predDataPoints = Array(labels.length - 1).fill(null);
+      predDataPoints.push(lastClosePrice);
+      predDataPoints.push(predictionData.predicted_close);
+      
+      datasets.push({
+        label: predLabel,
+        type: "line",
+        data: predDataPoints,
+        borderColor: predColor,
+        borderWidth: 2,
+        borderDash: [5, 5],
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        pointBackgroundColor: predColor,
+        pointBorderColor: "#ffffff",
+        pointBorderWidth: 1.5,
+        fill: false,
+        tension: 0,
+      });
+    }
 
     // Add Support and Resistance Levels (All-symbols for premium, BTC-USD for everyone)
     const canShowSR = (activeSymbol === "BTC-USD") || (user && user.is_premium);
@@ -1071,13 +1116,13 @@ export default function Home() {
   };
 
   // API Call: Load LSTM Prediction (timeframe-aware)
-  const loadPrediction = async (symbol, interval = chartInterval) => {
+  const loadPrediction = async (symbol, interval = chartInterval, mType = modelType) => {
     setPredictLoading(true);
     setPredictError("");
     setPredictionData(null); // Clear old prediction data to trigger loading UI immediately
     try {
       const headers = token ? { "Authorization": `Bearer ${token}` } : {};
-      const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}&lang=${lang}`, {
+      const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}&lang=${lang}&model_type=${mType}`, {
         headers
       });
       if (res.status === 401 && token) {
@@ -3358,8 +3403,75 @@ export default function Home() {
               {/* Column 2: LSTM Prediction Summary */}
               <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
                 {/* Prediction Highlight Card */}
-                <div className="glass-panel prediction-card" style={{ minHeight: "220px", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-                  {predictionData && predictionData.prediction_status === "pending_data" ? (
+                <div className="glass-panel prediction-card" style={{ minHeight: "220px", display: "flex", flexDirection: "column", justifyContent: "flex-start", position: "relative", overflow: "hidden", padding: "20px" }}>
+                  {/* Model Type Selector */}
+                  <div style={{ display: "flex", background: "rgba(0, 0, 0, 0.25)", padding: "3px", borderRadius: "8px", marginBottom: "15px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                    <button 
+                      onClick={() => !predictLoading && setModelType("xgboost")}
+                      disabled={predictLoading}
+                      style={{
+                        flex: 1,
+                        background: modelType === "xgboost" ? "rgba(255, 255, 255, 0.08)" : "transparent",
+                        border: "none",
+                        color: modelType === "xgboost" ? "#ffffff" : "var(--text-muted)",
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        padding: "6px 0",
+                        borderRadius: "6px",
+                        cursor: predictLoading ? "not-allowed" : "pointer",
+                        transition: "all 0.2s"
+                      }}
+                    >
+                      XGBoost
+                    </button>
+                    <button 
+                      onClick={() => !predictLoading && setModelType("lstm")}
+                      disabled={predictLoading}
+                      style={{
+                        flex: 1,
+                        background: modelType === "lstm" ? "rgba(255, 255, 255, 0.08)" : "transparent",
+                        border: "none",
+                        color: modelType === "lstm" ? "#ffffff" : "var(--text-muted)",
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        padding: "6px 0",
+                        borderRadius: "6px",
+                        cursor: predictLoading ? "not-allowed" : "pointer",
+                        transition: "all 0.2s"
+                      }}
+                    >
+                      LSTM
+                    </button>
+                    {activeSymbol === "BTC-USD" && (
+                      <button 
+                        onClick={() => !predictLoading && setModelType("linear_regression")}
+                        disabled={predictLoading}
+                        style={{
+                          flex: 1,
+                          background: modelType === "linear_regression" ? "rgba(255, 255, 255, 0.08)" : "transparent",
+                          border: "none",
+                          color: modelType === "linear_regression" ? "#ffffff" : "var(--text-muted)",
+                          fontSize: "11px",
+                          fontWeight: "600",
+                          padding: "6px 0",
+                          borderRadius: "6px",
+                          cursor: predictLoading ? "not-allowed" : "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        Linear Reg.
+                      </button>
+                    )}
+                  </div>
+
+                  {predictLoading ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, minHeight: "120px" }}>
+                      <div className="spinner" style={{ marginBottom: "10px" }}></div>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                        {lang === "tr" ? "Tahmin hesaplanıyor..." : "Calculating prediction..."}
+                      </span>
+                    </div>
+                  ) : predictionData && predictionData.prediction_status === "pending_data" ? (
                     <div style={{ textAlign: "center", padding: "15px" }}>
                       <span style={{ fontSize: "28px", display: "block", marginBottom: "8px" }}>⏳</span>
                       <h4 style={{ fontSize: "14px", fontWeight: "700", color: "#f59e0b", marginBottom: "6px" }}>
@@ -3592,6 +3704,8 @@ export default function Home() {
                       let title = t("analytics_title");
                       if (predictionData && predictionData.model_type === "xgboost") {
                         title = title.replace("LSTM", "XGBoost");
+                      } else if (predictionData && predictionData.model_type === "linear_regression") {
+                        title = title.replace("LSTM", "Linear Regression");
                       }
                       return title;
                     })()}
@@ -3628,8 +3742,8 @@ export default function Home() {
                   
                   <div style={{ marginTop: "20px", fontSize: "12px", color: "var(--text-muted)", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "15px" }}>
                     {lang === "tr" 
-                      ? `* Model, RSI, MACD, Bollinger Bantları, ATR ve fiyat gecikmeleri dahil 19 göstergeyi hesaplayarak bunları optimize edilmiş bir ${predictionData && predictionData.model_type === "xgboost" ? "XGBoost karar ağaçları modeline" : "derin LSTM yapay sinir ağına"} besler.`
-                      : `* The model calculates 19 normalized indicators (including RSI, MACD, Bollinger Bands, ATR, and return lags) to feed into ${predictionData && predictionData.model_type === "xgboost" ? "an optimized XGBoost regressor" : "a deep LSTM neural network"}.`}
+                      ? `* Model, RSI, MACD, Bollinger Bantları, ATR ve fiyat gecikmeleri dahil 19 göstergeyi hesaplayarak bunları optimize edilmiş bir ${predictionData && predictionData.model_type === "xgboost" ? "XGBoost karar ağaçları modeline" : predictionData && predictionData.model_type === "linear_regression" ? "Lineer Regresyon modeline" : "derin LSTM yapay sinir ağına"} besler.`
+                      : `* The model calculates 19 normalized indicators (including RSI, MACD, Bollinger Bands, ATR, and return lags) to feed into ${predictionData && predictionData.model_type === "xgboost" ? "an optimized XGBoost regressor" : predictionData && predictionData.model_type === "linear_regression" ? "a Linear Regression model" : "a deep LSTM neural network"}.`}
                   </div>
                 </div>
 
