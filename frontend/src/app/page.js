@@ -1166,13 +1166,13 @@ export default function Home() {
   };
 
   // API Call: Load LSTM Prediction (timeframe-aware)
-  const loadPrediction = async (symbol, interval = chartInterval, mType = modelType) => {
+  const loadPrediction = async (symbol, interval = chartInterval, mType = modelType, forceRetrain = false) => {
     setPredictLoading(true);
     setPredictError("");
     setPredictionData(null); // Clear old prediction data to trigger loading UI immediately
     try {
       const headers = token ? { "Authorization": `Bearer ${token}` } : {};
-      const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}&lang=${lang}&model_type=${mType}`, {
+      const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}&lang=${lang}&model_type=${mType}&force_retrain=${forceRetrain}`, {
         headers
       });
       if (res.status === 401 && token) {
@@ -3491,9 +3491,31 @@ export default function Home() {
                     </div>
                   ) : (
                     <>
-                      <span className="prediction-label" style={{ marginBottom: "12px", display: "block" }}>
-                        {lang === "tr" ? "Model Tahmin Fiyatları" : "Model Prediction Prices"}
-                      </span>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                        <span className="prediction-label" style={{ margin: 0 }}>
+                          {lang === "tr" ? "Model Tahmin Fiyatları" : "Model Prediction Prices"}
+                        </span>
+                        <button 
+                          onClick={() => loadPrediction(activeSymbol, chartInterval, modelType, true)} 
+                          className="btn-secondary" 
+                          style={{ 
+                            fontSize: "10px", 
+                            height: "24px", 
+                            padding: "0 10px", 
+                            margin: 0, 
+                            display: "flex", 
+                            alignItems: "center", 
+                            gap: "4px",
+                            background: "rgba(255,255,255,0.03)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: "4px"
+                          }}
+                          title={lang === "tr" ? "Modelleri elle sıfırdan eğit ve hesapla" : "Force retrain and calculate models from scratch"}
+                        >
+                          <RefreshCw style={{ width: "10px", height: "10px" }} />
+                          {lang === "tr" ? "Yeniden Hesapla" : "Recalculate"}
+                        </button>
+                      </div>
                       
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", marginBottom: "15px" }}>
                         {/* XGBoost Box */}
