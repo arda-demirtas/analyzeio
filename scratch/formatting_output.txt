@@ -1,0 +1,376 @@
+Position 117113:
+dge = <span style={{ color: "var(--accent-success)", fontWeight: "700" }}>▲ +{item.predicted_change.toFixed(2)}%</span>;
+                          } else if (isBearish) {
+                            sentimentBadge = <span style={{ color: "var(--accen
+---
+Position 117321:
+Badge = <span style={{ color: "var(--accent-danger)", fontWeight: "700" }}>▼ {item.predicted_change.toFixed(2)}%</span>;
+                          } else {
+                            sentimentBadge = <span style={{ color: "var(--text-muted)" }}>~ {i
+---
+Position 117493:
+            sentimentBadge = <span style={{ color: "var(--text-muted)" }}>~ {item.predicted_change?.toFixed(2)}%</span>;
+                          }
+
+                          let rsiBadge;
+                          if (item.rsi < 35) {
+             
+---
+Position 125109:
+badge-info">Open: ${activeHistory[activeHistory.length - 1]?.open?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Close: ${activeHistory[activeHistory.l
+---
+Position 125135:
+History[activeHistory.length - 1]?.open?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Close: ${activeHistory[activeHistory.length - 1]?.close?.toLocal
+---
+Position 125311:
+dge-info">Close: ${activeHistory[activeHistory.length - 1]?.close?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">High: ${activeHistory[activeHistory.le
+---
+Position 125337:
+istory[activeHistory.length - 1]?.close?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">High: ${activeHistory[activeHistory.length - 1]?.high?.toLocaleS
+---
+Position 125511:
+badge-info">High: ${activeHistory[activeHistory.length - 1]?.high?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Low: ${activeHistory[activeHistory.len
+---
+Position 125537:
+History[activeHistory.length - 1]?.high?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Low: ${activeHistory[activeHistory.length - 1]?.low?.toLocaleStr
+---
+Position 125709:
+e badge-info">Low: ${activeHistory[activeHistory.length - 1]?.low?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Vol: {activeHistory[activeHistory.leng
+---
+Position 125735:
+eHistory[activeHistory.length - 1]?.low?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Vol: {activeHistory[activeHistory.length - 1]?.volume?.toLocaleS
+---
+Position 126057:
+e-info">EMA 20: ${activeHistory[activeHistory.length - 1]?.ema_20?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">EMA 50: ${activeHistory[activeHistory.
+---
+Position 126083:
+story[activeHistory.length - 1]?.ema_20?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">EMA 50: ${activeHistory[activeHistory.length - 1]?.ema_50?.toLoc
+---
+Position 126261:
+e-info">EMA 50: ${activeHistory[activeHistory.length - 1]?.ema_50?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">BB Upper: ${activeHistory[activeHistor
+---
+Position 126287:
+story[activeHistory.length - 1]?.ema_50?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">BB Upper: ${activeHistory[activeHistory.length - 1]?.bb_upper?.t
+---
+Position 126469:
+fo">BB Upper: ${activeHistory[activeHistory.length - 1]?.bb_upper?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">BB Lower: ${activeHistory[activeHistor
+---
+Position 126495:
+ory[activeHistory.length - 1]?.bb_upper?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">BB Lower: ${activeHistory[activeHistory.length - 1]?.bb_lower?.t
+---
+Position 126677:
+fo">BB Lower: ${activeHistory[activeHistory.length - 1]?.bb_lower?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+     
+---
+Position 126703:
+ory[activeHistory.length - 1]?.bb_lower?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ dis
+---
+Position 127217:
+ice !== null 
+                      ? predictionData.current_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+                      : (predictionData ? predictionData.last_close.toLocaleString("en-US", { minimumF
+---
+Position 127243:
+          ? predictionData.current_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+                      : (predictionData ? predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumF
+---
+Position 127366:
+                     : (predictionData ? predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---")}
+                  </div>
+                  <span style={{ fontSize: "12px", color: "var(--acc
+---
+Position 127392:
+edictionData ? predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---")}
+                  </div>
+                  <span style={{ fontSize: "12px", color: "var(--accent-primary)", fontWeight:
+---
+Position 127898:
+                    {t("last_close")}: ${predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({predictionData.last_date})
+                    </span>
+                  )}
+                </div>
+ 
+---
+Position 127924:
+st_close")}: ${predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({predictionData.last_date})
+                    </span>
+                  )}
+                </div>
+              </div>
+      
+---
+Position 140462:
+ontFamily: "monospace" }}>
+                          {activeHistory[activeHistory.length - 1]?.rsi?.toFixed(2) || "---"}
+                        </span>
+                        {(() => {
+                          const rsi = activeHistory[activeHisto
+---
+Position 141952:
+ntFamily: "monospace" }}>
+                          {activeHistory[activeHistory.length - 1]?.macd?.toFixed(2) || "---"}
+                        </span>
+                        {(() => {
+                          const hist = activeHistory[activeHist
+---
+Position 153811:
+              if (!v) return "---";
+                              if (v >= 1e9) return `${(v / 1e9).toFixed(2)}B`;
+                              if (v >= 1e6) return `${(v / 1e6).toFixed(2)}M`;
+                              if (v >= 1e3) return `${(v
+---
+Position 153890:
+ return `${(v / 1e9).toFixed(2)}B`;
+                              if (v >= 1e6) return `${(v / 1e6).toFixed(2)}M`;
+                              if (v >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
+                              return v.toLocaleString();
+---
+Position 155097:
+              if (!v) return "---";
+                              if (v >= 1e9) return `${(v / 1e9).toFixed(2)}B`;
+                              if (v >= 1e6) return `${(v / 1e6).toFixed(2)}M`;
+                              if (v >= 1e3) return `${(v
+---
+Position 155176:
+ return `${(v / 1e9).toFixed(2)}B`;
+                              if (v >= 1e6) return `${(v / 1e6).toFixed(2)}M`;
+                              if (v >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
+                              return v.toLocaleString();
+---
+Position 157034:
+>
+                              ▲ {marketInfo.fifty_two_week_high?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
+                            </span>
+                            <span style={{ fontSize: "12px", fontWeight: "700", fon
+---
+Position 157324:
+}>
+                              ▼ {marketInfo.fifty_two_week_low?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
+                            </span>
+                          </div>
+                        )}
+
+                      
+---
+Position 158130:
+10b981" }}>
+                              H: {marketInfo.day_high?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
+                            </span>
+                            <span style={{ fontSize: "12px", fontWeight: "700", fon
+---
+Position 158410:
+#ef4444" }}>
+                              L: {marketInfo.day_low?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
+                            </span>
+                          </div>
+                        )}
+
+                      
+---
+Position 165532:
+                          ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </span>
+                        </di
+---
+Position 165558:
+? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </span>
+                        </div>
+
+                      
+---
+Position 166890:
+                         ? `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </span>
+                        </di
+---
+Position 166916:
+ `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </span>
+                        </div>
+
+                      
+---
+Position 168311:
+                           ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </span>
+                        </di
+---
+Position 168337:
+ ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </span>
+                        </div>
+                      <
+---
+Position 170340:
+                                    <span style={{ color: "var(--accent-success)" }}>+{xgbChangeVal.toFixed(2)}% ({t("bullish")})</span>
+                                  </>
+                                ) : (
+                                  <>
+
+---
+Position 170714:
+>
+                                    <span style={{ color: "var(--accent-danger)" }}>{xgbChangeVal.toFixed(2)}% ({t("bearish")})</span>
+                                  </>
+                                )}
+                              </div>
+   
+---
+Position 171931:
+                                   <span style={{ color: "var(--accent-success)" }}>+{lstmChangeVal.toFixed(2)}% ({t("bullish")})</span>
+                                  </>
+                                ) : (
+                                  <>
+
+---
+Position 172306:
+
+                                    <span style={{ color: "var(--accent-danger)" }}>{lstmChangeVal.toFixed(2)}% ({t("bearish")})</span>
+                                  </>
+                                )}
+                              </div>
+   
+---
+Position 173573:
+
+                                    <span style={{ color: "var(--accent-success)" }}>+{lrChangeVal.toFixed(2)}% ({t("bullish")})</span>
+                                  </>
+                                ) : (
+                                  <>
+
+---
+Position 173946:
+/>
+                                    <span style={{ color: "var(--accent-danger)" }}>{lrChangeVal.toFixed(2)}% ({t("bearish")})</span>
+                                  </>
+                                )}
+                              </div>
+   
+---
+Position 180805:
+                 {t(`rating_${newsData.sentiment_class.toLowerCase()}`)} ({newsData.sentiment_score.toFixed(2)})
+                          </span>
+                        </div>
+                        {/* Meter Bar */}
+                        <div s
+---
+Position 187634:
+                          ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </td>
+                          <td 
+---
+Position 187660:
+? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4p
+---
+Position 188341:
+onData.xgb_metrics && predictionData.xgb_metrics.mape !== null ? `${predictionData.xgb_metrics.mape.toFixed(2)}%` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "60
+---
+Position 189599:
+                         ? `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </td>
+                          <td 
+---
+Position 189625:
+ `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4p
+---
+Position 190312:
+ata.lstm_metrics && predictionData.lstm_metrics.mape !== null ? `${predictionData.lstm_metrics.mape.toFixed(2)}%` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "60
+---
+Position 191625:
+                           ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </td>
+                          <td 
+---
+Position 191651:
+ ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4p
+---
+Position 192326:
+ctionData.lr_metrics && predictionData.lr_metrics.mape !== null ? `${predictionData.lr_metrics.mape.toFixed(2)}%` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "60
+---
+Position 196817:
+s(predVal - actualVal) / actualVal : 0;
+                                  errorPct = `${(err * 100).toFixed(2)}%`;
+
+                                  const predUp = predVal > lastVal;
+                                  const actualUp = actualVal > las
+---
+Position 197798:
+ }}>
+                                      {predVal !== null && predVal !== undefined ? `$${predVal.toFixed(2)}` : "---"}
+                                    </td>
+                                    <td style={{ padding: "8px 4px", textAlign: "right
+---
+Position 198055:
+                                     {actualVal !== null && actualVal !== undefined ? `$${actualVal.toFixed(2)}` : (
+                                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic" }}>
+        
+---
+Position 230590:
+                     ${mockTradingState ? mockTradingState.balance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "2,000.00"}
+                      </strong>
+                    </div>
+                    <div style
+---
+Position 230616:
+kTradingState ? mockTradingState.balance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "2,000.00"}
+                      </strong>
+                    </div>
+                    <div style={{ background: "rgba(255,
+---
+Position 231632:
+                        at ${mockTradingState.position.entry_price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      ) : (
+                        <strong sty
+---
