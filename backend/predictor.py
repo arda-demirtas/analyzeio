@@ -188,8 +188,6 @@ def get_prediction(
             predicted_return = float(model.predict(last_features)[0])
             
         elif model_type == "linear_regression":
-            if symbol != "BTC-USD":
-                raise ValueError("Linear Regression is currently only available for Bitcoin (BTC-USD).")
                 
             def make_raw_lr_sequences(x_data, y_data):
                 xs, ys = [], []
@@ -483,10 +481,10 @@ def get_prediction(
         "text": tech_text
     }
     
-    # Load Linear Regression model once for BTC-USD to populate historical predictions
+    # Load Linear Regression model once to populate historical predictions
     model_lr = None
     lr_predicted_close = None
-    if symbol == "BTC-USD" and not is_pending_data:
+    if not is_pending_data:
         try:
             split_idx_lr = int(len(df) * 0.8)
             df_train_lr = df.iloc[:split_idx_lr]
