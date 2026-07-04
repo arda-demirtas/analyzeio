@@ -483,35 +483,8 @@ def get_prediction(
         "text": tech_text
     }
     
-    chart_limit = 730
-    history_df = df.tail(chart_limit)
-    history_list = []
-    for idx, row in history_df.iterrows():
-        if interval == "1d":
-            date_str = idx.strftime("%Y-%m-%d")
-        else:
-            date_str = idx.strftime("%Y-%m-%d %H:%M")
-            
-        history_list.append({
-            "date": date_str,
-            "open": float(row["Open"]),
-            "close": float(row["Close"]),
-            "volume": float(row["Volume"]),
-            "high": float(row["High"]),
-            "low": float(row["Low"]),
-            "rsi": float(row["RSI"]),
-            "macd": float(row["MACD"]),
-            "macd_signal": float(row["MACD_Signal"]),
-            "macd_hist": float(row["MACD_Hist"]),
-            "bb_upper": float(row["BB_Upper"]),
-            "bb_lower": float(row["BB_Lower"]),
-            "ema_20": float(row["EMA_20"]),
-            "ema_50": float(row["EMA_50"]),
-        })
-        
-    fundamental_result = get_fundamental_analysis(symbol, asset_name, lang=lang)
-    
-    # Calculate Linear Regression prediction specifically for BTC-USD
+    # Load Linear Regression model once for BTC-USD to populate historical predictions
+    model_lr = None
     lr_predicted_close = None
     if symbol == "BTC-USD" and not is_pending_data:
         try:
@@ -571,7 +544,50 @@ def get_prediction(
             predicted_lr_return = float(model_lr.predict(last_features_lr)[0])
             lr_predicted_close = float(last_close * (1 + predicted_lr_return))
         except Exception as lr_err:
-            print(f"Error calculating linear regression background prediction: {lr_err}")
+            print(f"Error calculating linear regression prediction: {lr_err}")
+
+    chart_limit = 730
+    history_df = df.tail(chart_limit)
+    df_indices = {dt: idx for idx, dt in enumerate(df.index)}
+    
+    history_list = []
+    for idx, row in history_df.iterrows():
+        if interval == "1d":
+            date_str = idx.strftime("%Y-%m-%d")
+        else:
+            date_str = idx.strftime("%Y-%m-%d %H:%M")
+            
+        lr_hist_val = None
+        if model_lr is not None:
+            pos = df_indices.get(idx)
+            if pos is not None and pos >= seq_length:
+                try:
+                    feat_seq = df[FEATURES].iloc[pos - seq_length : pos].values.flatten().reshape(1, -1)
+                    pred_ret = float(model_lr.predict(feat_seq)[0])
+                    prev_close = float(df["Close"].iloc[pos - 1])
+                    lr_hist_val = float(prev_close * (1 + pred_ret))
+                except Exception:
+                    pass
+            
+        history_list.append({
+            "date": date_str,
+            "open": float(row["Open"]),
+            "close": float(row["Close"]),
+            "volume": float(row["Volume"]),
+            "high": float(row["High"]),
+            "low": float(row["Low"]),
+            "rsi": float(row["RSI"]),
+            "macd": float(row["MACD"]),
+            "macd_signal": float(row["MACD_Signal"]),
+            "macd_hist": float(row["MACD_Hist"]),
+            "bb_upper": float(row["BB_Upper"]),
+            "bb_lower": float(row["BB_Lower"]),
+            "ema_20": float(row["EMA_20"]),
+            "ema_50": float(row["EMA_50"]),
+            "lr_predicted_close": lr_hist_val
+        })
+        
+    fundamental_result = get_fundamental_analysis(symbol, asset_name, lang=lang)
 
     # 7. Log Prediction and resolve past pending predictions in database
     from backend.database import SessionLocal
