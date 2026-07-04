@@ -1,0 +1,111 @@
+Line 653:       renderCharts();
+Context:  643:       loadPrediction(activeSymbol, chartInterval, currentModelType);
+  644:     }
+  645:   }, [activeSymbol, chartInterval, modelType, token, lang]);
+  646: 
+  647:   // 3. Render charts when predictionData, chartHistory, historyLimit, isChartFullscreen, or showScreener updates
+  648:   useEffect(() => {
+  649:     if (showScreener) return;
+  650:     if (!predictionData || !chartHistory || chartHistory.length === 0) return;
+  651:     
+  652:     const timer = setTimeout(() => {
+  653:       renderCharts();
+  654:     }, 50);
+  655:     
+  656:     // Cleanup on unmount or update
+  657:     return () => {
+  658:       clearTimeout(timer);
+  659:       destroyCharts();
+  660:     };
+  661:   }, [predictionData, chartHistory, historyLimit, isChartFullscreen, showScreener]);
+  662: 
+  663:   // Handle price chart resize and body overflow on fullscreen state toggle
+  664:   useEffect(() => {
+  665:     if (isChartFullscreen) {
+  666:       document.body.style.overflow = "hidden";
+  667:     } else {
+  668:       document.body.style.overflow = "";
+  669:     }
+  670:     
+  671:     if (priceChartInst.current) {
+  672:       const timer = setTimeout(() => {
+  673:         priceChartInst.current.resize();
+  674:       }, 100);
+  675:       return () => {
+  676:         clearTimeout(timer);
+  677:         document.body.style.overflow = "";
+---
+Line 685:       renderCharts();
+Context:  675:       return () => {
+  676:         clearTimeout(timer);
+  677:         document.body.style.overflow = "";
+  678:       };
+  679:     }
+  680:   }, [isChartFullscreen]);
+  681: 
+  682:   // Re-render charts when chartType changes
+  683:   useEffect(() => {
+  684:     if (predictionData && chartHistory && chartHistory.length > 0) {
+  685:       renderCharts();
+  686:     }
+  687:   }, [chartType]);
+  688: 
+  689:   // Helper: Destroy existing charts
+  690:   const destroyCharts = () => {
+  691:     if (priceChartInst.current) {
+  692:       priceChartInst.current.destroy();
+  693:       priceChartInst.current = null;
+  694:     }
+  695:     if (rsiChartInst.current) {
+  696:       rsiChartInst.current.destroy();
+  697:       rsiChartInst.current = null;
+  698:     }
+  699:     if (macdChartInst.current) {
+  700:       macdChartInst.current.destroy();
+  701:       macdChartInst.current = null;
+  702:     }
+  703:     if (stochChartInst.current) {
+  704:       stochChartInst.current.destroy();
+  705:       stochChartInst.current = null;
+  706:     }
+  707:     if (atrChartInst.current) {
+  708:       atrChartInst.current.destroy();
+  709:       atrChartInst.current = null;
+---
+Line 781:   const renderCharts = () => {
+Context:  771:       }
+  772:     }
+  773:     
+  774:     return {
+  775:       supports: supports.sort((a, b) => a - b),
+  776:       resistances: resistances.sort((a, b) => a - b)
+  777:     };
+  778:   };
+  779: 
+  780:   // Helper: Render price, RSI, and MACD charts
+  781:   const renderCharts = () => {
+  782:     destroyCharts();
+  783:     if (!predictionData || !chartHistory || chartHistory.length === 0) return;
+  784: 
+  785:     const ctxPrice = priceChartRef.current?.getContext("2d");
+  786:     const ctxRsi = rsiChartRef.current?.getContext("2d");
+  787:     const ctxMacd = macdChartRef.current?.getContext("2d");
+  788:     const ctxStoch = stochChartRef.current?.getContext("2d");
+  789:     const ctxAtr = atrChartRef.current?.getContext("2d");
+  790:     const ctxObv = obvChartRef.current?.getContext("2d");
+  791:     const ctxCci = cciChartRef.current?.getContext("2d");
+  792:     const ctxWilliams = williamsChartRef.current?.getContext("2d");
+  793: 
+  794:     const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+  795:     const chartEvents = isTouchDevice ? ["click"] : ["mousemove", "mouseout", "click", "touchstart", "touchmove", "touchend"];
+  796: 
+  797:     const history = chartHistory.slice(-historyLimit);
+  798:     const labels = history.map(item => item.date);
+  799:     const closePrices = history.map(item => item.close);
+  800:     const ema20Prices = history.map(item => item.ema_20);
+  801:     const ema50Prices = history.map(item => item.ema_50);
+  802:     const bbUpperPrices = history.map(item => item.bb_upper);
+  803:     const bbLowerPrices = history.map(item => item.bb_lower);
+  804:     
+  805:     // Include prediction point only for daily (1d) interval
+---
