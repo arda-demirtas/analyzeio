@@ -644,7 +644,7 @@ export default function Home() {
     }
   }, [activeSymbol, chartInterval, modelType, token, lang]);
 
-  // 3. Render charts when predictionData, chartHistory, historyLimit, isChartFullscreen, showScreener, or activeIndicatorTab updates
+  // 3. Render charts when predictionData, chartHistory, historyLimit, isChartFullscreen, or showScreener updates
   useEffect(() => {
     if (showScreener) return;
     if (!predictionData || !chartHistory || chartHistory.length === 0) return;
@@ -658,7 +658,7 @@ export default function Home() {
       clearTimeout(timer);
       destroyCharts();
     };
-  }, [predictionData, chartHistory, historyLimit, isChartFullscreen, showScreener, activeIndicatorTab]);
+  }, [predictionData, chartHistory, historyLimit, isChartFullscreen, showScreener]);
 
   // Handle price chart resize and body overflow on fullscreen state toggle
   useEffect(() => {
@@ -3449,110 +3449,174 @@ export default function Home() {
 
                 {/* Technical Indicators Chart Card */}
                 <div className="glass-panel">
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "15px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "12px" }}>
-                    <h3 style={{ fontSize: "16px", fontWeight: "700", margin: 0 }}>{t("chart_indicators")}</h3>
-                    
-                    {/* Beautiful Tab Selection Bar */}
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                      {[
-                        { id: "rsi_macd", label: lang === "tr" ? "RSI & MACD" : "RSI & MACD" },
-                        { id: "stoch_rsi", label: lang === "tr" ? "Stokastik RSI" : "Stoch RSI" },
-                        { id: "atr", label: lang === "tr" ? "ATR (Oynaklık)" : "ATR (Volatility)" },
-                        { id: "obv", label: lang === "tr" ? "OBV (Hacim Akışı)" : "OBV (Volume Flow)" },
-                        { id: "cci", label: lang === "tr" ? "CCI (Trend Sapması)" : "CCI (Trend)" },
-                        { id: "williams_r", label: lang === "tr" ? "Williams %R" : "Williams %R" }
-                      ].map(tab => (
-                        <button
-                          key={tab.id}
-                          onClick={() => setActiveIndicatorTab(tab.id)}
-                          className={activeIndicatorTab === tab.id ? "btn-primary" : "btn-secondary"}
-                          style={{
-                            padding: "4px 10px",
-                            fontSize: "11px",
-                            height: "auto",
-                            border: "none",
-                            borderRadius: "6px",
-                            fontWeight: "600",
-                            transition: "all 0.2s ease"
-                          }}
-                        >
-                          {tab.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "20px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "12px" }}>
+                    {t("chart_indicators")}
+                  </h3>
 
-                  {activeIndicatorTab === "rsi_macd" && (
-                    <div className="indicator-grid">
-                      <div>
-                        <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>{t("rsi_title")}</h4>
-                        <div className="indicator-wrapper">
-                          <canvas ref={rsiChartRef} />
-                        </div>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                    gap: "20px"
+                  }}>
+                    {/* RSI Card */}
+                    <div className="glass-panel" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px", background: "rgba(0, 0, 0, 0.12)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h4 style={{ fontSize: "13px", fontWeight: "700", color: "#f3e8ff", margin: 0, textTransform: "uppercase" }}>
+                          {lang === "tr" ? "Göreceli Güç Endeksi (RSI)" : "Relative Strength Index (RSI)"}
+                        </h4>
+                        {(() => {
+                          const rsi = activeHistory[activeHistory.length - 1]?.rsi;
+                          if (rsi === null || rsi === undefined) return <span className="badge badge-warning" style={{ padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+                          if (rsi >= 70) return <span className="badge badge-danger" style={{ padding: "2px 6px", fontSize: "10px" }}>{t("rsi_status_overbought")}</span>;
+                          if (rsi <= 30) return <span className="badge badge-success" style={{ padding: "2px 6px", fontSize: "10px" }}>{t("rsi_status_oversold")}</span>;
+                          return <span className="badge badge-warning" style={{ padding: "2px 6px", fontSize: "10px" }}>{t("rsi_status_neutral")}</span>;
+                        })()}
                       </div>
-                      <div>
-                        <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>{t("macd_title")}</h4>
-                        <div className="indicator-wrapper">
-                          <canvas ref={macdChartRef} />
-                        </div>
+                      <div className="indicator-wrapper" style={{ height: "140px", position: "relative" }}>
+                        <canvas ref={rsiChartRef} />
                       </div>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4" }}>
+                        {lang === "tr" 
+                          ? "Fiyat hareketlerinin hızını ve değişimini ölçer. 70 üzeri aşırı alım (düşüş ihtimali), 30 altı aşırı satım (yükseliş ihtimali) anlamına gelir." 
+                          : "Measures velocity of price changes. Over 70 signals overbought (potential drop), under 30 signals oversold (potential rise)."}
+                      </span>
                     </div>
-                  )}
 
-                  {activeIndicatorTab === "stoch_rsi" && (
-                    <div>
-                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>
-                        {lang === "tr" ? "Stokastik RSI (Momentum Osilatörü)" : "Stochastic RSI (Momentum Oscillator)"}
-                      </h4>
-                      <div className="indicator-wrapper">
+                    {/* MACD Card */}
+                    <div className="glass-panel" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px", background: "rgba(0, 0, 0, 0.12)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h4 style={{ fontSize: "13px", fontWeight: "700", color: "#f3e8ff", margin: 0, textTransform: "uppercase" }}>
+                          MACD (Trend Göstergesi)
+                        </h4>
+                        {(() => {
+                          const hist = activeHistory[activeHistory.length - 1]?.macd_hist;
+                          if (hist === null || hist === undefined) return <span className="badge badge-warning" style={{ padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+                          if (hist > 0) return <span className="badge badge-success" style={{ padding: "2px 6px", fontSize: "10px" }}>{t("macd_status_bullish")}</span>;
+                          return <span className="badge badge-danger" style={{ padding: "2px 6px", fontSize: "10px" }}>{t("macd_status_bearish")}</span>;
+                        })()}
+                      </div>
+                      <div className="indicator-wrapper" style={{ height: "140px", position: "relative" }}>
+                        <canvas ref={macdChartRef} />
+                      </div>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4" }}>
+                        {lang === "tr" 
+                          ? "Kısa ve uzun vadeli hareketli ortalamaların ilişkisini gösterir. Mavi çizgi pembeyi yukarı keserse al, aşağı keserse sat sinyalidir." 
+                          : "Shows relationship between short and long term moving averages. Blue line crossing above pink indicates buy, below indicates sell."}
+                      </span>
+                    </div>
+
+                    {/* Stochastic RSI Card */}
+                    <div className="glass-panel" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px", background: "rgba(0, 0, 0, 0.12)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h4 style={{ fontSize: "13px", fontWeight: "700", color: "#f3e8ff", margin: 0, textTransform: "uppercase" }}>
+                          {lang === "tr" ? "Stokastik RSI" : "Stochastic RSI"}
+                        </h4>
+                        {(() => {
+                          const k = activeHistory[activeHistory.length - 1]?.stoch_k;
+                          if (k === null || k === undefined) return <span className="badge badge-warning" style={{ padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+                          if (k >= 80) return <span className="badge badge-danger" style={{ padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Aşırı Alım" : "Overbought"}</span>;
+                          if (k <= 20) return <span className="badge badge-success" style={{ padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Aşırı Satım" : "Oversold"}</span>;
+                          return <span className="badge badge-warning" style={{ padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Yatay" : "Neutral"}</span>;
+                        })()}
+                      </div>
+                      <div className="indicator-wrapper" style={{ height: "140px", position: "relative" }}>
                         <canvas ref={stochChartRef} />
                       </div>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4" }}>
+                        {lang === "tr" 
+                          ? "Normal RSI'a kıyasla fiyattaki momentum dönüşlerini çok daha hassas gösterir. Sarı (%K) ve mavi (%D) çizgilerin kesişimleri takip edilir." 
+                          : "Generates more sensitive momentum signals than standard RSI. Crossovers between yellow (%K) and cyan (%D) lines are key."}
+                      </span>
                     </div>
-                  )}
 
-                  {activeIndicatorTab === "atr" && (
-                    <div>
-                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>
-                        {lang === "tr" ? "Ortalama Gerçek Aralık (ATR Volatilite)" : "Average True Range (ATR Volatility)"}
-                      </h4>
-                      <div className="indicator-wrapper">
+                    {/* ATR Card */}
+                    <div className="glass-panel" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px", background: "rgba(0, 0, 0, 0.12)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h4 style={{ fontSize: "13px", fontWeight: "700", color: "#f3e8ff", margin: 0, textTransform: "uppercase" }}>
+                          {lang === "tr" ? "Ortalama Gerçek Aralık (ATR)" : "Average True Range (ATR)"}
+                        </h4>
+                        <span className="badge badge-warning" style={{ padding: "2px 6px", fontSize: "10px" }}>
+                          {activeHistory[activeHistory.length - 1]?.atr?.toFixed(3) || "---"}
+                        </span>
+                      </div>
+                      <div className="indicator-wrapper" style={{ height: "140px", position: "relative" }}>
                         <canvas ref={atrChartRef} />
                       </div>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4" }}>
+                        {lang === "tr" 
+                          ? "Belirli bir dönemdeki fiyat dalgalanmasının büyüklüğünü ölçer. ATR yükseldikçe piyasadaki oynaklık (volatilite/risk) artar." 
+                          : "Measures market volatility over a specific period. Higher ATR values indicate higher volatility and potential risk."}
+                      </span>
                     </div>
-                  )}
 
-                  {activeIndicatorTab === "obv" && (
-                    <div>
-                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>
-                        {lang === "tr" ? "Hacim Akışı / Denge İşlem Hacmi (OBV)" : "On-Balance Volume (OBV Volume Flow)"}
-                      </h4>
-                      <div className="indicator-wrapper">
+                    {/* OBV Card */}
+                    <div className="glass-panel" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px", background: "rgba(0, 0, 0, 0.12)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h4 style={{ fontSize: "13px", fontWeight: "700", color: "#f3e8ff", margin: 0, textTransform: "uppercase" }}>
+                          {lang === "tr" ? "Denge İşlem Hacmi (OBV)" : "On-Balance Volume (OBV)"}
+                        </h4>
+                        <span className="badge badge-warning" style={{ padding: "2px 6px", fontSize: "10px" }}>
+                          {lang === "tr" ? "Hacim Akışı" : "Volume Flow"}
+                        </span>
+                      </div>
+                      <div className="indicator-wrapper" style={{ height: "140px", position: "relative" }}>
                         <canvas ref={obvChartRef} />
                       </div>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4" }}>
+                        {lang === "tr" 
+                          ? "Fiyat hareketlerini hacim akışıyla teyit eder. Fiyat yatayken OBV'nin yukarı yönelmesi, kurumsal alım/toplama (akümülasyon) işaretidir." 
+                          : "Relates price momentum to volume flow. An increasing OBV while price is flat suggests institutional accumulation."}
+                      </span>
                     </div>
-                  )}
 
-                  {activeIndicatorTab === "cci" && (
-                    <div>
-                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>
-                        {lang === "tr" ? "Emtia Kanal Endeksi (CCI Trend Sapması)" : "Commodity Channel Index (CCI Trend Deviation)"}
-                      </h4>
-                      <div className="indicator-wrapper">
+                    {/* CCI Card */}
+                    <div className="glass-panel" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px", background: "rgba(0, 0, 0, 0.12)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h4 style={{ fontSize: "13px", fontWeight: "700", color: "#f3e8ff", margin: 0, textTransform: "uppercase" }}>
+                          {lang === "tr" ? "Emtia Kanal Endeksi (CCI)" : "Commodity Channel Index (CCI)"}
+                        </h4>
+                        {(() => {
+                          const cci = activeHistory[activeHistory.length - 1]?.cci;
+                          if (cci === null || cci === undefined) return <span className="badge badge-warning" style={{ padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+                          if (cci >= 100) return <span className="badge badge-success" style={{ padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Güçlü Boğa" : "Strong Bullish"}</span>;
+                          if (cci <= -100) return <span className="badge badge-danger" style={{ padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Güçlü Ayı" : "Strong Bearish"}</span>;
+                          return <span className="badge badge-warning" style={{ padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Yatay" : "Neutral"}</span>;
+                        })()}
+                      </div>
+                      <div className="indicator-wrapper" style={{ height: "140px", position: "relative" }}>
                         <canvas ref={cciChartRef} />
                       </div>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4" }}>
+                        {lang === "tr" 
+                          ? "Fiyatın istatistiksel ortalamasından sapmasını ölçer. +100 üzeri yeni bir güçlü yükseliş trendi, -100 altı ise düşüş trendi başlatır." 
+                          : "Measures price deviation from its average. Values above +100 signal a strong uptrend, below -100 signal a strong downtrend."}
+                      </span>
                     </div>
-                  )}
 
-                  {activeIndicatorTab === "williams_r" && (
-                    <div>
-                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>
-                        {lang === "tr" ? "Williams %R Momentum Göstergesi" : "Williams %R Momentum Indicator"}
-                      </h4>
-                      <div className="indicator-wrapper">
+                    {/* Williams %R Card */}
+                    <div className="glass-panel" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px", background: "rgba(0, 0, 0, 0.12)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h4 style={{ fontSize: "13px", fontWeight: "700", color: "#f3e8ff", margin: 0, textTransform: "uppercase" }}>
+                          Williams %R
+                        </h4>
+                        {(() => {
+                          const w = activeHistory[activeHistory.length - 1]?.williams_r;
+                          if (w === null || w === undefined) return <span className="badge badge-warning" style={{ padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+                          if (w >= -20) return <span className="badge badge-danger" style={{ padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Aşırı Alım" : "Overbought"}</span>;
+                          if (w <= -80) return <span className="badge badge-success" style={{ padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Aşırı Satım" : "Oversold"}</span>;
+                          return <span className="badge badge-warning" style={{ padding: "2px 6px", fontSize: "10px" }}>{lang === "tr" ? "Yatay" : "Neutral"}</span>;
+                        })()}
+                      </div>
+                      <div className="indicator-wrapper" style={{ height: "140px", position: "relative" }}>
                         <canvas ref={williamsChartRef} />
                       </div>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4" }}>
+                        {lang === "tr" 
+                          ? "Kapanış fiyatını son tepe ve dip seviyelerine göre karşılaştırır. 0 ile -20 arası aşırı alım, -80 ile -100 arası aşırı satımdır." 
+                          : "Compares close price relative to the highest high and lowest low. Range 0 to -20 is overbought, -80 to -100 is oversold."}
+                      </span>
                     </div>
-                  )}
+                  </div>
 
                   {/* Summary of Technical Signals */}
                   <div style={{ marginTop: "25px", paddingTop: "20px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
