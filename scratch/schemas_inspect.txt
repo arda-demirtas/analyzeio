@@ -1,0 +1,725 @@
+Position 124:
+ptional
+import datetime
+
+# Authentication Schemas
+class UserCreate(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    email: EmailStr
+    password: str = Field(..., min_length=6)
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class UserChangePassword(BaseModel):
+    old_password: str
+    new_password: str = Field(..., min_length=6)
+
+class VerificationCon
+---
+Position 279:
+Str
+    password: str = Field(..., min_length=6)
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class UserChangePassword(BaseModel):
+    old_password: str
+    new_password: str = Field(..., min_length=6)
+
+class VerificationConfirm(BaseModel):
+    email: EmailStr
+    code: str
+
+class CodeConfirm(BaseModel):
+    code: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: s
+---
+Position 344:
+(BaseModel):
+    username: str
+    password: str
+
+class UserChangePassword(BaseModel):
+    old_password: str
+    new_password: str = Field(..., min_length=6)
+
+class VerificationConfirm(BaseModel):
+    email: EmailStr
+    code: str
+
+class CodeConfirm(BaseModel):
+    code: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    is_active: bool
+    profile_picture: Option
+---
+Position 453:
+    new_password: str = Field(..., min_length=6)
+
+class VerificationConfirm(BaseModel):
+    email: EmailStr
+    code: str
+
+class CodeConfirm(BaseModel):
+    code: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    is_active: bool
+    profile_picture: Optional[str] = None
+    is_premium: bool = False
+    created_at: datetime.datetime
+
+    class Config:
+        from
+---
+Position 526:
+rm(BaseModel):
+    email: EmailStr
+    code: str
+
+class CodeConfirm(BaseModel):
+    code: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    is_active: bool
+    profile_picture: Optional[str] = None
+    is_premium: bool = False
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Token Schemas
+class Token(BaseModel):
+    access_t
+---
+Position 571:
+str
+
+class CodeConfirm(BaseModel):
+    code: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    is_active: bool
+    profile_picture: Optional[str] = None
+    is_premium: bool = False
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Token Schemas
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenDat
+---
+Position 777:
+ol = False
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Token Schemas
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+
+# Watchlist Schemas
+class WatchlistAdd(BaseModel):
+    symbol: str = Field(..., min_length=1, max_length=20)
+
+class WatchlistResponse(BaseModel):
+    id: i
+---
+Position 840:
+
+        from_attributes = True
+
+
+# Token Schemas
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+
+# Watchlist Schemas
+class WatchlistAdd(BaseModel):
+    symbol: str = Field(..., min_length=1, max_length=20)
+
+class WatchlistResponse(BaseModel):
+    id: int
+    symbol: str
+    created_at: datetime.datetime
+
+    class
+---
+Position 907:
+odel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+
+# Watchlist Schemas
+class WatchlistAdd(BaseModel):
+    symbol: str = Field(..., min_length=1, max_length=20)
+
+class WatchlistResponse(BaseModel):
+    id: int
+    symbol: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Machine Learning / Pred
+---
+Position 992:
+rname: Optional[str] = None
+
+
+# Watchlist Schemas
+class WatchlistAdd(BaseModel):
+    symbol: str = Field(..., min_length=1, max_length=20)
+
+class WatchlistResponse(BaseModel):
+    id: int
+    symbol: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Machine Learning / Prediction Schemas
+class IndicatorPoint(BaseModel):
+    date: str
+    open: float
+    clo
+---
+Position 1082:
+l: str = Field(..., min_length=1, max_length=20)
+
+class WatchlistResponse(BaseModel):
+    id: int
+    symbol: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Machine Learning / Prediction Schemas
+class IndicatorPoint(BaseModel):
+    date: str
+    open: float
+    close: float
+    volume: float
+    high: Optional[float] = None
+    low: Optional[float] = No
+---
+Position 1185:
+ymbol: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Machine Learning / Prediction Schemas
+class IndicatorPoint(BaseModel):
+    date: str
+    open: float
+    close: float
+    volume: float
+    high: Optional[float] = None
+    low: Optional[float] = None
+    rsi: Optional[float] = None
+    macd: Optional[float] = None
+    macd_signal: Optional[float] = 
+---
+Position 1272:
+ = True
+
+
+# Machine Learning / Prediction Schemas
+class IndicatorPoint(BaseModel):
+    date: str
+    open: float
+    close: float
+    volume: float
+    high: Optional[float] = None
+    low: Optional[float] = None
+    rsi: Optional[float] = None
+    macd: Optional[float] = None
+    macd_signal: Optional[float] = None
+    macd_hist: Optional[float] = None
+    bb_upper: Optional[float] = None
+    bb_
+---
+Position 1770:
+e
+    lr_predicted_close: Optional[float] = None
+
+class PredictionMetrics(BaseModel):
+    rmse: float
+    mape: float
+    directional_accuracy: float  # Percentage of days predicted direction matches actual direction
+    training_status: str
+
+class NewsArticle(BaseModel):
+    title: str
+    publisher: str
+    link: str
+    sentiment: str  # "Bullish", "Bearish", "Neutral"
+
+class FundamentalAnalysi
+---
+Position 1963:
+atches actual direction
+    training_status: str
+
+class NewsArticle(BaseModel):
+    title: str
+    publisher: str
+    link: str
+    sentiment: str  # "Bullish", "Bearish", "Neutral"
+
+class FundamentalAnalysisResult(BaseModel):
+    sentiment_score: float
+    sentiment_class: str  # "Bullish", "Bearish", "Neutral"
+    recommendation: str
+    articles: List[NewsArticle]
+
+class TechnicalRecommendation
+---
+Position 2096:
+entiment: str  # "Bullish", "Bearish", "Neutral"
+
+class FundamentalAnalysisResult(BaseModel):
+    sentiment_score: float
+    sentiment_class: str  # "Bullish", "Bearish", "Neutral"
+    recommendation: str
+    articles: List[NewsArticle]
+
+class TechnicalRecommendation(BaseModel):
+    signal: str  # "STRONG_BUY", "STRONG_SELL", "HOLD"
+    text: str
+
+class PredictionResponse(BaseModel):
+    symbol: s
+---
+Position 2284:
+ommendation: str
+    articles: List[NewsArticle]
+
+class TechnicalRecommendation(BaseModel):
+    signal: str  # "STRONG_BUY", "STRONG_SELL", "HOLD"
+    text: str
+
+class PredictionResponse(BaseModel):
+    symbol: str
+    name: str
+    last_date: str
+    last_close: float
+    predicted_close: Optional[float] = None
+    prediction_date: Optional[str] = None
+    expected_close_time: Optional[str] = Non
+---
+Position 2396:
+STRONG_BUY", "STRONG_SELL", "HOLD"
+    text: str
+
+class PredictionResponse(BaseModel):
+    symbol: str
+    name: str
+    last_date: str
+    last_close: float
+    predicted_close: Optional[float] = None
+    prediction_date: Optional[str] = None
+    expected_close_time: Optional[str] = None
+    price_change_percent: Optional[float] = None
+    current_price: Optional[float] = None
+    metrics: Option
+---
+Position 3407:
+ndation] = None
+
+
+
+
+
+# Profile & Comments schemas
+class ProfilePictureUpdate(BaseModel):
+    profile_picture: str  # Base64 string
+
+class CommentCreate(BaseModel):
+    symbol: str
+    content: str = Field(..., min_length=1, max_length=1000)
+    parent_id: Optional[int] = None
+
+class CommentUser(BaseModel):
+    id: int
+    username: str
+    profile_picture: Optional[str] = None
+
+    class Config:
+ 
+---
+Position 3489:
+odel):
+    profile_picture: str  # Base64 string
+
+class CommentCreate(BaseModel):
+    symbol: str
+    content: str = Field(..., min_length=1, max_length=1000)
+    parent_id: Optional[int] = None
+
+class CommentUser(BaseModel):
+    id: int
+    username: str
+    profile_picture: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class CommentResponse(BaseModel):
+    id: int
+    s
+---
+Position 3635:
+length=1000)
+    parent_id: Optional[int] = None
+
+class CommentUser(BaseModel):
+    id: int
+    username: str
+    profile_picture: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class CommentResponse(BaseModel):
+    id: int
+    symbol: str
+    content: str
+    created_at: datetime.datetime
+    parent_id: Optional[int] = None
+    user: CommentUser
+    likes: int = 0
+    dis
+---
+Position 3742:
+tr
+    profile_picture: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class CommentResponse(BaseModel):
+    id: int
+    symbol: str
+    content: str
+    created_at: datetime.datetime
+    parent_id: Optional[int] = None
+    user: CommentUser
+    likes: int = 0
+    dislikes: int = 0
+    user_reaction: Optional[str] = None  # "like", "dislike", or None
+
+    class Config:
+   
+---
+Position 3788:
+    class Config:
+        from_attributes = True
+
+class CommentResponse(BaseModel):
+    id: int
+    symbol: str
+    content: str
+    created_at: datetime.datetime
+    parent_id: Optional[int] = None
+    user: CommentUser
+    likes: int = 0
+    dislikes: int = 0
+    user_reaction: Optional[str] = None  # "like", "dislike", or None
+
+    class Config:
+        from_attributes = True
+
+class CommentReac
+---
+Position 4075:
+al[str] = None  # "like", "dislike", or None
+
+    class Config:
+        from_attributes = True
+
+class CommentReactRequest(BaseModel):
+    reaction: str  # "like" or "dislike"
+
+class PredictionLogResponse(BaseModel):
+    id: int
+    symbol: str
+    interval: str
+    prediction_date: str
+    predicted_close: float
+    last_close: float
+    actual_close: Optional[float] = None
+    created_at: datetim
+---
+Position 4121:
+    class Config:
+        from_attributes = True
+
+class CommentReactRequest(BaseModel):
+    reaction: str  # "like" or "dislike"
+
+class PredictionLogResponse(BaseModel):
+    id: int
+    symbol: str
+    interval: str
+    prediction_date: str
+    predicted_close: float
+    last_close: float
+    actual_close: Optional[float] = None
+    created_at: datetime.datetime
+
+    class Config:
+        from_att
+---
+Position 4201:
+Model):
+    reaction: str  # "like" or "dislike"
+
+class PredictionLogResponse(BaseModel):
+    id: int
+    symbol: str
+    interval: str
+    prediction_date: str
+    predicted_close: float
+    last_close: float
+    actual_close: Optional[float] = None
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AutoTrainSymbolResponse(BaseModel):
+    id: int
+    symbo
+---
+Position 4441:
+at] = None
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AutoTrainSymbolResponse(BaseModel):
+    id: int
+    symbol: str
+    created_at: datetime.datetime
+    last_trained_at: Optional[str] = None
+    is_trained: Optional[bool] = False
+
+    class Config:
+        from_attributes = True
+
+
+class AutoTrainSymbolAdd(BaseModel):
+    symbol: str
+
+
+class Marke
+---
+Position 4488:
+   class Config:
+        from_attributes = True
+
+
+class AutoTrainSymbolResponse(BaseModel):
+    id: int
+    symbol: str
+    created_at: datetime.datetime
+    last_trained_at: Optional[str] = None
+    is_trained: Optional[bool] = False
+
+    class Config:
+        from_attributes = True
+
+
+class AutoTrainSymbolAdd(BaseModel):
+    symbol: str
+
+
+class MarketScreenerResponse(BaseModel):
+    id: int
+    s
+---
+Position 4678:
+ None
+    is_trained: Optional[bool] = False
+
+    class Config:
+        from_attributes = True
+
+
+class AutoTrainSymbolAdd(BaseModel):
+    symbol: str
+
+
+class MarketScreenerResponse(BaseModel):
+    id: int
+    symbol: str
+    name: Optional[str] = None
+    price: float
+    predicted_change: Optional[float] = None
+    rsi: Optional[float] = None
+    macd_signal: Optional[str] = None
+    updated_at: 
+---
+Position 4725:
+   class Config:
+        from_attributes = True
+
+
+class AutoTrainSymbolAdd(BaseModel):
+    symbol: str
+
+
+class MarketScreenerResponse(BaseModel):
+    id: int
+    symbol: str
+    name: Optional[str] = None
+    price: float
+    predicted_change: Optional[float] = None
+    rsi: Optional[float] = None
+    macd_signal: Optional[str] = None
+    updated_at: datetime.datetime
+
+    class Config:
+        fr
+---
+Position 4780:
+ AutoTrainSymbolAdd(BaseModel):
+    symbol: str
+
+
+class MarketScreenerResponse(BaseModel):
+    id: int
+    symbol: str
+    name: Optional[str] = None
+    price: float
+    predicted_change: Optional[float] = None
+    rsi: Optional[float] = None
+    macd_signal: Optional[str] = None
+    updated_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+class NewsArticleResponse(BaseMo
+---
+Position 5051:
+tr] = None
+    updated_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+class NewsArticleResponse(BaseModel):
+    title: str
+    publisher: str
+    link: str
+    time: int
+    score: float
+    rating: str
+
+
+class NewsSentimentResponse(BaseModel):
+    symbol: str
+    sentiment_score: float
+    sentiment_class: str
+    articles: List[NewsArticleResponse]
+
+
+---
+Position 5098:
+   class Config:
+        from_attributes = True
+
+
+class NewsArticleResponse(BaseModel):
+    title: str
+    publisher: str
+    link: str
+    time: int
+    score: float
+    rating: str
+
+
+class NewsSentimentResponse(BaseModel):
+    symbol: str
+    sentiment_score: float
+    sentiment_class: str
+    articles: List[NewsArticleResponse]
+
+
+---
+Position 5233:
+
+    time: int
+    score: float
+    rating: str
+
+
+class NewsSentimentResponse(BaseModel):
+    symbol: str
+    sentiment_score: float
+    sentiment_class: str
+    articles: List[NewsArticleResponse]
+
+
+---
