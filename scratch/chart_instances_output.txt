@@ -1,0 +1,325 @@
+Position 26452:
+useRef(null);
+  const rsiChartRef = useRef(null);
+  const macdChartRef = useRef(null);
+  const priceChartInst = useRef(null);
+  const rsiChartInst = useRef(null);
+  const macdChartInst = useRef(null);
+
+  // 1. Check for token on mount
+  useEffect(() 
+---
+Position 26489:
+seRef(null);
+  const macdChartRef = useRef(null);
+  const priceChartInst = useRef(null);
+  const rsiChartInst = useRef(null);
+  const macdChartInst = useRef(null);
+
+  // 1. Check for token on mount
+  useEffect(() => {
+    const savedToken = localStor
+---
+Position 26527:
+eRef(null);
+  const priceChartInst = useRef(null);
+  const rsiChartInst = useRef(null);
+  const macdChartInst = useRef(null);
+
+  // 1. Check for token on mount
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token");
+    if (savedTok
+---
+Position 26935:
+clicks/touches
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      const isClickInsideChart = 
+        priceChartRef.current?.contains(e.target) || 
+        rsiChartRef.current?.contains(e.target) || 
+        macdChartRef.current?.conta
+---
+Position 27148:
+ 
+        macdChartRef.current?.contains(e.target);
+
+      if (!isClickInsideChart) {
+        [priceChartInst.current, rsiChartInst.current, macdChartInst.current].forEach(chart => {
+          if (chart) {
+            chart.setActiveElements([]);
+   
+---
+Position 27170:
+.current?.contains(e.target);
+
+      if (!isClickInsideChart) {
+        [priceChartInst.current, rsiChartInst.current, macdChartInst.current].forEach(chart => {
+          if (chart) {
+            chart.setActiveElements([]);
+            if (chart.too
+---
+Position 27193:
+rget);
+
+      if (!isClickInsideChart) {
+        [priceChartInst.current, rsiChartInst.current, macdChartInst.current].forEach(chart => {
+          if (chart) {
+            chart.setActiveElements([]);
+            if (chart.tooltip) {
+              c
+---
+Position 29450:
+.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    
+    if (priceChartInst.current) {
+      const timer = setTimeout(() => {
+        priceChartInst.current.resize();
+      }, 100);
+      return () => {
+        clear
+---
+Position 29523:
+";
+    }
+    
+    if (priceChartInst.current) {
+      const timer = setTimeout(() => {
+        priceChartInst.current.resize();
+      }, 100);
+      return () => {
+        clearTimeout(timer);
+        document.body.style.overflow = "";
+      };
+    }
+---
+Position 29966:
+}, [chartType]);
+
+  // Helper: Destroy existing charts
+  const destroyCharts = () => {
+    if (priceChartInst.current) {
+      priceChartInst.current.destroy();
+      priceChartInst.current = null;
+    }
+    if (rsiChartInst.current) {
+      rsiChart
+---
+Position 29998:
+estroy existing charts
+  const destroyCharts = () => {
+    if (priceChartInst.current) {
+      priceChartInst.current.destroy();
+      priceChartInst.current = null;
+    }
+    if (rsiChartInst.current) {
+      rsiChartInst.current.destroy();
+      rs
+---
+Position 30038:
+arts = () => {
+    if (priceChartInst.current) {
+      priceChartInst.current.destroy();
+      priceChartInst.current = null;
+    }
+    if (rsiChartInst.current) {
+      rsiChartInst.current.destroy();
+      rsiChartInst.current = null;
+    }
+    if 
+---
+Position 30047:
+ => {
+    if (priceChartInst.current) {
+      priceChartInst.current.destroy();
+      priceChartInst.current = null;
+    }
+    if (rsiChartInst.current) {
+      rsiChartInst.current.destroy();
+      rsiChartInst.current = null;
+    }
+    if (macdChar
+---
+Position 30081:
+nt) {
+      priceChartInst.current.destroy();
+      priceChartInst.current = null;
+    }
+    if (rsiChartInst.current) {
+      rsiChartInst.current.destroy();
+      rsiChartInst.current = null;
+    }
+    if (macdChartInst.current) {
+      macdChartIn
+---
+Position 30111:
+rent.destroy();
+      priceChartInst.current = null;
+    }
+    if (rsiChartInst.current) {
+      rsiChartInst.current.destroy();
+      rsiChartInst.current = null;
+    }
+    if (macdChartInst.current) {
+      macdChartInst.current.destroy();
+      ma
+---
+Position 30149:
+urrent = null;
+    }
+    if (rsiChartInst.current) {
+      rsiChartInst.current.destroy();
+      rsiChartInst.current = null;
+    }
+    if (macdChartInst.current) {
+      macdChartInst.current.destroy();
+      macdChartInst.current = null;
+    }
+  };
+---
+Position 30158:
+null;
+    }
+    if (rsiChartInst.current) {
+      rsiChartInst.current.destroy();
+      rsiChartInst.current = null;
+    }
+    if (macdChartInst.current) {
+      macdChartInst.current.destroy();
+      macdChartInst.current = null;
+    }
+  };
+
+  // He
+---
+Position 30193:
+rrent) {
+      rsiChartInst.current.destroy();
+      rsiChartInst.current = null;
+    }
+    if (macdChartInst.current) {
+      macdChartInst.current.destroy();
+      macdChartInst.current = null;
+    }
+  };
+
+  // Helper: Calculate support and resista
+---
+Position 30224:
+rent.destroy();
+      rsiChartInst.current = null;
+    }
+    if (macdChartInst.current) {
+      macdChartInst.current.destroy();
+      macdChartInst.current = null;
+    }
+  };
+
+  // Helper: Calculate support and resistance levels (Swing High/Low Pivo
+---
+Position 30263:
+ent = null;
+    }
+    if (macdChartInst.current) {
+      macdChartInst.current.destroy();
+      macdChartInst.current = null;
+    }
+  };
+
+  // Helper: Calculate support and resistance levels (Swing High/Low Pivot method)
+  const calculateSupportResis
+---
+Position 30272:
+l;
+    }
+    if (macdChartInst.current) {
+      macdChartInst.current.destroy();
+      macdChartInst.current = null;
+    }
+  };
+
+  // Helper: Calculate support and resistance levels (Swing High/Low Pivot method)
+  const calculateSupportResistance = (
+---
+Position 39424:
+       hidden: true,
+        });
+      });
+    }
+
+    // Price Chart
+    if (ctxPrice) {
+      priceChartInst.current = new Chart(ctxPrice, {
+        type: "line",
+        data: {
+          labels: extendedLabels,
+          datasets: datasets
+       
+---
+Position 39433:
+dden: true,
+        });
+      });
+    }
+
+    // Price Chart
+    if (ctxPrice) {
+      priceChartInst.current = new Chart(ctxPrice, {
+        type: "line",
+        data: {
+          labels: extendedLabels,
+          datasets: datasets
+        },
+     
+---
+Position 41248:
+
+    // RSI Chart
+    if (ctxRsi) {
+      const rsiValues = history.map(item => item.rsi);
+      rsiChartInst.current = new Chart(ctxRsi, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "RSI
+---
+Position 41257:
+SI Chart
+    if (ctxRsi) {
+      const rsiValues = history.map(item => item.rsi);
+      rsiChartInst.current = new Chart(ctxRsi, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "RSI (14)",
+ 
+---
+Position 42470:
+> item.macd_signal);
+      const histValues = history.map(item => item.macd_hist);
+      
+      macdChartInst.current = new Chart(ctxMacd, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+          
+---
+Position 42479:
+cd_signal);
+      const histValues = history.map(item => item.macd_hist);
+      
+      macdChartInst.current = new Chart(ctxMacd, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type:
+---
