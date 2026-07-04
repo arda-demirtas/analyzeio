@@ -1,0 +1,106 @@
+Line 1140:             y: {
+Line 1141:               grid: { color: "rgba(255, 255, 255, 0.05)" },
+Line 1142:               ticks: { color: "#9ca3af", maxTicksLimit: 5 }
+Line 1143:             }
+Line 1144:           }
+Line 1145:         }
+Line 1146:       });
+Line 1147:     }
+Line 1148: 
+Line 1149:     // Stochastic RSI Chart
+Line 1150:     if (ctxStoch) {
+Line 1151:       const stochKValues = history.map(item => item.stoch_k !== undefined ? item.stoch_k : 50.0);
+Line 1152:       const stochDValues = history.map(item => item.stoch_d !== undefined ? item.stoch_d : 50.0);
+Line 1153:       
+Line 1154:       stochChartInst.current = new Chart(ctxStoch, {
+Line 1155:         type: "line",
+Line 1156:         data: {
+Line 1157:           labels: labels,
+Line 1158:           datasets: [
+Line 1159:             {
+Line 1160:               label: "%K",
+Line 1161:               data: stochKValues,
+Line 1162:               borderColor: "#f59e0b",
+Line 1163:               borderWidth: 1.5,
+Line 1164:               pointRadius: 0,
+Line 1165:               tension: 0.1,
+Line 1166:             },
+Line 1167:             {
+Line 1168:               label: "%D",
+Line 1169:               data: stochDValues,
+Line 1170:               borderColor: "#06b6d4",
+Line 1171:               borderWidth: 1.5,
+Line 1172:               pointRadius: 0,
+Line 1173:               tension: 0.1,
+Line 1174:             }
+Line 1175:           ]
+Line 1176:         },
+Line 1177:         options: {
+Line 1178:           events: chartEvents,
+Line 1179:           responsive: true,
+Line 1180:           maintainAspectRatio: false,
+Line 1181:           plugins: { legend: { display: false } },
+Line 1182:           scales: {
+Line 1183:             x: { grid: { display: false }, ticks: { display: false } },
+Line 1184:             y: {
+Line 1185:               min: 0,
+Line 1186:               max: 100,
+Line 1187:               grid: { color: "rgba(255, 255, 255, 0.05)" },
+Line 1188:               ticks: { color: "#9ca3af", stepSize: 20 },
+Line 1189:               border: { dash: [5, 5] }
+Line 1190:             }
+Line 1191:           }
+Line 1192:         }
+Line 1193:       });
+Line 1194:     }
+Line 1195: 
+Line 1196:     // ATR Chart
+Line 1197:     if (ctxAtr) {
+Line 1198:       const atrValues = history.map(item => item.atr !== undefined ? item.atr : 0.0);
+Line 1199:       
+Line 1200:       atrChartInst.current = new Chart(ctxAtr, {
+Line 1201:         type: "line",
+Line 1202:         data: {
+Line 1203:           labels: labels,
+Line 1204:           datasets: [{
+Line 1205:             label: "ATR",
+Line 1206:             data: atrValues,
+Line 1207:             borderColor: "#a855f7",
+Line 1208:             borderWidth: 1.5,
+Line 1209:             pointRadius: 0,
+Line 1210:             tension: 0.1,
+Line 1211:           }]
+Line 1212:         },
+Line 1213:         options: {
+Line 1214:           events: chartEvents,
+Line 1215:           responsive: true,
+Line 1216:           maintainAspectRatio: false,
+Line 1217:           plugins: { legend: { display: false } },
+Line 1218:           scales: {
+Line 1219:             x: { grid: { display: false }, ticks: { display: false } },
+Line 1220:             y: {
+Line 1221:               grid: { color: "rgba(255, 255, 255, 0.05)" },
+Line 1222:               ticks: { color: "#9ca3af" }
+Line 1223:             }
+Line 1224:           }
+Line 1225:         }
+Line 1226:       });
+Line 1227:     }
+Line 1228: 
+Line 1229:     // OBV Chart
+Line 1230:     if (ctxObv) {
+Line 1231:       const obvValues = history.map(item => item.obv !== undefined ? item.obv : 0.0);
+Line 1232:       
+Line 1233:       obvChartInst.current = new Chart(ctxObv, {
+Line 1234:         type: "line",
+Line 1235:         data: {
+Line 1236:           labels: labels,
+Line 1237:           datasets: [{
+Line 1238:             label: "OBV",
+Line 1239:             data: obvValues,
+Line 1240:             borderColor: "#10b981",
+Line 1241:             borderWidth: 1.5,
+Line 1242:             pointRadius: 0,
+Line 1243:             tension: 0.1,
+Line 1244:           }]
+Line 1245:         },
