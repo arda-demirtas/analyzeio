@@ -3519,6 +3519,27 @@ export default function Home() {
                         {t("expected_close")}: {predictionData ? predictionData.expected_close_time : "---"}
                       </div>
                       
+                      {predictionData && predictionData.lr_predicted_close !== null && (
+                        <div style={{ 
+                          marginTop: "12px", 
+                          padding: "6px 10px", 
+                          background: "rgba(59, 130, 246, 0.08)", 
+                          border: "1px solid rgba(59, 130, 246, 0.2)", 
+                          borderRadius: "6px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px"
+                        }}>
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3b82f6" }}></span>
+                          <span style={{ fontSize: "11px", color: "#93c5fd", fontWeight: "500" }}>
+                            {lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction"}: 
+                            <strong style={{ color: "#ffffff", marginLeft: "4px" }}>
+                              ${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </strong>
+                          </span>
+                        </div>
+                      )}
+                      
                       {predictionData && predictionData.price_change_percent !== null && (
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "16px", fontWeight: "700", marginTop: "15px" }}>
                           {predictionData.price_change_percent >= 0 ? (
