@@ -1,0 +1,4 @@
+Line 530:     history_list = []
+Line 549:         history_list.append({
+Line 565:             "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+Line 646:         "history": history_list,
