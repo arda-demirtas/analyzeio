@@ -1,0 +1,304 @@
+Position 252:
+ICKER_NAMES, FEATURES
+from backend.indicators import (
+    calculate_rsi, calculate_macd, calculate_atr,
+    calculate_stoch_rsi, calculate_obv, calculate_cci, calculate_williams_r
+)
+
+def fetch_binance_data(binance_symbol: str, interval: str) -> pd.DataFrame:
+    """
+    Fetches historical kline/can
+---
+Position 292:
+ators import (
+    calculate_rsi, calculate_macd, calculate_atr,
+    calculate_stoch_rsi, calculate_obv, calculate_cci, calculate_williams_r
+)
+
+def fetch_binance_data(binance_symbol: str, interval: str) -> pd.DataFrame:
+    """
+    Fetches historical kline/candlestick data from Binance public API.
+ 
+---
+Position 307:
+    calculate_rsi, calculate_macd, calculate_atr,
+    calculate_stoch_rsi, calculate_obv, calculate_cci, calculate_williams_r
+)
+
+def fetch_binance_data(binance_symbol: str, interval: str) -> pd.DataFrame:
+    """
+    Fetches historical kline/candlestick data from Binance public API.
+    Paginates tw
+---
+Position 322:
+si, calculate_macd, calculate_atr,
+    calculate_stoch_rsi, calculate_obv, calculate_cci, calculate_williams_r
+)
+
+def fetch_binance_data(binance_symbol: str, interval: str) -> pd.DataFrame:
+    """
+    Fetches historical kline/candlestick data from Binance public API.
+    Paginates twice to retrieve
+---
+Position 7253:
+
+    df["EMA_50"] = df["Close"].ewm(span=50, adjust=False).mean()
+    
+    # New Indicators
+    df["ATR"] = calculate_atr(df["High"], df["Low"], df["Close"])
+    
+    # Calculate StochRSI, OBV, CCI, and Williams %R
+    stoch_k, stoch_d = calculate_stoch_rsi(df["RSI"])
+    df["Stoch_K"] = stoch_k
+   
+---
+Position 7271:
+= df["Close"].ewm(span=50, adjust=False).mean()
+    
+    # New Indicators
+    df["ATR"] = calculate_atr(df["High"], df["Low"], df["Close"])
+    
+    # Calculate StochRSI, OBV, CCI, and Williams %R
+    stoch_k, stoch_d = calculate_stoch_rsi(df["RSI"])
+    df["Stoch_K"] = stoch_k
+    df["Stoch_D"] = s
+---
+Position 7342:
+rs
+    df["ATR"] = calculate_atr(df["High"], df["Low"], df["Close"])
+    
+    # Calculate StochRSI, OBV, CCI, and Williams %R
+    stoch_k, stoch_d = calculate_stoch_rsi(df["RSI"])
+    df["Stoch_K"] = stoch_k
+    df["Stoch_D"] = stoch_d
+    df["OBV"] = calculate_obv(df["Close"], df["Volume"])
+    df[
+---
+Position 7347:
+  df["ATR"] = calculate_atr(df["High"], df["Low"], df["Close"])
+    
+    # Calculate StochRSI, OBV, CCI, and Williams %R
+    stoch_k, stoch_d = calculate_stoch_rsi(df["RSI"])
+    df["Stoch_K"] = stoch_k
+    df["Stoch_D"] = stoch_d
+    df["OBV"] = calculate_obv(df["Close"], df["Volume"])
+    df["CCI"
+---
+Position 7372:
+tr(df["High"], df["Low"], df["Close"])
+    
+    # Calculate StochRSI, OBV, CCI, and Williams %R
+    stoch_k, stoch_d = calculate_stoch_rsi(df["RSI"])
+    df["Stoch_K"] = stoch_k
+    df["Stoch_D"] = stoch_d
+    df["OBV"] = calculate_obv(df["Close"], df["Volume"])
+    df["CCI"] = calculate_cci(df["Hig
+---
+Position 7430:
+e StochRSI, OBV, CCI, and Williams %R
+    stoch_k, stoch_d = calculate_stoch_rsi(df["RSI"])
+    df["Stoch_K"] = stoch_k
+    df["Stoch_D"] = stoch_d
+    df["OBV"] = calculate_obv(df["Close"], df["Volume"])
+    df["CCI"] = calculate_cci(df["High"], df["Low"], df["Close"])
+    df["Williams_R"] = calcul
+---
+Position 7442:
+OBV, CCI, and Williams %R
+    stoch_k, stoch_d = calculate_stoch_rsi(df["RSI"])
+    df["Stoch_K"] = stoch_k
+    df["Stoch_D"] = stoch_d
+    df["OBV"] = calculate_obv(df["Close"], df["Volume"])
+    df["CCI"] = calculate_cci(df["High"], df["Low"], df["Close"])
+    df["Williams_R"] = calculate_williams
+---
+Position 7486:
+_d = calculate_stoch_rsi(df["RSI"])
+    df["Stoch_K"] = stoch_k
+    df["Stoch_D"] = stoch_d
+    df["OBV"] = calculate_obv(df["Close"], df["Volume"])
+    df["CCI"] = calculate_cci(df["High"], df["Low"], df["Close"])
+    df["Williams_R"] = calculate_williams_r(df["High"], df["Low"], df["Close"])
+    
+
+---
+Position 7504:
+ch_rsi(df["RSI"])
+    df["Stoch_K"] = stoch_k
+    df["Stoch_D"] = stoch_d
+    df["OBV"] = calculate_obv(df["Close"], df["Volume"])
+    df["CCI"] = calculate_cci(df["High"], df["Low"], df["Close"])
+    df["Williams_R"] = calculate_williams_r(df["High"], df["Low"], df["Close"])
+    
+    df["BB_Width"]
+---
+Position 7543:
+toch_k
+    df["Stoch_D"] = stoch_d
+    df["OBV"] = calculate_obv(df["Close"], df["Volume"])
+    df["CCI"] = calculate_cci(df["High"], df["Low"], df["Close"])
+    df["Williams_R"] = calculate_williams_r(df["High"], df["Low"], df["Close"])
+    
+    df["BB_Width"] = (df["BB_Upper"] - df["BB_Lower"]) / 
+---
+Position 7561:
+ch_D"] = stoch_d
+    df["OBV"] = calculate_obv(df["Close"], df["Volume"])
+    df["CCI"] = calculate_cci(df["High"], df["Low"], df["Close"])
+    df["Williams_R"] = calculate_williams_r(df["High"], df["Low"], df["Close"])
+    
+    df["BB_Width"] = (df["BB_Upper"] - df["BB_Lower"]) / (df["Close"] + 1e-
+---
+Position 7609:
+f["Close"], df["Volume"])
+    df["CCI"] = calculate_cci(df["High"], df["Low"], df["Close"])
+    df["Williams_R"] = calculate_williams_r(df["High"], df["Low"], df["Close"])
+    
+    df["BB_Width"] = (df["BB_Upper"] - df["BB_Lower"]) / (df["Close"] + 1e-10)
+    df["Daily_Return"] = df["Close"].pct_cha
+---
+Position 7634:
+
+    df["CCI"] = calculate_cci(df["High"], df["Low"], df["Close"])
+    df["Williams_R"] = calculate_williams_r(df["High"], df["Low"], df["Close"])
+    
+    df["BB_Width"] = (df["BB_Upper"] - df["BB_Lower"]) / (df["Close"] + 1e-10)
+    df["Daily_Return"] = df["Close"].pct_change()
+    df["Return_Lag1
+---
+Position 10196:
+           "ema_20": float(row["EMA_20"]),
+            "ema_50": float(row["EMA_50"]),
+            "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "s
+---
+Position 10213:
+0": float(row["EMA_20"]),
+            "ema_50": float(row["EMA_50"]),
+            "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(ro
+---
+Position 10224:
+ow["EMA_20"]),
+            "ema_50": float(row["EMA_50"]),
+            "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"
+---
+Position 10257:
+0": float(row["EMA_50"]),
+            "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd
+---
+Position 10287:
+        "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.
+---
+Position 10308:
+row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv":
+---
+Position 10323:
+"ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV
+---
+Position 10360:
+"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(r
+---
+Position 10503:
+: float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float
+---
+Position 10520:
+h_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"
+---
+Position 10531:
+Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Will
+---
+Position 10564:
+ow["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(ro
+---
+Position 10594:
+        "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+ 
+---
+Position 10611:
+oat(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+        })
+       
+---
+Position 10622:
+V"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+        })
+        
+    retur
+---
+Position 10655:
+sna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+        })
+        
+    return history_list
+
+---
+Position 10685:
+        "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+        })
+        
+    return history_list
+
+---
+Position 10709:
+["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+        })
+        
+    return history_list
+
+---
+Position 10727:
+in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+        })
+        
+    return history_list
+
+---
+Position 10767:
+0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+        })
+        
+    return history_list
+
+---
