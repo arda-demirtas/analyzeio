@@ -44,10 +44,7 @@ POPULAR_STOCKS = [
 AUTO_TRAINED_SYMBOLS = POPULAR_CRYPTOS + POPULAR_COMMODITIES + POPULAR_STOCKS
 
 FEATURES = [
-    "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
-    "BB_Upper", "BB_Lower", "BB_Width", "EMA_20", "EMA_50",
-    "Open", "Close", "Volume", "High", "Low", "ATR",
-    "Daily_Return", "Return_Lag1", "Return_Lag3", "Return_Lag7"
+    "Return_Lag3", "EMA_50"
 ]
 
 TICKER_NAMES = {
