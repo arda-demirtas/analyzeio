@@ -1138,7 +1138,8 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         "fundamental_analysis": fundamental_result,
         "technical_recommendation": technical_recommendation,
         "prediction_status": "pending_data" if is_pending_data else "success",
-        "prediction_error": pending_error_msg
+        "prediction_error": pending_error_msg,
+        "model_type": model_type
     }
 
 def fetch_interval_history(symbol: str, interval: str) -> List[Dict[str, Any]]:
