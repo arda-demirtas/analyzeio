@@ -1,0 +1,200 @@
+Line 4251:               </form>
+Line 4252:             )}
+Line 4253:           </div>
+Line 4254:         </div>
+Line 4255:       )}
+Line 4256: 
+Line 4257:       {/* Admin Panel Modal */}
+Line 4258:       {showAdminModal && (
+Line 4259:         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+Line 4260:           <div className="glass-panel" style={{ width: "100%", maxWidth: "800px", maxHeight: "85vh", display: "flex", flexDirection: "column", padding: "25px", overflow: "hidden" }}>
+Line 4261:             
+Line 4262:             {/* Header */}
+Line 4263:             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "15px" }}>
+Line 4264:               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+Line 4265:                 <Shield style={{ color: "#f59e0b", width: "22px", height: "22px" }} />
+Line 4266:                 <h3 style={{ fontSize: "20px", fontWeight: "700", margin: 0, color: "#f59e0b" }}>Admin Control Panel</h3>
+Line 4267:               </div>
+Line 4268:               <button 
+Line 4269:                 onClick={() => setShowAdminModal(false)} 
+Line 4270:                 className="btn-secondary" 
+Line 4271:                 style={{ minWidth: "auto", padding: "6px 12px", fontSize: "12px" }}
+Line 4272:               >
+Line 4273:                 ✕ Close
+Line 4274:               </button>
+Line 4275:             </div>
+Line 4276:             
+Line 4277:             {/* Tabs */}
+Line 4278:             <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+Line 4279:               <button 
+Line 4280:                 onClick={() => setAdminActiveTab("users")} 
+Line 4281:                 className={adminActiveTab === "users" ? "btn-primary" : "btn-secondary"}
+Line 4282:                 style={{ 
+Line 4283:                   flex: 1, 
+Line 4284:                   background: adminActiveTab === "users" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
+Line 4285:                   border: "none",
+Line 4286:                   fontWeight: "600"
+Line 4287:                 }}
+Line 4288:               >
+Line 4289:                 👥 User Accounts ({adminUsers.length})
+Line 4290:               </button>
+Line 4291:               <button 
+Line 4292:                 onClick={() => setAdminActiveTab("auto_train")} 
+Line 4293:                 className={adminActiveTab === "auto_train" ? "btn-primary" : "btn-secondary"}
+Line 4294:                 style={{ 
+Line 4295:                   flex: 1, 
+Line 4296:                   background: adminActiveTab === "auto_train" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
+Line 4297:                   border: "none",
+Line 4298:                   fontWeight: "600"
+Line 4299:                 }}
+Line 4300:               >
+Line 4301:                 🤖 Auto-Train List ({autoTrainSymbols.length})
+Line 4302:               </button>
+Line 4303:               <button 
+Line 4304:                 onClick={() => setAdminActiveTab("models")} 
+Line 4305:                 className={adminActiveTab === "models" ? "btn-primary" : "btn-secondary"}
+Line 4306:                 style={{ 
+Line 4307:                   flex: 1, 
+Line 4308:                   background: adminActiveTab === "models" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
+Line 4309:                   border: "none",
+Line 4310:                   fontWeight: "600"
+Line 4311:                 }}
+Line 4312:               >
+Line 4313:                 🧠 Model Cache ({adminStats ? adminStats.total_cached_models : 0})
+Line 4314:               </button>
+Line 4315:             </div>
+Line 4316:             
+Line 4317:             {/* Main Content Area (Scrollable) */}
+Line 4318:             <div style={{ flex: 1, overflowY: "auto", paddingRight: "5px" }}>
+Line 4319:               {adminLoading ? (
+Line 4320:                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "50px 0", gap: "15px" }}>
+Line 4321:                   <RefreshCw className="animate-spin" style={{ color: "#f59e0b", width: "32px", height: "32px" }} />
+Line 4322:                   <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>Loading Admin Data...</span>
+Line 4323:                 </div>
+Line 4324:               ) : adminActiveTab === "users" ? (
+Line 4325:                 <div>
+Line 4326:                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+Line 4327:                     <thead>
+Line 4328:                       <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)" }}>
+Line 4329:                         <th style={{ padding: "10px" }}>ID</th>
+Line 4330:                         <th style={{ padding: "10px" }}>Username</th>
+Line 4331:                         <th style={{ padding: "10px" }}>Email</th>
+Line 4332:                         <th style={{ padding: "10px" }}>Membership</th>
+Line 4333:                         <th style={{ padding: "10px", textAlign: "right" }}>Actions</th>
+Line 4334:                       </tr>
+Line 4335:                     </thead>
+Line 4336:                     <tbody>
+Line 4337:                       {adminUsers.map(u => (
+Line 4338:                         <tr key={u.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.03)" }}>
+Line 4339:                           <td style={{ padding: "12px 10px", color: "var(--text-muted)" }}>{u.id}</td>
+Line 4340:                           <td style={{ padding: "12px 10px", fontWeight: "600" }}>{u.username}</td>
+Line 4341:                           <td style={{ padding: "12px 10px" }}>{u.email}</td>
+Line 4342:                           <td style={{ padding: "12px 10px" }}>
+Line 4343:                             {u.is_premium ? (
+Line 4344:                               <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "700" }}>
+Line 4345:                                 ★ Premium
+Line 4346:                               </span>
+Line 4347:                             ) : (
+Line 4348:                               <span style={{ background: "rgba(255, 255, 255, 0.05)", color: "var(--text-muted)", padding: "2px 8px", borderRadius: "10px", fontSize: "11px" }}>
+Line 4349:                                 Standard
+Line 4350:                               </span>
+Line 4351:                             )}
+Line 4352:                           </td>
+Line 4353:                           <td style={{ padding: "12px 10px", textAlign: "right" }}>
+Line 4354:                             <button
+Line 4355:                               onClick={() => handleAdminTogglePremium(u.id)}
+Line 4356:                               className="btn-secondary"
+Line 4357:                               style={{
+Line 4358:                                 padding: "4px 10px",
+Line 4359:                                 fontSize: "11px",
+Line 4360:                                 minWidth: "auto",
+Line 4361:                                 borderColor: u.is_premium ? "rgba(239, 68, 68, 0.4)" : "rgba(245, 158, 11, 0.4)",
+Line 4362:                                 color: u.is_premium ? "var(--accent-danger)" : "#f59e0b"
+Line 4363:                               }}
+Line 4364:                             >
+Line 4365:                               {u.is_premium ? "Revoke Premium" : "Grant Premium"}
+Line 4366:                             </button>
+Line 4367:                           </td>
+Line 4368:                         </tr>
+Line 4369:                       ))}
+Line 4370:                     </tbody>
+Line 4371:                   </table>
+Line 4372:                 </div>
+Line 4373:               ) : adminActiveTab === "auto_train" ? (
+Line 4374:                 <div>
+Line 4375:                   {/* Add symbol form */}
+Line 4376:                   <form onSubmit={handleAddAutoTrainSymbol} style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+Line 4377:                     <input 
+Line 4378:                       type="text" 
+Line 4379:                       placeholder="e.g. SOL-USD, AAPL, Gold" 
+Line 4380:                       value={newAutoTrainSymbol}
+Line 4381:                       onChange={(e) => setNewAutoTrainSymbol(e.target.value)}
+Line 4382:                       style={{ 
+Line 4383:                         flex: 1, 
+Line 4384:                         background: "rgba(255, 255, 255, 0.03)", 
+Line 4385:                         border: "1px solid rgba(255, 255, 255, 0.08)", 
+Line 4386:                         borderRadius: "6px", 
+Line 4387:                         padding: "8px 12px", 
+Line 4388:                         color: "var(--text-main)",
+Line 4389:                         fontSize: "13px"
+Line 4390:                       }} 
+Line 4391:                     />
+Line 4392:                     <button 
+Line 4393:                       type="submit" 
+Line 4394:                       className="btn-primary"
+Line 4395:                       style={{ 
+Line 4396:                         background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", 
+Line 4397:                         border: "none", 
+Line 4398:                         padding: "8px 16px",
+Line 4399:                         fontSize: "13px",
+Line 4400:                         fontWeight: "600",
+Line 4401:                         minWidth: "120px"
+Line 4402:                       }}
+Line 4403:                     >
+Line 4404:                       + Add Asset
+Line 4405:                     </button>
+Line 4406:                   </form>
+Line 4407: 
+Line 4408:                   <h4 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-muted)" }}>
+Line 4409:                     Auto-Trained Assets List ({autoTrainSymbols.length})
+Line 4410:                   </h4>
+Line 4411: 
+Line 4412:                   <div style={{ overflowX: "auto", maxHeight: "400px" }}>
+Line 4413:                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+Line 4414:                       <thead>
+Line 4415:                         <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)" }}>
+Line 4416:                           <th style={{ padding: "10px" }}>Asset Symbol</th>
+Line 4417:                           <th style={{ padding: "10px" }}>Model Status</th>
+Line 4418:                           <th style={{ padding: "10px" }}>Last Trained At</th>
+Line 4419:                           <th style={{ padding: "10px", textAlign: "right" }}>Actions</th>
+Line 4420:                         </tr>
+Line 4421:                       </thead>
+Line 4422:                       <tbody>
+Line 4423:                         {autoTrainSymbols.length === 0 ? (
+Line 4424:                           <tr>
+Line 4425:                             <td colSpan={4} style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
+Line 4426:                               No auto-trained assets found.
+Line 4427:                             </td>
+Line 4428:                           </tr>
+Line 4429:                         ) : (
+Line 4430:                           autoTrainSymbols.map((item) => (
+Line 4431:                             <tr key={item.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.03)" }}>
+Line 4432:                               <td style={{ padding: "12px 10px" }}>
+Line 4433:                                 <strong style={{ fontSize: "13.5px", color: "var(--text-main)" }}>{item.symbol}</strong>
+Line 4434:                               </td>
+Line 4435:                               <td style={{ padding: "12px 10px" }}>
+Line 4436:                                 {item.is_trained ? (
+Line 4437:                                   <span style={{ background: "rgba(16, 185, 129, 0.15)", color: "var(--accent-success)", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "700" }}>
+Line 4438:                                     ✓ Trained
+Line 4439:                                   </span>
+Line 4440:                                 ) : (
+Line 4441:                                   <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "700" }}>
+Line 4442:                                     ⏳ Pending Data
+Line 4443:                                   </span>
+Line 4444:                                 )}
+Line 4445:                               </td>
+Line 4446:                               <td style={{ padding: "12px 10px", color: "var(--text-muted)", fontFamily: "monospace" }}>
+Line 4447:                                 {item.last_trained_at || "Never (Needs 1st run)"}
+Line 4448:                               </td>
+Line 4449:                               <td style={{ padding: "12px 10px", textAlign: "right" }}>
+Line 4450:                                 <button 
