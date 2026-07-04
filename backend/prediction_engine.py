@@ -3,6 +3,7 @@ import pandas as pd
 import tensorflow as tf
 import xgboost as xgb
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import LinearRegression
 from typing import Tuple, Dict, Any, Optional
 
 from backend.config import FEATURES
@@ -171,3 +172,51 @@ def evaluate_xgb_performance(
         "mape": float(mape),
         "directional_accuracy": float(dir_acc)
     }
+
+def train_lr_model(x_train: np.ndarray, y_train: np.ndarray) -> LinearRegression:
+    """Trains a simple Linear Regression model."""
+    model = LinearRegression()
+    model.fit(x_train, y_train)
+    return model
+
+def evaluate_lr_performance(
+    model: LinearRegression, 
+    x_test: np.ndarray, 
+    df_test: pd.DataFrame,
+    seq_length: int
+) -> Dict[str, Any]:
+    """
+    Evaluates Linear Regression predictions on a test set.
+    Computes RMSE, MAPE, and Directional Accuracy.
+    """
+    if len(x_test) == 0:
+        return {"rmse": 0.0, "mape": 0.0, "directional_accuracy": 0.0}
+        
+    preds_returns = model.predict(x_test).flatten()
+    actual_prices = df_test["Close"].values[seq_length:]
+    prev_prices = df_test["Close"].values[seq_length-1:-1]
+    actual_returns = df_test["Daily_Return"].values[seq_length:]
+    
+    preds = prev_prices * (1 + preds_returns)
+    actuals = actual_prices
+    
+    rmse = np.sqrt(np.mean((actuals - preds) ** 2))
+    mape = np.mean(np.abs((actuals - preds) / (actuals + 1e-10))) * 100
+    
+    correct_directions = 0
+    total_comparisons = len(preds_returns)
+    
+    for i in range(total_comparisons):
+        actual_up = actual_returns[i] > 0
+        pred_up = preds_returns[i] > 0
+        if actual_up == pred_up:
+            correct_directions += 1
+            
+    dir_acc = (correct_directions / total_comparisons * 100) if total_comparisons > 0 else 50.0
+    
+    return {
+        "rmse": float(rmse),
+        "mape": float(mape),
+        "directional_accuracy": float(dir_acc)
+    }
+
