@@ -1,0 +1,55 @@
+Line 216: def fetch_interval_history(symbol: str, interval: str) -> List[Dict[str, Any]]:
+Line 217:     """
+Line 218:     Downloads historical data from Yahoo Finance for a specific interval,
+Line 219:     calculates all technical indicators, and returns formatted history points.
+Line 220:     """
+Line 221:     df, asset_name, is_crypto, current_price = fetch_market_data(symbol, interval=interval)
+Line 222:     
+Line 223:     # Calculate indicators
+Line 224:     df["RSI"] = calculate_rsi(df["Close"])
+Line 225:     macd_line, signal_line, macd_hist = calculate_macd(df["Close"])
+Line 226:     df["MACD"] = macd_line
+Line 227:     df["MACD_Signal"] = signal_line
+Line 228:     df["MACD_Hist"] = macd_hist
+Line 229:     
+Line 230:     sma_20 = df["Close"].rolling(window=20).mean()
+Line 231:     std_20 = df["Close"].rolling(window=20).std()
+Line 232:     df["BB_Upper"] = sma_20 + 2 * std_20
+Line 233:     df["BB_Lower"] = sma_20 - 2 * std_20
+Line 234:     
+Line 235:     df["EMA_20"] = df["Close"].ewm(span=20, adjust=False).mean()
+Line 236:     df["EMA_50"] = df["Close"].ewm(span=50, adjust=False).mean()
+Line 237:     
+Line 238:     df = df.dropna(subset=[
+Line 239:         "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
+Line 240:         "BB_Upper", "BB_Lower", "EMA_20", "EMA_50"
+Line 241:     ])
+Line 242:     
+Line 243:     chart_limit = 730
+Line 244:     df = df.tail(chart_limit)
+Line 245:     
+Line 246:     history_list = []
+Line 247:     for idx, row in df.iterrows():
+Line 248:         if interval == "1d":
+Line 249:             date_str = idx.strftime("%Y-%m-%d")
+Line 250:         else:
+Line 251:             date_str = idx.strftime("%Y-%m-%d %H:%M")
+Line 252:             
+Line 253:         history_list.append({
+Line 254:             "date": date_str,
+Line 255:             "open": float(row["Open"]),
+Line 256:             "close": float(row["Close"]),
+Line 257:             "volume": float(row["Volume"]),
+Line 258:             "high": float(row["High"]),
+Line 259:             "low": float(row["Low"]),
+Line 260:             "rsi": float(row["RSI"]),
+Line 261:             "macd": float(row["MACD"]),
+Line 262:             "macd_signal": float(row["MACD_Signal"]),
+Line 263:             "macd_hist": float(row["MACD_Hist"]),
+Line 264:             "bb_upper": float(row["BB_Upper"]),
+Line 265:             "bb_lower": float(row["BB_Lower"]),
+Line 266:             "ema_20": float(row["EMA_20"]),
+Line 267:             "ema_50": float(row["EMA_50"]),
+Line 268:             "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+Line 269:             "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+Line 270:             "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
