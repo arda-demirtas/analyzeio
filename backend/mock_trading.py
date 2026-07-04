@@ -64,16 +64,18 @@ def score_symbol_for_trading(symbol: str) -> float:
             return -999.0
             
         last_date_str = res.get("last_date")
-        if last_date_str:
-            try:
-                # Yahoo Finance dates may be formatted as YYYY-MM-DD or with time; extract date part
-                last_dt = datetime.datetime.strptime(last_date_str.split()[0], "%Y-%m-%d")
-                now_utc = datetime.datetime.utcnow()
-                # Skip if data is older than 2 calendar days (allows weekend gap for traditional stock markets)
-                if (now_utc - last_dt).days > 2:
-                    return -999.0
-            except Exception:
-                pass
+        if not last_date_str:
+            return -999.0
+            
+        try:
+            # Yahoo Finance dates may be formatted as YYYY-MM-DD or with time; extract date part
+            last_dt = datetime.datetime.strptime(last_date_str.split()[0], "%Y-%m-%d")
+            now_utc = datetime.datetime.utcnow()
+            # Require today's candle to be open/available (i.e. last candle date matches today's date in UTC)
+            if last_dt.date() < now_utc.date():
+                return -999.0
+        except Exception:
+            return -999.0
 
         last_close = res.get("last_close")
         if not last_close:
@@ -153,14 +155,16 @@ def select_best_symbol_to_buy() -> Tuple[str, float]:
             
     return best_symbol, best_score
 
-def run_mock_trading_daily_buy():
+def run_mock_trading_daily_buy(state=None):
     """Tries to select and purchase the most bullish asset at the start of a daily candle."""
     # Enforce start time constraint: July 5th, 2026 at 03:00 UTC (06:00 TRT)
     start_time = datetime.datetime(2026, 7, 5, 3, 0, 0)
     if datetime.datetime.utcnow() < start_time:
         return
 
-    state = get_mock_trading_state()
+    if state is None:
+        state = get_mock_trading_state()
+        
     # Check if we already have a position
     if state.get("position"):
         return
@@ -196,6 +200,7 @@ def run_mock_trading_daily_buy():
         "qty": qty,
         "buy_time": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
     }
+    state["last_buy_date"] = now_utc.date().isoformat()
     
     event_str = f"OPENED position for {selected_symbol}: Selected based on predictions, sentiment, and indicators (Score: {score:.4f}). Purchased {qty:.6f} units at daily open price ${open_price:,.2f}."
     log_mock_event(state, event_str)
@@ -208,13 +213,50 @@ def check_mock_trading_rule():
     - 0.5% profit target (Take Profit)
     - 0.5% loss limit (Stop Loss)
     - End of day (23:50+ UTC or different calendar date)
+    - Daily 6:00 AM TRT (03:00 UTC) cycle reset and buy
     """
     # Enforce start time constraint: July 5th, 2026 at 03:00 UTC (06:00 TRT)
     start_time = datetime.datetime(2026, 7, 5, 3, 0, 0)
-    if datetime.datetime.utcnow() < start_time:
+    now_utc = datetime.datetime.utcnow()
+    if now_utc < start_time:
         return
 
     state = get_mock_trading_state()
+    
+    # 6:00 AM TRT (03:00 UTC) daily reset and buy
+    today_str = now_utc.date().isoformat()
+    if now_utc.hour == 3 and state.get("last_buy_date") != today_str:
+        print(f"[Mock Trading] Resetting cycle at {now_utc.strftime('%H:%M:%S UTC')}...")
+        pos = state.get("position")
+        if pos:
+            symbol = pos["symbol"]
+            qty = pos["qty"]
+            entry_price = pos["entry_price"]
+            try:
+                df, _, _, current_price = fetch_market_data(symbol, interval="1d")
+                if current_price is None and not df.empty:
+                    current_price = float(df["Close"].iloc[-1])
+                if current_price is None:
+                    current_price = entry_price
+            except Exception:
+                current_price = entry_price
+                
+            new_balance = qty * current_price
+            state["balance"] = float(round(new_balance, 2))
+            state["position"] = None
+            change_pct = (current_price - entry_price) / entry_price
+            
+            event_str = f"CLOSED position for {symbol} at daily cycle reset. Price: ${current_price:,.2f}. Gross Return: {change_pct*100:+.2f}%. New Cash Balance: ${state['balance']:,.2f}."
+            log_mock_event(state, event_str)
+            print(f"[Mock Trading] {event_str}")
+            
+        state["last_buy_date"] = today_str
+        save_mock_trading_state(state)
+        
+        # Execute the new daily buy
+        run_mock_trading_daily_buy(state)
+        return
+
     pos = state.get("position")
     if not pos:
         return
