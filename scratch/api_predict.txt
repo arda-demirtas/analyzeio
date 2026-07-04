@@ -1,0 +1,50 @@
+Line 1401:       console.error("Error fetching accuracy logs:", err);
+Line 1402:     } finally {
+Line 1403:       setAccuracyLoading(false);
+Line 1404:     }
+Line 1405:   };
+Line 1406: 
+Line 1407:   // API Call: Load LSTM Prediction (timeframe-aware)
+Line 1408:   const loadPrediction = async (symbol, interval = chartInterval, mType = modelType, forceRetrain = false) => {
+Line 1409:     setPredictLoading(true);
+Line 1410:     setPredictError("");
+Line 1411:     setPredictionData(null); // Clear old prediction data to trigger loading UI immediately
+Line 1412:     try {
+Line 1413:       const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+Line 1414:       const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}&lang=${lang}&model_type=${mType}&force_retrain=${forceRetrain}`, {
+Line 1415:         headers
+Line 1416:       });
+Line 1417:       if (res.status === 401 && token) {
+Line 1418:         handleLogout();
+Line 1419:         return;
+Line 1420:       }
+Line 1421:       const data = await res.json();
+Line 1422:       if (res.ok) {
+Line 1423:         setPredictionData(data);
+Line 1424:         setChartHistory(data.history);
+Line 1425:         fetchMarketInfo(symbol);
+Line 1426:         if (AUTO_TRAINED_SYMBOLS.includes(symbol) && interval === "1d") {
+Line 1427:           fetchAccuracyLogs(symbol, interval);
+Line 1428:         } else {
+Line 1429:           setAccuracyLogs([]);
+Line 1430:         }
+Line 1431:       } else {
+Line 1432:         setPredictError(data.detail || "Failed to load prediction model.");
+Line 1433:       }
+Line 1434:     } catch (err) {
+Line 1435:       setPredictError("Connection failed to Python FastAPI server.");
+Line 1436:     } finally {
+Line 1437:       setPredictLoading(false);
+Line 1438:     }
+Line 1439:   };
+Line 1440: 
+Line 1441:   // API Call: Fetch Market Info (market cap, P/E, 52w range, sector)
+Line 1442:   const fetchMarketInfo = async (symbol) => {
+Line 1443:     try {
+Line 1444:       const res = await fetch(`${API_BASE_URL}/api/market-info/${encodeURIComponent(symbol)}`);
+Line 1445:       if (res.ok) {
+Line 1446:         const data = await res.json();
+Line 1447:         setMarketInfo(data);
+Line 1448:       } else {
+Line 1449:         setMarketInfo(null);
+Line 1450:       }
