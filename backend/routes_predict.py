@@ -28,7 +28,7 @@ def normalize_symbol(symbol: str) -> str:
     return sym
 
 @router.get("/predict", response_model=PredictionResponse)
-def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_type: str = "xgboost", current_user: Optional[User] = Depends(get_current_user_optional)):
+def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_type: str = "xgboost", force_retrain: bool = False, current_user: Optional[User] = Depends(get_current_user_optional)):
     """
     Triggers historical data loading, computes technical indicators,
     and runs XGBoost (default) or LSTM model inference to predict the close price for the next candle of the selected interval.
@@ -78,7 +78,7 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_typ
                 detail=f"Error loading historical data: {str(e)}"
             )
     try:
-        prediction_result = get_prediction(symbol_upper, interval=interval, lang=lang, model_type=model_type)
+        prediction_result = get_prediction(symbol_upper, interval=interval, lang=lang, model_type=model_type, force_retrain=force_retrain)
         return prediction_result
     except ValueError as val_err:
         raise HTTPException(
