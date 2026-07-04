@@ -1,0 +1,285 @@
+Position 1562:
+ster(...registerables, candlestickPlugin);
+
+const API_BASE_URL = typeof window !== "undefined" 
+  ? (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+      ? "http
+---
+Position 21186:
+e them
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(q)}`);
+      if (res.ok) {
+        const dynamicMatches = await res.json();
+        const merged = [..
+---
+Position 51309:
+) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/watchlist`, {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+      if (res.status === 401) {
+        handleLo
+---
+Position 52135:
+ {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/watchlist`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorizat
+---
+Position 52860:
+{token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/api/predictions/accuracy/${symbol}?interval=${interval}`, {
+        headers
+      });
+      if (res.ok) {
+        const data = await res
+---
+Position 53655:
+{token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}&lang=${lang}&model_type=${mType}&force_retrain=${forceRetrain}`, {
+        headers
+   
+---
+Position 54650:
+) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/market-info/${encodeURIComponent(symbol)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMarketInfo(data);
+---
+Position 55033:
+) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+      if (res.ok) {
+        const data = await res
+---
+Position 55913:
+t;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "
+---
+Position 56848:
+
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/premium/toggle`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+---
+Position 57457:
+earer ${token}`;
+      const res = await fetch(`${API_BASE_URL}/api/comments/${symbol}`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setComments(Array.isArray(data
+---
+Position 57874:
+true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/screener`);
+      if (res.ok) {
+        const data = await res.json();
+        setScreenerData(Array.isArray(data) ? data : []);
+   
+---
+Position 58346:
+null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/news/${symbol}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNewsData(data);
+      }
+    } catch (err) {
+
+---
+Position 59099:
+turn;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Be
+---
+Position 60033:
+eturn;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/comments/${commentId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.
+---
+Position 60780:
+
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/comments/${commentId}/react`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "
+---
+Position 62089:
+true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.string
+---
+Position 62852:
+true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.string
+---
+Position 63965:
+true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usern
+---
+Position 65484:
+}
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/watchlist`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `B
+---
+Position 66814:
+
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/watchlist/${symbolToRemove}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if
+---
+Position 67494:
+s("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/change-password/request`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          
+---
+Position 68351:
+s("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/change-password/confirm`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          
+---
+Position 72324:
+eturn;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/mock-trading`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = awai
+---
+Position 73005:
+eturn;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/mock-trading/reset`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.o
+---
+Position 73520:
+;
+    try {
+      const usersRes = await fetch(`${API_BASE_URL}/api/admin/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (usersRes.ok) {
+        const usersData = a
+---
+Position 73779:
+   }
+      
+      const statsRes = await fetch(`${API_BASE_URL}/api/admin/system-stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (statsRes.ok) {
+        const statsD
+---
+Position 74047:
+ }
+      
+      const symbolsRes = await fetch(`${API_BASE_URL}/api/admin/auto-train-symbols`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (symbolsRes.ok) {
+        cons
+---
+Position 74720:
+eturn;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/auto-train-symbols`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Con
+---
+Position 75656:
+eturn;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/auto-train-symbols/${symbol}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+   
+---
+Position 76277:
+eturn;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/toggle-premium`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+   
+---
+Position 76903:
+
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/delete-account`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok
+---
