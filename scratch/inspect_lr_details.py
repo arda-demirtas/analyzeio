@@ -15,10 +15,14 @@ sys.path.append("/var/www/analyzeio")
 import pandas as pd
 from backend.predictor import fetch_market_data, FEATURES
 
-df, name, _, _ = fetch_market_data("BTC-USD", interval="1d")
-last_row = df[FEATURES].iloc[-1]
-for col in FEATURES:
-    print(f"{col}: {last_row[col]}")
+df, name, _, _ = fetch_market_data("ETH-USD", interval="1h")
+print("Total rows:", len(df))
+if not df.empty:
+    last_row = df[FEATURES].iloc[-1]
+    for col in FEATURES:
+        print(f"{col}: {last_row[col]}")
+else:
+    print("DataFrame is empty!")
 """
 
 ssh.exec_command("cat > /tmp/inspect_lr_details.py << 'PYEOF'\n" + py_code + "\nPYEOF")
