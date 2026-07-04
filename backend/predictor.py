@@ -48,20 +48,19 @@ def get_prediction(
             # Expected last completed daily candle date is yesterday (UTC)
             expected_last_date = now_utc.date() - datetime.timedelta(days=1)
         else:
-            # Expected last completed daily candle date is today (if past market close) or yesterday/previous weekday (if before market close)
+            # Expected last completed daily candle date is today (if past market close) or yesterday (if before market close)
+            # On weekends, traditional markets are closed, so we expect today's date to trigger a pending state
             if symbol.endswith(".IS"):
                 close_hour_utc = 15  # BIST closes at 18:00 TRT (15:00 UTC)
             else:
                 close_hour_utc = 20  # US markets close at 16:00 EST (20:00 UTC)
 
-            if now_utc.hour >= close_hour_utc:
-                target_completed_date = now_utc.date()
+            if now_utc.date().weekday() in [5, 6]:
+                expected_last_date = now_utc.date()
+            elif now_utc.hour >= close_hour_utc:
+                expected_last_date = now_utc.date()
             else:
-                target_completed_date = now_utc.date() - datetime.timedelta(days=1)
-
-            while target_completed_date.weekday() in [5, 6]:
-                target_completed_date -= datetime.timedelta(days=1)
-            expected_last_date = target_completed_date
+                expected_last_date = now_utc.date() - datetime.timedelta(days=1)
 
         # Check the date of the last valid row in cleaned data
         last_row_date = df.index[-1].date()
