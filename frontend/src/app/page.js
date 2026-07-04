@@ -2990,15 +2990,15 @@ export default function Home() {
                         activeHistory[activeHistory.length - 1]?.macd,
                         activeHistory[activeHistory.length - 1]?.macd_hist
                       )}
-                      <span className="badge badge-info">Open: ${activeHistory[activeHistory.length - 1]?.open?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">Close: ${activeHistory[activeHistory.length - 1]?.close?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">High: ${activeHistory[activeHistory.length - 1]?.high?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">Low: ${activeHistory[activeHistory.length - 1]?.low?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">Open: ${activeHistory[activeHistory.length - 1]?.open?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+                      <span className="badge badge-info">Close: ${activeHistory[activeHistory.length - 1]?.close?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+                      <span className="badge badge-info">High: ${activeHistory[activeHistory.length - 1]?.high?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+                      <span className="badge badge-info">Low: ${activeHistory[activeHistory.length - 1]?.low?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
                       <span className="badge badge-info">Vol: {activeHistory[activeHistory.length - 1]?.volume?.toLocaleString("en-US")}</span>
-                      <span className="badge badge-info">EMA 20: ${activeHistory[activeHistory.length - 1]?.ema_20?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">EMA 50: ${activeHistory[activeHistory.length - 1]?.ema_50?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">BB Upper: ${activeHistory[activeHistory.length - 1]?.bb_upper?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="badge badge-info">BB Lower: ${activeHistory[activeHistory.length - 1]?.bb_lower?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="badge badge-info">EMA 20: ${activeHistory[activeHistory.length - 1]?.ema_20?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+                      <span className="badge badge-info">EMA 50: ${activeHistory[activeHistory.length - 1]?.ema_50?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+                      <span className="badge badge-info">BB Upper: ${activeHistory[activeHistory.length - 1]?.bb_upper?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+                      <span className="badge badge-info">BB Lower: ${activeHistory[activeHistory.length - 1]?.bb_lower?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
                     </>
                   )}
                 </div>
@@ -3008,15 +3008,15 @@ export default function Home() {
                 <div className="header-price-panel">
                   <div className="asset-price">
                     ${predictionData && predictionData.current_price !== undefined && predictionData.current_price !== null 
-                      ? predictionData.current_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
-                      : (predictionData ? predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---")}
+                      ? predictionData.current_price.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) 
+                      : (predictionData ? predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : "---")}
                   </div>
                   <span style={{ fontSize: "12px", color: "var(--accent-primary)", fontWeight: "600", display: "block" }}>
                     ● {t("live_price")}
                   </span>
                   {predictionData && (
                     <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginTop: "2px" }}>
-                      {t("last_close")}: ${predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({predictionData.last_date})
+                      {t("last_close")}: ${predictionData.last_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} ({predictionData.last_date})
                     </span>
                   )}
                 </div>
@@ -3426,10 +3426,10 @@ export default function Home() {
                           <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
                             <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{lang === "tr" ? "52 Hafta Aralığı" : "52-Week Range"}</span>
                             <span style={{ fontSize: "12px", fontWeight: "700", fontFamily: "monospace", color: "#10b981" }}>
-                              ▲ {marketInfo.fifty_two_week_high?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
+                              ▲ {marketInfo.fifty_two_week_high?.toLocaleString("en-US", { maximumFractionDigits: 3 }) || "---"}
                             </span>
                             <span style={{ fontSize: "12px", fontWeight: "700", fontFamily: "monospace", color: "#ef4444" }}>
-                              ▼ {marketInfo.fifty_two_week_low?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
+                              ▼ {marketInfo.fifty_two_week_low?.toLocaleString("en-US", { maximumFractionDigits: 3 }) || "---"}
                             </span>
                           </div>
                         )}
@@ -3439,10 +3439,10 @@ export default function Home() {
                           <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
                             <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>{lang === "tr" ? "Günlük Aralık" : "Day Range"}</span>
                             <span style={{ fontSize: "12px", fontWeight: "700", fontFamily: "monospace", color: "#10b981" }}>
-                              H: {marketInfo.day_high?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
+                              H: {marketInfo.day_high?.toLocaleString("en-US", { maximumFractionDigits: 3 }) || "---"}
                             </span>
                             <span style={{ fontSize: "12px", fontWeight: "700", fontFamily: "monospace", color: "#ef4444" }}>
-                              L: {marketInfo.day_low?.toLocaleString("en-US", { maximumFractionDigits: 2 }) || "---"}
+                              L: {marketInfo.day_low?.toLocaleString("en-US", { maximumFractionDigits: 3 }) || "---"}
                             </span>
                           </div>
                         )}
@@ -3549,7 +3549,7 @@ export default function Home() {
                           </div>
                           <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
                             {predictionData && predictionData.xgb_predicted_close !== null
-                              ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
                               : "---"}
                           </span>
                         </div>
@@ -3570,7 +3570,7 @@ export default function Home() {
                           </div>
                           <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
                             {predictionData && predictionData.lstm_predicted_close !== null
-                              ? `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              ? `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
                               : "---"}
                           </span>
                         </div>
@@ -3591,7 +3591,7 @@ export default function Home() {
                           </div>
                           <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
                             {predictionData && predictionData.lr_predicted_close !== null
-                              ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
                               : "---"}
                           </span>
                         </div>
@@ -3859,7 +3859,7 @@ export default function Home() {
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
                             {predictionData && predictionData.xgb_predicted_close !== null
-                              ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
                               : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
@@ -3881,7 +3881,7 @@ export default function Home() {
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
                             {predictionData && predictionData.lstm_predicted_close !== null
-                              ? `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              ? `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
                               : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
@@ -3903,7 +3903,7 @@ export default function Home() {
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
                             {predictionData && predictionData.lr_predicted_close !== null
-                              ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
                               : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
@@ -3992,10 +3992,10 @@ export default function Home() {
                                       {log.prediction_date}
                                     </td>
                                     <td style={{ padding: "8px 4px", textAlign: "right", fontWeight: "600" }}>
-                                      {predVal !== null && predVal !== undefined ? `$${predVal.toFixed(2)}` : "---"}
+                                      {predVal !== null && predVal !== undefined ? `$${predVal.toFixed(3)}` : "---"}
                                     </td>
                                     <td style={{ padding: "8px 4px", textAlign: "right" }}>
-                                      {actualVal !== null && actualVal !== undefined ? `$${actualVal.toFixed(2)}` : (
+                                      {actualVal !== null && actualVal !== undefined ? `$${actualVal.toFixed(3)}` : (
                                         <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic" }}>
                                           {t("table_pending")}
                                         </span>
@@ -4556,7 +4556,7 @@ export default function Home() {
                     <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
                       <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Cash Balance</span>
                       <strong style={{ fontSize: "22px", color: "#10b981" }}>
-                        ${mockTradingState ? mockTradingState.balance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "2,000.00"}
+                        ${mockTradingState ? mockTradingState.balance.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : "2,000.00"}
                       </strong>
                     </div>
                     <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
@@ -4567,7 +4567,7 @@ export default function Home() {
                             {mockTradingState.position.symbol} ({mockTradingState.position.qty.toFixed(4)} Units)
                           </strong>
                           <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                            at ${mockTradingState.position.entry_price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                            at ${mockTradingState.position.entry_price.toLocaleString("en-US", { minimumFractionDigits: 3 })}
                           </span>
                         </div>
                       ) : (
