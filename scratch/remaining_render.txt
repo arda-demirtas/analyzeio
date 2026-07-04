@@ -1,0 +1,65 @@
+Line 1036:               border: { dash: [5, 5] }
+Line 1037:             }
+Line 1038:           }
+Line 1039:         }
+Line 1040:       });
+Line 1041:     }
+Line 1042: 
+Line 1043:     // MACD Chart
+Line 1044:     if (ctxMacd) {
+Line 1045:       const macdValues = history.map(item => item.macd);
+Line 1046:       const signalValues = history.map(item => item.macd_signal);
+Line 1047:       const histValues = history.map(item => item.macd_hist);
+Line 1048:       
+Line 1049:       macdChartInst.current = new Chart(ctxMacd, {
+Line 1050:         type: "bar",
+Line 1051:         data: {
+Line 1052:           labels: labels,
+Line 1053:           datasets: [
+Line 1054:             {
+Line 1055:               type: "line",
+Line 1056:               label: "MACD",
+Line 1057:               data: macdValues,
+Line 1058:               borderColor: "#3b82f6",
+Line 1059:               borderWidth: 1.5,
+Line 1060:               pointRadius: 0,
+Line 1061:               tension: 0.1,
+Line 1062:             },
+Line 1063:             {
+Line 1064:               type: "line",
+Line 1065:               label: "Signal",
+Line 1066:               data: signalValues,
+Line 1067:               borderColor: "#ec4899",
+Line 1068:               borderWidth: 1.5,
+Line 1069:               pointRadius: 0,
+Line 1070:               tension: 0.1,
+Line 1071:             },
+Line 1072:             {
+Line 1073:               label: "Histogram",
+Line 1074:               data: histValues,
+Line 1075:               backgroundColor: histValues.map(h => h >= 0 ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.4)"),
+Line 1076:               borderWidth: 0,
+Line 1077:               barPercentage: 0.8
+Line 1078:             }
+Line 1079:           ]
+Line 1080:         },
+Line 1081:         options: {
+Line 1082:           events: chartEvents,
+Line 1083:           responsive: true,
+Line 1084:           maintainAspectRatio: false,
+Line 1085:           plugins: {
+Line 1086:             legend: { display: false }
+Line 1087:           },
+Line 1088:           scales: {
+Line 1089:             x: {
+Line 1090:               grid: { display: false },
+Line 1091:               ticks: { display: false }
+Line 1092:             },
+Line 1093:             y: {
+Line 1094:               grid: { color: "rgba(255, 255, 255, 0.05)" },
+Line 1095:               ticks: { color: "#9ca3af", maxTicksLimit: 5 }
+Line 1096:             }
+Line 1097:           }
+Line 1098:         }
+Line 1099:       });
+Line 1100:     }
