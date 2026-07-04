@@ -113,7 +113,12 @@ class PredictionResponse(BaseModel):
     prediction_status: Optional[str] = None
     prediction_error: Optional[str] = None
     model_type: Optional[str] = None
+    xgb_predicted_close: Optional[float] = None
+    lstm_predicted_close: Optional[float] = None
     lr_predicted_close: Optional[float] = None
+    xgb_metrics: Optional[PredictionMetrics] = None
+    lstm_metrics: Optional[PredictionMetrics] = None
+    lr_metrics: Optional[PredictionMetrics] = None
     fundamental_analysis: Optional[FundamentalAnalysisResult] = None
     technical_recommendation: Optional[TechnicalRecommendation] = None
 
