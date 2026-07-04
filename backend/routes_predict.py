@@ -28,16 +28,21 @@ def normalize_symbol(symbol: str) -> str:
     return sym
 
 @router.get("/predict", response_model=PredictionResponse)
-def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", current_user: Optional[User] = Depends(get_current_user_optional)):
+def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_type: str = "xgboost", current_user: Optional[User] = Depends(get_current_user_optional)):
     """
     Triggers historical data loading, computes technical indicators,
-    and runs LSTM model inference to predict the close price for the next candle of the selected interval.
+    and runs XGBoost (default) or LSTM model inference to predict the close price for the next candle of the selected interval.
     """
     symbol_upper = normalize_symbol(symbol)
     if interval not in ["15m", "1h", "4h", "1d"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported interval. Allowed: 15m, 1h, 4h, 1d"
+        )
+    if model_type not in ["xgboost", "lstm"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported model_type. Allowed: xgboost, lstm"
         )
     is_btc = symbol_upper == "BTC-USD"
     is_premium = current_user.is_premium if current_user else False
@@ -73,7 +78,7 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", current_u
                 detail=f"Error loading historical data: {str(e)}"
             )
     try:
-        prediction_result = get_prediction(symbol_upper, interval=interval, lang=lang)
+        prediction_result = get_prediction(symbol_upper, interval=interval, lang=lang, model_type=model_type)
         return prediction_result
     except ValueError as val_err:
         raise HTTPException(
