@@ -76,65 +76,124 @@ TICKER_NAMES = {
     "BIMAS.IS": "BİM Birleşik Mağazalar"
 }
 
+def fetch_binance_data(binance_symbol: str, interval: str) -> pd.DataFrame:
+    """
+    Fetches historical kline/candlestick data from Binance public API.
+    Paginates twice to retrieve up to 2000 candles for robust LSTM training.
+    """
+    bin_interval = interval
+    limit = 1000
+    url = "https://api.binance.com/api/v3/klines"
+    
+    all_klines = []
+    end_time = None
+    
+    for _ in range(2):
+        params = {
+            "symbol": binance_symbol,
+            "interval": bin_interval,
+            "limit": limit
+        }
+        if end_time:
+            params["endTime"] = end_time - 1
+            
+        r = requests.get(url, params=params, timeout=10)
+        if r.status_code != 200:
+            break
+        klines = r.json()
+        if not klines:
+            break
+        all_klines = klines + all_klines
+        end_time = klines[0][0]
+        if len(klines) < limit:
+            break
+            
+    if not all_klines:
+        raise ValueError(f"No data returned from Binance for {binance_symbol}")
+        
+    dates = [datetime.datetime.fromtimestamp(k[0] / 1000, datetime.timezone.utc).replace(tzinfo=None) for k in all_klines]
+    df = pd.DataFrame({
+        "Open": [float(k[1]) for k in all_klines],
+        "High": [float(k[2]) for k in all_klines],
+        "Low": [float(k[3]) for k in all_klines],
+        "Close": [float(k[4]) for k in all_klines],
+        "Volume": [float(k[5]) for k in all_klines]
+    }, index=dates)
+    df.index.name = "Date"
+    return df
+
 def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, str, bool, Optional[float]]:
     """
-    Downloads historical market data from Yahoo Finance API for a specific interval,
+    Downloads historical market data from Binance (for crypto) or Yahoo Finance API,
     resamples hourly to 4-hour if requested, computes indicators, and returns a DataFrame.
     """
-    if interval == "15m":
-        range_param = "60d"
-        api_interval = "15m"
-    elif interval == "1h":
-        range_param = "365d"
-        api_interval = "1h"
-    elif interval == "4h":
-        range_param = "365d"
-        api_interval = "1h"  # Resample from hourly
-    elif interval == "1d":
-        range_param = "5y"
-        api_interval = "1d"
-    else:
-        raise ValueError(f"Unsupported interval: {interval}")
-
-    url = f"https://query2.finance.yahoo.com/v8/finance/chart/{symbol}?range={range_param}&interval={api_interval}"
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
-    
+    is_crypto = symbol.endswith("-USD")
+    df = None
     current_price = None
-    try:
-        r = requests.get(url, headers=headers, timeout=15)
-        if r.status_code != 200:
-            raise ValueError(f"Failed to fetch data from Yahoo Finance: {r.status_code}")
-            
-        data = r.json()
-        result = data["chart"]["result"][0]
-        timestamps = result.get("timestamp", [])
-        quote = result["indicators"]["quote"][0]
-        meta = result.get("meta", {})
-        current_price = meta.get("regularMarketPrice")
-        
-        if not timestamps:
-            raise ValueError(f"No historical data returned for symbol: {symbol}")
-            
-        dates = [datetime.datetime.fromtimestamp(ts) for ts in timestamps]
-        df = pd.DataFrame({
-            "Open": quote["open"],
-            "High": quote["high"],
-            "Low": quote["low"],
-            "Close": quote["close"],
-            "Volume": quote["volume"]
-        }, index=dates)
-        df.index.name = "Date"
-        # Safely fill missing volume with 0 (e.g. indices like VIX that have no volume)
-        df["Volume"] = df["Volume"].fillna(0)
-        # Drop rows where core price information is missing
-        df = df.dropna(subset=["Open", "High", "Low", "Close"])
+    meta = None
+    
+    if is_crypto:
+        try:
+            binance_symbol = symbol.replace("-USD", "USDT")
+            df = fetch_binance_data(binance_symbol, interval)
+            if not df.empty:
+                current_price = float(df["Close"].iloc[-1])
+        except Exception as e:
+            print(f"Binance fetch failed for {symbol}, falling back to Yahoo Finance: {e}")
+            df = None
 
+    if df is None:
+        if interval == "15m":
+            range_param = "60d"
+            api_interval = "15m"
+        elif interval == "1h":
+            range_param = "365d"
+            api_interval = "1h"
+        elif interval == "4h":
+            range_param = "365d"
+            api_interval = "1h"  # Resample from hourly
+        elif interval == "1d":
+            range_param = "5y"
+            api_interval = "1d"
+        else:
+            raise ValueError(f"Unsupported interval: {interval}")
+
+        url = f"https://query2.finance.yahoo.com/v8/finance/chart/{symbol}?range={range_param}&interval={api_interval}"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
         
-    except Exception as e:
-        raise ValueError(f"No historical data found or failed to parse for symbol: {symbol}. Error: {e}")
-        
+        try:
+            r = requests.get(url, headers=headers, timeout=15)
+            if r.status_code != 200:
+                raise ValueError(f"Failed to fetch data from Yahoo Finance: {r.status_code}")
+                
+            data = r.json()
+            result = data["chart"]["result"][0]
+            timestamps = result.get("timestamp", [])
+            quote = result["indicators"]["quote"][0]
+            meta = result.get("meta", {})
+            current_price = meta.get("regularMarketPrice")
+            
+            if not timestamps:
+                raise ValueError(f"No historical data returned for symbol: {symbol}")
+                
+            dates = [datetime.datetime.fromtimestamp(ts) for ts in timestamps]
+            df = pd.DataFrame({
+                "Open": quote["open"],
+                "High": quote["high"],
+                "Low": quote["low"],
+                "Close": quote["close"],
+                "Volume": quote["volume"]
+            }, index=dates)
+            df.index.name = "Date"
+            # Safely fill missing volume with 0
+            df["Volume"] = df["Volume"].fillna(0)
+            # Drop rows where core price information is missing
+            df = df.dropna(subset=["Open", "High", "Low", "Close"])
+        except Exception as e:
+            raise ValueError(f"No historical data found or failed to parse for symbol: {symbol}. Error: {e}")
+            
     if df.empty:
         raise ValueError(f"No historical data found for symbol: {symbol}")
 
@@ -153,7 +212,8 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
     if not asset_name:
         asset_name = symbol
         
-    is_crypto = symbol.endswith("-USD") or meta.get("instrumentType") == "CRYPTOCURRENCY"
+    meta_dict = meta if meta is not None else {}
+    is_crypto = symbol.endswith("-USD") or meta_dict.get("instrumentType") == "CRYPTOCURRENCY"
     
     # For daily data, exclude today's incomplete candle if market is active
     if interval == "1d":
