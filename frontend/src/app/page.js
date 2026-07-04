@@ -3511,34 +3511,78 @@ export default function Home() {
                     </div>
                   ) : (
                     <>
-                      <span className="prediction-label">{getPredictionHeader()}</span>
-                      <div className="prediction-value">
-                        ${predictionData ? predictionData.predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"}
-                      </div>
-                      <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "-5px" }}>
-                        {t("expected_close")}: {predictionData ? predictionData.expected_close_time : "---"}
-                      </div>
+                      <span className="prediction-label" style={{ marginBottom: "12px", display: "block" }}>
+                        {lang === "tr" ? "Model Tahmin Fiyatları" : "Model Prediction Prices"}
+                      </span>
                       
-                      {predictionData && predictionData.lr_predicted_close !== null && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", marginBottom: "15px" }}>
+                        {/* XGBoost Box */}
                         <div style={{ 
-                          marginTop: "12px", 
-                          padding: "6px 10px", 
-                          background: "rgba(59, 130, 246, 0.08)", 
-                          border: "1px solid rgba(59, 130, 246, 0.2)", 
-                          borderRadius: "6px",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px"
+                          padding: "10px 14px", 
+                          background: "rgba(168, 85, 247, 0.04)", 
+                          border: "1px solid rgba(168, 85, 247, 0.15)", 
+                          borderRadius: "var(--border-radius-md)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
                         }}>
-                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3b82f6" }}></span>
-                          <span style={{ fontSize: "11px", color: "#93c5fd", fontWeight: "500" }}>
-                            {lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction"}: 
-                            <strong style={{ color: "#ffffff", marginLeft: "4px" }}>
-                              ${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </strong>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a855f7", boxShadow: "0 0 8px #a855f7" }}></span>
+                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
+                          </div>
+                          <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
+                            {predictionData && predictionData.xgb_predicted_close !== null
+                              ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
                           </span>
                         </div>
-                      )}
+
+                        {/* LSTM Box */}
+                        <div style={{ 
+                          padding: "10px 14px", 
+                          background: "rgba(14, 165, 233, 0.04)", 
+                          border: "1px solid rgba(14, 165, 233, 0.15)", 
+                          borderRadius: "var(--border-radius-md)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#0ea5e9", boxShadow: "0 0 8px #0ea5e9" }}></span>
+                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#e0f2fe" }}>LSTM</span>
+                          </div>
+                          <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
+                            {predictionData && predictionData.lstm_predicted_close !== null
+                              ? `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </span>
+                        </div>
+
+                        {/* Linear Regression Box */}
+                        <div style={{ 
+                          padding: "10px 14px", 
+                          background: "rgba(59, 130, 246, 0.04)", 
+                          border: "1px solid rgba(59, 130, 246, 0.15)", 
+                          borderRadius: "var(--border-radius-md)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6", boxShadow: "0 0 8px #3b82f6" }}></span>
+                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#dbeafe" }}>{lang === "tr" ? "Lineer Regresyon" : "Linear Regression"}</span>
+                          </div>
+                          <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
+                            {predictionData && predictionData.lr_predicted_close !== null
+                              ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", width: "100%" }}>
+                        {t("expected_close")}: {predictionData ? predictionData.expected_close_time : "---"}
+                      </div>
                       
                       {predictionData && predictionData.price_change_percent !== null && (
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "16px", fontWeight: "700", marginTop: "15px" }}>
@@ -3730,53 +3774,98 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* Model Information & Metrics */}
+                {/* Model Information & Metrics (Comparison Table) */}
                 <div className="glass-panel">
-                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>
-                    {(() => {
-                      let title = t("analytics_title");
-                      if (predictionData && predictionData.model_type === "xgboost") {
-                        title = title.replace("LSTM", "XGBoost");
-                      } else if (predictionData && predictionData.model_type === "linear_regression") {
-                        title = title.replace("LSTM", "Linear Regression");
-                      }
-                      return title;
-                    })()}
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <LineChart style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} />
+                    {lang === "tr" ? "Model Analitiği & Karşılaştırma" : "Model Analytics & Comparison"}
                   </h3>
                   
-                  <div className="stats-list">
-                    <div className="stats-row">
-                      <span>{t("cache_status")}</span>
-                      <span>{predictionData && predictionData.metrics ? predictionData.metrics.training_status : "---"}</span>
-                    </div>
-                    <div className="stats-row">
-                      <span>{t("rmse")}</span>
-                      <span>{predictionData && predictionData.metrics && predictionData.metrics.rmse !== null && predictionData.metrics.rmse !== undefined ? `$${predictionData.metrics.rmse.toFixed(2)}` : "---"}</span>
-                    </div>
-                    <div className="stats-row">
-                      <span>{t("mape")}</span>
-                      <span>{predictionData && predictionData.metrics && predictionData.metrics.mape !== null && predictionData.metrics.mape !== undefined ? `${predictionData.metrics.mape.toFixed(2)}%` : "---"}</span>
-                    </div>
-                    <div className="stats-row">
-                      <span>{t("directional_accuracy")}</span>
-                      <span style={{ color: predictionData && predictionData.metrics && predictionData.metrics.directional_accuracy !== null && predictionData.metrics.directional_accuracy >= 55 ? "var(--accent-success)" : "inherit" }}>
-                        {predictionData && predictionData.metrics && predictionData.metrics.directional_accuracy !== null && predictionData.metrics.directional_accuracy !== undefined ? `${predictionData.metrics.directional_accuracy.toFixed(1)}%` : "---"}
-                      </span>
-                    </div>
-                    <div className="stats-row">
-                      <span>{t("features_used")}</span>
-                      <span>RSI, MACD, Bollinger Bands (Upper/Lower/Width), EMA 20/50, Open, Close, Vol, High, Low, ATR, Lags (1,3,7), Vol Change (19 total)</span>
-                    </div>
-                    <div className="stats-row">
-                      <span>{t("time_step")}</span>
-                      <span>{getTimeStepText(chartInterval)}</span>
-                    </div>
+                  <div style={{ overflowX: "auto", marginTop: "15px" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", textAlign: "left" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", color: "var(--text-muted)" }}>
+                          <th style={{ padding: "8px 4px", fontWeight: "600" }}>{lang === "tr" ? "Model" : "Model"}</th>
+                          <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>{lang === "tr" ? "Tahmin" : "Prediction"}</th>
+                          <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>RMSE</th>
+                          <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>MAPE</th>
+                          <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>{lang === "tr" ? "Yönsel İsabet" : "Dir. Accuracy"}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* XGBoost row */}
+                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                          <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#a855f7" }}></span>
+                            <span style={{ fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+                            {predictionData && predictionData.xgb_predicted_close !== null
+                              ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.rmse !== null ? `$${predictionData.xgb_metrics.rmse.toFixed(1)}` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.mape !== null ? `${predictionData.xgb_metrics.mape.toFixed(2)}%` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
+                            {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.directional_accuracy !== null ? `${predictionData.xgb_metrics.directional_accuracy.toFixed(1)}%` : "---"}
+                          </td>
+                        </tr>
+
+                        {/* LSTM row */}
+                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                          <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#0ea5e9" }}></span>
+                            <span style={{ fontWeight: "600", color: "#e0f2fe" }}>LSTM</span>
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+                            {predictionData && predictionData.lstm_predicted_close !== null
+                              ? `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.lstm_metrics && predictionData.lstm_metrics.rmse !== null ? `$${predictionData.lstm_metrics.rmse.toFixed(1)}` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.lstm_metrics && predictionData.lstm_metrics.mape !== null ? `${predictionData.lstm_metrics.mape.toFixed(2)}%` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
+                            {predictionData && predictionData.lstm_metrics && predictionData.lstm_metrics.directional_accuracy !== null ? `${predictionData.lstm_metrics.directional_accuracy.toFixed(1)}%` : "---"}
+                          </td>
+                        </tr>
+
+                        {/* Linear Regression row */}
+                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                          <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3b82f6" }}></span>
+                            <span style={{ fontWeight: "600", color: "#dbeafe" }}>{lang === "tr" ? "Lineer Reg." : "Linear Reg."}</span>
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+                            {predictionData && predictionData.lr_predicted_close !== null
+                              ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.lr_metrics && predictionData.lr_metrics.rmse !== null ? `$${predictionData.lr_metrics.rmse.toFixed(1)}` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.lr_metrics && predictionData.lr_metrics.mape !== null ? `${predictionData.lr_metrics.mape.toFixed(2)}%` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
+                            {predictionData && predictionData.lr_metrics && predictionData.lr_metrics.directional_accuracy !== null ? `${predictionData.lr_metrics.directional_accuracy.toFixed(1)}%` : "---"}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                   
-                  <div style={{ marginTop: "20px", fontSize: "12px", color: "var(--text-muted)", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "15px" }}>
+                  <div style={{ marginTop: "18px", fontSize: "11px", color: "var(--text-muted)", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "12px" }}>
                     {lang === "tr" 
-                      ? `* Model, RSI, MACD, Bollinger Bantları, ATR ve fiyat gecikmeleri dahil 19 göstergeyi hesaplayarak bunları optimize edilmiş bir ${predictionData && predictionData.model_type === "xgboost" ? "XGBoost karar ağaçları modeline" : predictionData && predictionData.model_type === "linear_regression" ? "Lineer Regresyon modeline" : "derin LSTM yapay sinir ağına"} besler.`
-                      : `* The model calculates 19 normalized indicators (including RSI, MACD, Bollinger Bands, ATR, and return lags) to feed into ${predictionData && predictionData.model_type === "xgboost" ? "an optimized XGBoost regressor" : predictionData && predictionData.model_type === "linear_regression" ? "a Linear Regression model" : "a deep LSTM neural network"}.`}
+                      ? `* Analitik verileri, her modelin geçmiş %20 out-of-sample test seti üzerindeki performansını (hata payı ve yön tahmini isabetini) gösterir.`
+                      : `* Analytics show backtest performance (error metrics and directional accuracy) calculated over the last 20% out-of-sample test set for each model.`}
                   </div>
                 </div>
 
