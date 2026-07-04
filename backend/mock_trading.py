@@ -139,6 +139,11 @@ def select_best_symbol_to_buy() -> Tuple[str, float]:
 
 def run_mock_trading_daily_buy():
     """Tries to select and purchase the most bullish asset at the start of a daily candle."""
+    # Enforce start time constraint: July 5th, 2026 at 03:00 UTC (06:00 TRT)
+    start_time = datetime.datetime(2026, 7, 5, 3, 0, 0)
+    if datetime.datetime.utcnow() < start_time:
+        return
+
     state = get_mock_trading_state()
     # Check if we already have a position
     if state.get("position"):
@@ -188,6 +193,11 @@ def check_mock_trading_rule():
     - 0.5% loss limit (Stop Loss)
     - End of day (23:50+ UTC or different calendar date)
     """
+    # Enforce start time constraint: July 5th, 2026 at 03:00 UTC (06:00 TRT)
+    start_time = datetime.datetime(2026, 7, 5, 3, 0, 0)
+    if datetime.datetime.utcnow() < start_time:
+        return
+
     state = get_mock_trading_state()
     pos = state.get("position")
     if not pos:
