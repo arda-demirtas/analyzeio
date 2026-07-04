@@ -1,0 +1,12 @@
+Position 5746:
+Ayı",
+      rating_neutral: "Yatay"
+    }
+  };
+
+  const t = (key) => {
+    if (LOCAL_TRANSLATIONS[lang]?.[key]) {
+      return LOCAL_TRANSLATIONS[lang][key];
+    }
+    if (LOCAL_TRANSLATIONS["en"]?.[k
+---
