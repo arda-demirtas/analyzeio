@@ -548,9 +548,22 @@ export default function Home() {
   const priceChartRef = useRef(null);
   const rsiChartRef = useRef(null);
   const macdChartRef = useRef(null);
+  const stochChartRef = useRef(null);
+  const atrChartRef = useRef(null);
+  const obvChartRef = useRef(null);
+  const cciChartRef = useRef(null);
+  const williamsChartRef = useRef(null);
+
   const priceChartInst = useRef(null);
   const rsiChartInst = useRef(null);
   const macdChartInst = useRef(null);
+  const stochChartInst = useRef(null);
+  const atrChartInst = useRef(null);
+  const obvChartInst = useRef(null);
+  const cciChartInst = useRef(null);
+  const williamsChartInst = useRef(null);
+
+  const [activeIndicatorTab, setActiveIndicatorTab] = useState("rsi_macd");
 
   // 1. Check for token on mount
   useEffect(() => {
@@ -568,10 +581,19 @@ export default function Home() {
       const isClickInsideChart = 
         priceChartRef.current?.contains(e.target) || 
         rsiChartRef.current?.contains(e.target) || 
-        macdChartRef.current?.contains(e.target);
+        macdChartRef.current?.contains(e.target) ||
+        stochChartRef.current?.contains(e.target) ||
+        atrChartRef.current?.contains(e.target) ||
+        obvChartRef.current?.contains(e.target) ||
+        cciChartRef.current?.contains(e.target) ||
+        williamsChartRef.current?.contains(e.target);
 
       if (!isClickInsideChart) {
-        [priceChartInst.current, rsiChartInst.current, macdChartInst.current].forEach(chart => {
+        [
+          priceChartInst.current, rsiChartInst.current, macdChartInst.current,
+          stochChartInst.current, atrChartInst.current, obvChartInst.current,
+          cciChartInst.current, williamsChartInst.current
+        ].forEach(chart => {
           if (chart) {
             chart.setActiveElements([]);
             if (chart.tooltip) {
@@ -622,7 +644,7 @@ export default function Home() {
     }
   }, [activeSymbol, chartInterval, modelType, token, lang]);
 
-  // 3. Render charts when predictionData, chartHistory, historyLimit, isChartFullscreen, or showScreener updates
+  // 3. Render charts when predictionData, chartHistory, historyLimit, isChartFullscreen, showScreener, or activeIndicatorTab updates
   useEffect(() => {
     if (showScreener) return;
     if (!predictionData || !chartHistory || chartHistory.length === 0) return;
@@ -636,7 +658,7 @@ export default function Home() {
       clearTimeout(timer);
       destroyCharts();
     };
-  }, [predictionData, chartHistory, historyLimit, isChartFullscreen, showScreener]);
+  }, [predictionData, chartHistory, historyLimit, isChartFullscreen, showScreener, activeIndicatorTab]);
 
   // Handle price chart resize and body overflow on fullscreen state toggle
   useEffect(() => {
@@ -677,6 +699,26 @@ export default function Home() {
     if (macdChartInst.current) {
       macdChartInst.current.destroy();
       macdChartInst.current = null;
+    }
+    if (stochChartInst.current) {
+      stochChartInst.current.destroy();
+      stochChartInst.current = null;
+    }
+    if (atrChartInst.current) {
+      atrChartInst.current.destroy();
+      atrChartInst.current = null;
+    }
+    if (obvChartInst.current) {
+      obvChartInst.current.destroy();
+      obvChartInst.current = null;
+    }
+    if (cciChartInst.current) {
+      cciChartInst.current.destroy();
+      cciChartInst.current = null;
+    }
+    if (williamsChartInst.current) {
+      williamsChartInst.current.destroy();
+      williamsChartInst.current = null;
     }
   };
 
@@ -743,6 +785,11 @@ export default function Home() {
     const ctxPrice = priceChartRef.current?.getContext("2d");
     const ctxRsi = rsiChartRef.current?.getContext("2d");
     const ctxMacd = macdChartRef.current?.getContext("2d");
+    const ctxStoch = stochChartRef.current?.getContext("2d");
+    const ctxAtr = atrChartRef.current?.getContext("2d");
+    const ctxObv = obvChartRef.current?.getContext("2d");
+    const ctxCci = cciChartRef.current?.getContext("2d");
+    const ctxWilliams = williamsChartRef.current?.getContext("2d");
 
     const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
     const chartEvents = isTouchDevice ? ["click"] : ["mousemove", "mouseout", "click", "touchstart", "touchmove", "touchend"];
@@ -1093,6 +1140,197 @@ export default function Home() {
             y: {
               grid: { color: "rgba(255, 255, 255, 0.05)" },
               ticks: { color: "#9ca3af", maxTicksLimit: 5 }
+            }
+          }
+        }
+      });
+    }
+
+    // Stochastic RSI Chart
+    if (ctxStoch) {
+      const stochKValues = history.map(item => item.stoch_k !== undefined ? item.stoch_k : 50.0);
+      const stochDValues = history.map(item => item.stoch_d !== undefined ? item.stoch_d : 50.0);
+      
+      stochChartInst.current = new Chart(ctxStoch, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "%K",
+              data: stochKValues,
+              borderColor: "#f59e0b",
+              borderWidth: 1.5,
+              pointRadius: 0,
+              tension: 0.1,
+            },
+            {
+              label: "%D",
+              data: stochDValues,
+              borderColor: "#06b6d4",
+              borderWidth: 1.5,
+              pointRadius: 0,
+              tension: 0.1,
+            }
+          ]
+        },
+        options: {
+          events: chartEvents,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { display: false } },
+            y: {
+              min: 0,
+              max: 100,
+              grid: { color: "rgba(255, 255, 255, 0.05)" },
+              ticks: { color: "#9ca3af", stepSize: 20 },
+              border: { dash: [5, 5] }
+            }
+          }
+        }
+      });
+    }
+
+    // ATR Chart
+    if (ctxAtr) {
+      const atrValues = history.map(item => item.atr !== undefined ? item.atr : 0.0);
+      
+      atrChartInst.current = new Chart(ctxAtr, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "ATR",
+            data: atrValues,
+            borderColor: "#a855f7",
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0.1,
+          }]
+        },
+        options: {
+          events: chartEvents,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { display: false } },
+            y: {
+              grid: { color: "rgba(255, 255, 255, 0.05)" },
+              ticks: { color: "#9ca3af" }
+            }
+          }
+        }
+      });
+    }
+
+    // OBV Chart
+    if (ctxObv) {
+      const obvValues = history.map(item => item.obv !== undefined ? item.obv : 0.0);
+      
+      obvChartInst.current = new Chart(ctxObv, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "OBV",
+            data: obvValues,
+            borderColor: "#10b981",
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0.1,
+          }]
+        },
+        options: {
+          events: chartEvents,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { display: false } },
+            y: {
+              grid: { color: "rgba(255, 255, 255, 0.05)" },
+              ticks: { 
+                color: "#9ca3af",
+                callback: (val) => {
+                  if (Math.abs(val) >= 1e9) return (val / 1e9).toFixed(1) + "B";
+                  if (Math.abs(val) >= 1e6) return (val / 1e6).toFixed(1) + "M";
+                  if (Math.abs(val) >= 1e3) return (val / 1e3).toFixed(1) + "K";
+                  return val;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // CCI Chart
+    if (ctxCci) {
+      const cciValues = history.map(item => item.cci !== undefined ? item.cci : 0.0);
+      
+      cciChartInst.current = new Chart(ctxCci, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "CCI",
+            data: cciValues,
+            borderColor: "#3b82f6",
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0.1,
+          }]
+        },
+        options: {
+          events: chartEvents,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { display: false } },
+            y: {
+              grid: { color: "rgba(255, 255, 255, 0.05)" },
+              ticks: { color: "#9ca3af", stepSize: 100 },
+              border: { dash: [5, 5] }
+            }
+          }
+        }
+      });
+    }
+
+    // Williams %R Chart
+    if (ctxWilliams) {
+      const williamsValues = history.map(item => item.williams_r !== undefined ? item.williams_r : -50.0);
+      
+      williamsChartInst.current = new Chart(ctxWilliams, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Williams %R",
+            data: williamsValues,
+            borderColor: "#ec4899",
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0.1,
+          }]
+        },
+        options: {
+          events: chartEvents,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { display: false } },
+            y: {
+              min: -100,
+              max: 0,
+              grid: { color: "rgba(255, 255, 255, 0.05)" },
+              ticks: { color: "#9ca3af", stepSize: 20 },
+              border: { dash: [5, 5] }
             }
           }
         }
@@ -3211,21 +3449,110 @@ export default function Home() {
 
                 {/* Technical Indicators Chart Card */}
                 <div className="glass-panel">
-                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>{t("chart_indicators")}</h3>
-                  <div className="indicator-grid">
-                    <div>
-                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>{t("rsi_title")}</h4>
-                      <div className="indicator-wrapper">
-                        <canvas ref={rsiChartRef} />
-                      </div>
-                    </div>
-                    <div>
-                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>{t("macd_title")}</h4>
-                      <div className="indicator-wrapper">
-                        <canvas ref={macdChartRef} />
-                      </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "15px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "12px" }}>
+                    <h3 style={{ fontSize: "16px", fontWeight: "700", margin: 0 }}>{t("chart_indicators")}</h3>
+                    
+                    {/* Beautiful Tab Selection Bar */}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {[
+                        { id: "rsi_macd", label: lang === "tr" ? "RSI & MACD" : "RSI & MACD" },
+                        { id: "stoch_rsi", label: lang === "tr" ? "Stokastik RSI" : "Stoch RSI" },
+                        { id: "atr", label: lang === "tr" ? "ATR (Oynaklık)" : "ATR (Volatility)" },
+                        { id: "obv", label: lang === "tr" ? "OBV (Hacim Akışı)" : "OBV (Volume Flow)" },
+                        { id: "cci", label: lang === "tr" ? "CCI (Trend Sapması)" : "CCI (Trend)" },
+                        { id: "williams_r", label: lang === "tr" ? "Williams %R" : "Williams %R" }
+                      ].map(tab => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveIndicatorTab(tab.id)}
+                          className={activeIndicatorTab === tab.id ? "btn-primary" : "btn-secondary"}
+                          style={{
+                            padding: "4px 10px",
+                            fontSize: "11px",
+                            height: "auto",
+                            border: "none",
+                            borderRadius: "6px",
+                            fontWeight: "600",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
+
+                  {activeIndicatorTab === "rsi_macd" && (
+                    <div className="indicator-grid">
+                      <div>
+                        <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>{t("rsi_title")}</h4>
+                        <div className="indicator-wrapper">
+                          <canvas ref={rsiChartRef} />
+                        </div>
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>{t("macd_title")}</h4>
+                        <div className="indicator-wrapper">
+                          <canvas ref={macdChartRef} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeIndicatorTab === "stoch_rsi" && (
+                    <div>
+                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>
+                        {lang === "tr" ? "Stokastik RSI (Momentum Osilatörü)" : "Stochastic RSI (Momentum Oscillator)"}
+                      </h4>
+                      <div className="indicator-wrapper">
+                        <canvas ref={stochChartRef} />
+                      </div>
+                    </div>
+                  )}
+
+                  {activeIndicatorTab === "atr" && (
+                    <div>
+                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>
+                        {lang === "tr" ? "Ortalama Gerçek Aralık (ATR Volatilite)" : "Average True Range (ATR Volatility)"}
+                      </h4>
+                      <div className="indicator-wrapper">
+                        <canvas ref={atrChartRef} />
+                      </div>
+                    </div>
+                  )}
+
+                  {activeIndicatorTab === "obv" && (
+                    <div>
+                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>
+                        {lang === "tr" ? "Hacim Akışı / Denge İşlem Hacmi (OBV)" : "On-Balance Volume (OBV Volume Flow)"}
+                      </h4>
+                      <div className="indicator-wrapper">
+                        <canvas ref={obvChartRef} />
+                      </div>
+                    </div>
+                  )}
+
+                  {activeIndicatorTab === "cci" && (
+                    <div>
+                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>
+                        {lang === "tr" ? "Emtia Kanal Endeksi (CCI Trend Sapması)" : "Commodity Channel Index (CCI Trend Deviation)"}
+                      </h4>
+                      <div className="indicator-wrapper">
+                        <canvas ref={cciChartRef} />
+                      </div>
+                    </div>
+                  )}
+
+                  {activeIndicatorTab === "williams_r" && (
+                    <div>
+                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>
+                        {lang === "tr" ? "Williams %R Momentum Göstergesi" : "Williams %R Momentum Indicator"}
+                      </h4>
+                      <div className="indicator-wrapper">
+                        <canvas ref={williamsChartRef} />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Summary of Technical Signals */}
                   <div style={{ marginTop: "25px", paddingTop: "20px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
