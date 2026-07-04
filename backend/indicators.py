@@ -29,3 +29,33 @@ def calculate_atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int
     tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
     atr = tr.rolling(window=period).mean()
     return atr
+
+def calculate_stoch_rsi(rsi: pd.Series, period: int = 14, k_period: int = 3, d_period: int = 3) -> Tuple[pd.Series, pd.Series]:
+    """Calculates Stochastic RSI (%K and %D lines)."""
+    rsi_min = rsi.rolling(window=period).min()
+    rsi_max = rsi.rolling(window=period).max()
+    stoch_rsi = (rsi - rsi_min) / (rsi_max - rsi_min + 1e-10) * 100
+    stoch_k = stoch_rsi.rolling(window=k_period).mean()
+    stoch_d = stoch_k.rolling(window=d_period).mean()
+    return stoch_k, stoch_d
+
+def calculate_obv(close: pd.Series, volume: pd.Series) -> pd.Series:
+    """Calculates On-Balance Volume (OBV)."""
+    direction = np.sign(close.diff().fillna(0.0))
+    obv = (direction * volume).cumsum()
+    return obv
+
+def calculate_cci(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 20) -> pd.Series:
+    """Calculates Commodity Channel Index (CCI)."""
+    tp = (high + low + close) / 3.0
+    sma = tp.rolling(window=period).mean()
+    mad = tp.rolling(window=period).apply(lambda x: np.abs(x - x.mean()).mean(), raw=True)
+    cci = (tp - sma) / (0.015 * mad + 1e-10)
+    return cci
+
+def calculate_williams_r(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
+    """Calculates Williams %R."""
+    highest_high = high.rolling(window=period).max()
+    lowest_low = low.rolling(window=period).min()
+    williams_r = (highest_high - close) / (highest_high - lowest_low + 1e-10) * -100
+    return williams_r
