@@ -1,0 +1,160 @@
+Line 554: 
+Line 555:   // 1. Check for token on mount
+Line 556:   useEffect(() => {
+Line 557:     const savedToken = localStorage.getItem("token");
+Line 558:     if (savedToken) {
+Line 559:       setToken(savedToken);
+Line 560:       fetchWatchlist(savedToken);
+Line 561:       fetchCurrentUser(savedToken);
+Line 562:     }
+Line 563:   }, []);
+Line 564: 
+Line 565:   // Clear chart tooltips on outside clicks/touches
+Line 566:   useEffect(() => {
+Line 567:     const handleOutsideClick = (e) => {
+Line 568:       const isClickInsideChart = 
+Line 569:         priceChartRef.current?.contains(e.target) || 
+Line 570:         rsiChartRef.current?.contains(e.target) || 
+Line 571:         macdChartRef.current?.contains(e.target);
+Line 572: 
+Line 573:       if (!isClickInsideChart) {
+Line 574:         [priceChartInst.current, rsiChartInst.current, macdChartInst.current].forEach(chart => {
+Line 575:           if (chart) {
+Line 576:             chart.setActiveElements([]);
+Line 577:             if (chart.tooltip) {
+Line 578:               chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+Line 579:             }
+Line 580:             chart.update();
+Line 581:           }
+Line 582:         });
+Line 583:       }
+Line 584:     };
+Line 585: 
+Line 586:     window.addEventListener("click", handleOutsideClick);
+Line 587:     window.addEventListener("touchstart", handleOutsideClick);
+Line 588: 
+Line 589:     return () => {
+Line 590:       window.removeEventListener("click", handleOutsideClick);
+Line 591:       window.removeEventListener("touchstart", handleOutsideClick);
+Line 592:     };
+Line 593:   }, []);
+Line 594: 
+Line 595: 
+Line 596:   // Fetch comments and news sentiment when activeSymbol changes
+Line 597:   useEffect(() => {
+Line 598:     if (activeSymbol) {
+Line 599:       fetchComments(activeSymbol);
+Line 600:       fetchNewsSentiment(activeSymbol);
+Line 601:     }
+Line 602:   }, [activeSymbol]);
+Line 603: 
+Line 604:   // Fetch market screener data when screener view is opened
+Line 605:   useEffect(() => {
+Line 606:     if (showScreener) {
+Line 607:       fetchScreenerData();
+Line 608:     }
+Line 609:   }, [showScreener]);
+Line 610: 
+Line 611:   // 2. Fetch Prediction data when activeSymbol, chartInterval, modelType, or lang changes
+Line 612:   useEffect(() => {
+Line 613:     if (activeSymbol) {
+Line 614:       let currentModelType = modelType;
+Line 615:       // Enforce Linear Regression only for BTC-USD
+Line 616:       if (modelType === "linear_regression" && activeSymbol !== "BTC-USD") {
+Line 617:         currentModelType = "xgboost";
+Line 618:         setModelType("xgboost");
+Line 619:         return;
+Line 620:       }
+Line 621:       loadPrediction(activeSymbol, chartInterval, currentModelType);
+Line 622:     }
+Line 623:   }, [activeSymbol, chartInterval, modelType, token, lang]);
+Line 624: 
+Line 625:   // 3. Render charts when predictionData, chartHistory, historyLimit, isChartFullscreen, or showScreener updates
+Line 626:   useEffect(() => {
+Line 627:     if (showScreener) return;
+Line 628:     if (!predictionData || !chartHistory || chartHistory.length === 0) return;
+Line 629:     
+Line 630:     const timer = setTimeout(() => {
+Line 631:       renderCharts();
+Line 632:     }, 50);
+Line 633:     
+Line 634:     // Cleanup on unmount or update
+Line 635:     return () => {
+Line 636:       clearTimeout(timer);
+Line 637:       destroyCharts();
+Line 638:     };
+Line 639:   }, [predictionData, chartHistory, historyLimit, isChartFullscreen, showScreener]);
+Line 640: 
+Line 641:   // Handle price chart resize and body overflow on fullscreen state toggle
+Line 642:   useEffect(() => {
+Line 643:     if (isChartFullscreen) {
+Line 644:       document.body.style.overflow = "hidden";
+Line 645:     } else {
+Line 646:       document.body.style.overflow = "";
+Line 647:     }
+Line 648:     
+Line 649:     if (priceChartInst.current) {
+Line 650:       const timer = setTimeout(() => {
+Line 651:         priceChartInst.current.resize();
+Line 652:       }, 100);
+Line 653:       return () => {
+Line 654:         clearTimeout(timer);
+Line 655:         document.body.style.overflow = "";
+Line 656:       };
+Line 657:     }
+Line 658:   }, [isChartFullscreen]);
+Line 659: 
+Line 660:   // Re-render charts when chartType changes
+Line 661:   useEffect(() => {
+Line 662:     if (predictionData && chartHistory && chartHistory.length > 0) {
+Line 663:       renderCharts();
+Line 664:     }
+Line 665:   }, [chartType]);
+Line 666: 
+Line 667:   // Helper: Destroy existing charts
+Line 668:   const destroyCharts = () => {
+Line 669:     if (priceChartInst.current) {
+Line 670:       priceChartInst.current.destroy();
+Line 671:       priceChartInst.current = null;
+Line 672:     }
+Line 673:     if (rsiChartInst.current) {
+Line 674:       rsiChartInst.current.destroy();
+Line 675:       rsiChartInst.current = null;
+Line 676:     }
+Line 677:     if (macdChartInst.current) {
+Line 678:       macdChartInst.current.destroy();
+Line 679:       macdChartInst.current = null;
+Line 680:     }
+Line 681:   };
+Line 682: 
+Line 683:   // Helper: Calculate support and resistance levels (Swing High/Low Pivot method)
+Line 684:   const calculateSupportResistance = (history) => {
+Line 685:     if (!history || history.length < 10) return { supports: [], resistances: [] };
+Line 686:     
+Line 687:     const closes = history.map(h => h.close);
+Line 688:     const highs = history.map(h => h.high !== null && h.high !== undefined ? h.high : h.close);
+Line 689:     const lows = history.map(h => h.low !== null && h.low !== undefined ? h.low : h.close);
+Line 690:     
+Line 691:     const windowSize = history.length > 300 ? 20 : 5;
+Line 692:     const peaks = [];
+Line 693:     const valleys = [];
+Line 694:     
+Line 695:     for (let i = windowSize; i < history.length - windowSize; i++) {
+Line 696:       // Peak (Local Maximum)
+Line 697:       const leftHighs = highs.slice(i - windowSize, i);
+Line 698:       const rightHighs = highs.slice(i + 1, i + windowSize + 1);
+Line 699:       if (highs[i] === Math.max(highs[i], ...leftHighs, ...rightHighs)) {
+Line 700:         peaks.push(highs[i]);
+Line 701:       }
+Line 702:       
+Line 703:       // Valley (Local Minimum)
+Line 704:       const leftLows = lows.slice(i - windowSize, i);
+Line 705:       const rightLows = lows.slice(i + 1, i + windowSize + 1);
+Line 706:       if (lows[i] === Math.min(lows[i], ...leftLows, ...rightLows)) {
+Line 707:         valleys.push(lows[i]);
+Line 708:       }
+Line 709:     }
+Line 710:     
+Line 711:     const currentPrice = closes[closes.length - 1];
+Line 712:     
+Line 713:     // Select up to 5 distinct supports (valleys below current price) and 5 resistances (peaks above current price)
