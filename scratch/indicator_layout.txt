@@ -1,0 +1,120 @@
+Line 3187:                         onClick={() => setIsChartFullscreen(!isChartFullscreen)}
+Line 3188:                         className="btn-secondary"
+Line 3189:                         style={{ padding: "8px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px" }}
+Line 3190:                         title={isChartFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+Line 3191:                       >
+Line 3192:                         {isChartFullscreen ? <Minimize2 style={{ width: "16px", height: "16px" }} /> : <Maximize2 style={{ width: "16px", height: "16px" }} />}
+Line 3193:                       </button>
+Line 3194:                     </div>
+Line 3195:                   </div>
+Line 3196:                   
+Line 3197:                   <div className="chart-wrapper" style={{ 
+Line 3198:                     position: "relative",
+Line 3199:                     height: isChartFullscreen ? "calc(100vh - 120px)" : "350px",
+Line 3200:                     width: "100%"
+Line 3201:                   }}>
+Line 3202:                     {chartLoading && (
+Line 3203:                       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(11, 15, 25, 0.6)", backdropFilter: "blur(2px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, borderRadius: "8px" }}>
+Line 3204:                         <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "28px", height: "28px" }} />
+Line 3205:                       </div>
+Line 3206:                     )}
+Line 3207: 
+Line 3208:                     <canvas ref={priceChartRef} />
+Line 3209:                   </div>
+Line 3210:                 </div>
+Line 3211: 
+Line 3212:                 {/* Technical Indicators Chart Card */}
+Line 3213:                 <div className="glass-panel">
+Line 3214:                   <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>{t("chart_indicators")}</h3>
+Line 3215:                   <div className="indicator-grid">
+Line 3216:                     <div>
+Line 3217:                       <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>{t("rsi_title")}</h4>
+Line 3218:                       <div className="indicator-wrapper">
+Line 3219:                         <canvas ref={rsiChartRef} />
+Line 3220:                       </div>
+Line 3221:                     </div>
+Line 3222:                     <div>
+Line 3223:                       <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>{t("macd_title")}</h4>
+Line 3224:                       <div className="indicator-wrapper">
+Line 3225:                         <canvas ref={macdChartRef} />
+Line 3226:                       </div>
+Line 3227:                     </div>
+Line 3228:                   </div>
+Line 3229: 
+Line 3230:                   {/* Summary of Technical Signals */}
+Line 3231:                   <div style={{ marginTop: "25px", paddingTop: "20px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+Line 3232:                     <h4 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+Line 3233:                       {t("signals_title")}
+Line 3234:                     </h4>
+Line 3235:                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "15px" }}>
+Line 3236:                       <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
+Line 3237:                         <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>RSI (14)</span>
+Line 3238:                         <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
+Line 3239:                           {activeHistory[activeHistory.length - 1]?.rsi?.toFixed(2) || "---"}
+Line 3240:                         </span>
+Line 3241:                         {(() => {
+Line 3242:                           const rsi = activeHistory[activeHistory.length - 1]?.rsi;
+Line 3243:                           if (rsi === null || rsi === undefined) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+Line 3244:                           if (rsi >= 70) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("rsi_status_overbought")}</span>;
+Line 3245:                           if (rsi <= 30) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("rsi_status_oversold")}</span>;
+Line 3246:                           return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("rsi_status_neutral")}</span>;
+Line 3247:                         })()}
+Line 3248:                       </div>
+Line 3249:                       
+Line 3250:                       <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
+Line 3251:                         <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>MACD</span>
+Line 3252:                         <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
+Line 3253:                           {activeHistory[activeHistory.length - 1]?.macd?.toFixed(2) || "---"}
+Line 3254:                         </span>
+Line 3255:                         {(() => {
+Line 3256:                           const hist = activeHistory[activeHistory.length - 1]?.macd_hist;
+Line 3257:                           if (hist === null || hist === undefined) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+Line 3258:                           if (hist > 0) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("macd_status_bullish")}</span>;
+Line 3259:                           return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("macd_status_bearish")}</span>;
+Line 3260:                         })()}
+Line 3261:                       </div>
+Line 3262:  
+Line 3263:                       <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
+Line 3264:                         <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>EMA (20 vs 50)</span>
+Line 3265:                         <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
+Line 3266:                           {(() => {
+Line 3267:                             const ema20 = activeHistory[activeHistory.length - 1]?.ema_20;
+Line 3268:                             const ema50 = activeHistory[activeHistory.length - 1]?.ema_50;
+Line 3269:                             if (ema20 && ema50) {
+Line 3270:                               return `${ema20.toFixed(1)} / ${ema50.toFixed(1)}`;
+Line 3271:                             }
+Line 3272:                             return "---";
+Line 3273:                           })()}
+Line 3274:                         </span>
+Line 3275:                         {(() => {
+Line 3276:                           const ema20 = activeHistory[activeHistory.length - 1]?.ema_20;
+Line 3277:                           const ema50 = activeHistory[activeHistory.length - 1]?.ema_50;
+Line 3278:                           const close = activeHistory[activeHistory.length - 1]?.close;
+Line 3279:                           if (ema20 === null || ema50 === null || close === null) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+Line 3280:                           if (close > ema20 && ema20 > ema50) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("ema_status_uptrend")}</span>;
+Line 3281:                           if (close < ema20 && ema20 < ema50) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("ema_status_downtrend")}</span>;
+Line 3282:                           if (ema20 > ema50) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("ema_status_golden")}</span>;
+Line 3283:                           return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("ema_status_death")}</span>;
+Line 3284:                         })()}
+Line 3285:                       </div>
+Line 3286:  
+Line 3287:                       <div className="glass-panel" style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.15)" }}>
+Line 3288:                         <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>Bollinger Bands</span>
+Line 3289:                         <span style={{ fontSize: "14px", fontWeight: "700", fontFamily: "monospace" }}>
+Line 3290:                           {(() => {
+Line 3291:                             const upper = activeHistory[activeHistory.length - 1]?.bb_upper;
+Line 3292:                             const lower = activeHistory[activeHistory.length - 1]?.bb_lower;
+Line 3293:                             if (upper && lower) {
+Line 3294:                               return `${upper.toFixed(1)} / ${lower.toFixed(1)}`;
+Line 3295:                             }
+Line 3296:                             return "---";
+Line 3297:                           })()}
+Line 3298:                         </span>
+Line 3299:                         {(() => {
+Line 3300:                           const upper = activeHistory[activeHistory.length - 1]?.bb_upper;
+Line 3301:                           const lower = activeHistory[activeHistory.length - 1]?.bb_lower;
+Line 3302:                           const close = activeHistory[activeHistory.length - 1]?.close;
+Line 3303:                           if (upper === null || lower === null || close === null) return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>N/A</span>;
+Line 3304:                           if (close >= upper) return <span className="badge badge-danger" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("bb_status_overbought")}</span>;
+Line 3305:                           if (close <= lower) return <span className="badge badge-success" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("bb_status_oversold")}</span>;
+Line 3306:                           return <span className="badge badge-warning" style={{ alignSelf: "flex-start", padding: "2px 6px", fontSize: "10px" }}>{t("bb_status_inside")}</span>;
