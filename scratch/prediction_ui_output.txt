@@ -1,0 +1,20 @@
+--- MATCH ---
+ history.map(item => item.bb_lower);
+    
+    // Include prediction point only for daily (1d) interval
+    let extendedLabels = [...labels];
+    const isPendingData = predictionData && predictionData.prediction_status === "pending_data";
+    if (predictionData && predictionData.prediction_date && !isPendingData) {
+      extendedLabels.push(predictionData.prediction_date);
+    }
+    let datasets = [];
+    if (chartType === "candle") {
+      const candleColors = history.map(h => h.close >= h.open 
+--- MATCH ---
+               {lang === "tr" ? "Tahmin hesaplanıyor..." : "Calculating prediction..."}
+                      </span>
+                    </div>
+                  ) : predictionData && predictionData.prediction_status === "pending_data" ? (
+                    <div style={{ textAlign: "center", padding: "15px" }}>
+                      <span style={{ fontSize: "28px", display: "block", marginBottom: "8px" }}>⏳</span>
+                      <h4 style={{ fontSize: "14px", fontWeight: "700", color: 
