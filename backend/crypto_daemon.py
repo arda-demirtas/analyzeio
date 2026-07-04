@@ -76,7 +76,7 @@ def cleanup_old_models():
     
     for filename in os.listdir(MODEL_CACHE_DIR):
         file_path = os.path.join(MODEL_CACHE_DIR, filename)
-        if os.path.isfile(file_path) and filename.endswith(".keras"):
+        if os.path.isfile(file_path) and (filename.endswith(".keras") or filename.endswith(".json") or filename.endswith(".pkl")):
             mtime = os.path.getmtime(file_path)
             age_hours = (now - mtime) / 3600
             # Delete if model has not been updated in the last 72 hours (prevents weekend stock model deletion)
