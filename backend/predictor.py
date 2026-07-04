@@ -386,7 +386,15 @@ def get_prediction(
         expected_close_time = f"{pred_date_str} (TRT)"
         
     if not is_pending_data:
-        change_percent = ((predicted_close - last_close) / last_close) * 100
+        valid_predictions = [
+            v for v in [xgb_predicted_close, lstm_predicted_close, lr_predicted_close]
+            if v is not None
+        ]
+        if valid_predictions:
+            avg_predicted_close = sum(valid_predictions) / len(valid_predictions)
+            change_percent = ((avg_predicted_close - last_close) / last_close) * 100
+        else:
+            change_percent = 0.0
     else:
         change_percent = None
     
@@ -408,46 +416,46 @@ def get_prediction(
     elif change_percent > 0.2:
         tech_signal = "STRONG_BUY"
         if lang == "tr":
-            tech_text = "Model, yüksek güvenilirlikli yukarı yönlü ivme öngörüyor (>0.2%). Long (Alış) pozisyonu açılması önerilir."
+            tech_text = "Modellerin ortalama tahmini, yüksek güvenilirlikli yukarı yönlü ivme öngörüyor (>0.2%). Long (Alış) pozisyonu açılması önerilir."
         elif lang == "de":
-            tech_text = "Das Modell prognostiziert eine hohe Aufwärtsdynamik (>0.2%). Die Eröffnung einer Long-Position wird empfohlen."
+            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf eine hohe Aufwärtsdynamik (>0.2%) hin. Die Eröffnung einer Long-Position wird empfohlen."
         elif lang == "ru":
-            tech_text = "Модель прогнозирует восходящий импульс высокой степени надежности (>0.2%). Рекомендуется открыть позицию Long."
+            tech_text = "Средний прогноз моделей указывает на восходящий импульс высокой степени надежности (>0.2%). Рекомендуется открыть позицию Long."
         elif lang == "zh":
-            tech_text = "模型预测高置信度上行趋势 (>0.2%)。建议开立多单（做多）。"
+            tech_text = "模型的平均预测显示高置信度上行趋势 (>0.2%)。建议开立多单（做多）。"
         elif lang == "es":
-            tech_text = "El modelo pronostica un impulso alcista de alta convicción (>0.2%). Se recomienda abrir una posición Long."
+            tech_text = "El pronóstico promedio de los modelos indica un impulso alcista de alta convicción (>0.2%). Se recomienda abrir una posición Long."
         else:
-            tech_text = "Model forecasts high-conviction upward momentum (>0.2%). Opening a Long position is recommended."
+            tech_text = "Models' average prediction forecasts high-conviction upward momentum (>0.2%). Opening a Long position is recommended."
     elif change_percent < -0.2:
         tech_signal = "STRONG_SELL"
         if lang == "tr":
-            tech_text = "Model, yüksek güvenilirlikli aşağı yönlü ivme öngörüyor (<-0.2%). Short (Satış) pozisyonu açılması veya Nakitte kalınması önerilir."
+            tech_text = "Modellerin ortalama tahmini, yüksek güvenilirlikli aşağı yönlü ivme öngörüyor (<-0.2%). Short (Satış) pozisyonu açılması veya Nakitte kalınması önerilir."
         elif lang == "de":
-            tech_text = "Das Modell prognostiziert eine hohe Abwärtsdynamik (<-0.2%). Die Eröffnung einer Short-Position oder das Verbleiben in bar wird empfohlen."
+            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf eine hohe Abwärtsdynamik (<-0.2%) hin. Die Eröffnung einer Short-Position oder das Verbleiben in bar wird empfohlen."
         elif lang == "ru":
-            tech_text = "Модель прогнозирует нисходящий импульс высокой степени надежности (<-0.2%). Рекомендуется открыть позицию Short или оставаться в кэше."
+            tech_text = "Средний прогноз моделей указывает на нисходящий импульс высокой степени надежности (<-0.2%). Рекомендуется открыть позицию Short или оставаться в кэше."
         elif lang == "zh":
-            tech_text = "模型预测高置信度下行趋势 (<-0.2%)。建议开立空单（做空）或持有现金。"
+            tech_text = "模型的平均预测显示高置信度下行趋势 (<-0.2%)。建议开立空单（做空）或持有现金。"
         elif lang == "es":
-            tech_text = "El modelo pronostica un impulso bajista de alta convicción (<-0.2%). Se recomienda abrir una posición Short o permanecer en Efectivo."
+            tech_text = "El pronóstico promedio de los modelos indica un impulso bajista de alta convicción (<-0.2%). Se recomienda abrir una posición Short o permanecer en Efectivo."
         else:
-            tech_text = "Model forecasts high-conviction downward momentum (<-0.2%). Opening a Short position or staying in Cash is recommended."
+            tech_text = "Models' average prediction forecasts high-conviction downward momentum (<-0.2%). Opening a Short position or staying in Cash is recommended."
     else:
         tech_signal = "HOLD"
         if lang == "tr":
-            tech_text = "Model, düşük güvenilirlikli fiyat konsolidasyonu öngörüyor (-0.2% ile 0.2% arasında). Piyasa gürültüsünü filtrelemek için Nakitte kalınması (pozisyon açılmaması) önerilir."
+            tech_text = "Modellerin ortalama tahmini, düşük güvenilirlikli fiyat konsolidasyonu öngörüyor (-0.2% ile 0.2% arasında). Nakitte kalınması önerilir."
         elif lang == "de":
-            tech_text = "Das Modell prognostiziert eine geringe Preiskonsolidierung (zwischen -0.2% und 0.2%). Das Verbleiben in bar (keine Position) wird empfohlen, um Marktstörungen herauszufiltern."
+            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf eine geringe Preiskonsolidierung hin (zwischen -0.2% und 0.2%). Es wird empfohlen, in bar zu bleiben."
         elif lang == "ru":
-            tech_text = "Модель прогнозирует консолидацию цены с низкой степенью надежности (между -0.2% и 0.2%). Рекомендуется оставаться в кэше (без позиций) для фильтрации рыночного шума."
+            tech_text = "Средний прогноз моделей указывает на низкую консолидацию цены (между -0.2% и 0.2%). Рекомендуется оставаться в кэше."
         elif lang == "zh":
-            tech_text = "模型预测低置信度震荡整理（在 -0.2% 至 0.2% 之间）。建议持有现金（不建仓）以过滤市场噪音。"
+            tech_text = "模型的平均预测显示低置信度震荡整理（在 -0.2% 至 0.2% 之间）。建议持有现金。"
         elif lang == "es":
-            tech_text = "El modelo pronostica una consolidación de precios de baja convicción (entre -0.2% y 0.2%). Se recomienda permanecer en Efectivo (sin posición) para filtrar el ruido del mercado."
+            tech_text = "El pronóstico promedio de los modelos indica una consolidación de precios de baja convicción (entre -0.2% y 0.2%). Se recomienda permanecer en Efectivo."
         else:
-            tech_text = "Model forecasts low-conviction price consolidation (between -0.2% and 0.2%). Staying in Cash (no position) is recommended to filter out market noise."
-        
+            tech_text = "Models' average prediction forecasts low-conviction price consolidation (between -0.2% and 0.2%). Staying in Cash is recommended."
+            
     technical_recommendation = {
         "signal": tech_signal,
         "text": tech_text
