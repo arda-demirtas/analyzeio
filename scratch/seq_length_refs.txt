@@ -1,0 +1,149 @@
+Position 916:
+
+    symbol: str, 
+    interval: str = "1d", 
+    seq_length: int = DEFAULT_SEQUENCE_LENGTH, 
+    lang: str = "en", 
+    force_retrain: bool = False, 
+    model_type: str = "xgboost", 
+    is_daemon: 
+---
+Position 3794:
+:split_idx]
+        df_test = df.iloc[split_idx - seq_length:]
+        
+        # Max/min return bounds
+        max_ret = 0.15 if is_crypto else 0.08
+        min_ret = -0.15 if is_crypto else -0.08
+
+ 
+---
+Position 4132:
+t]
+            df_val = df_train.iloc[val_split - seq_length:]
+            
+            def make_raw_xgb_sequences(x_data, y_data):
+                xs, ys = [], []
+                for i in range(seq_l
+---
+Position 4277:
+   xs, ys = [], []
+                for i in range(seq_length, len(x_data)):
+                    xs.append(x_data[i-seq_length:i])
+                    ys.append(y_data[i])
+                return np.arr
+---
+Position 4342:
+(x_data)):
+                    xs.append(x_data[i-seq_length:i])
+                    ys.append(y_data[i])
+                return np.array(xs).reshape(len(xs), -1), np.array(ys)
+                
+      
+---
+Position 8234:
+e_xgb_performance(model_xgb, x_xgb_test, df_test, seq_length)
+            xgb_metrics["training_status"] = xgb_status
+            
+            last_features_xgb = df[FEATURES].iloc[-seq_length:].value
+---
+Position 8366:
+           last_features_xgb = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
+            pred_ret_xgb = float(model_xgb.predict(last_features_xgb)[0])
+            pred_ret_xgb = max(
+---
+Position 8903:
+t]
+            df_val = df_train.iloc[val_split - seq_length:]
+            
+            x_lstm_train, y_lstm_train, scaler_x_train, scaler_y_train = prepare_lstm_data(df_train_sub, seq_length)
+       
+---
+Position 9034:
+ scaler_y_train = prepare_lstm_data(df_train_sub, seq_length)
+            x_lstm_val, y_lstm_val, _, _ = prepare_lstm_data(df_val, seq_length, scaler_x_train, scaler_y_train)
+            x_lstm_test, 
+---
+Position 9115:
+val, y_lstm_val, _, _ = prepare_lstm_data(df_val, seq_length, scaler_x_train, scaler_y_train)
+            x_lstm_test, y_lstm_test, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x_train, scaler
+---
+Position 9231:
+t, y_lstm_test, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x_train, scaler_y_train)
+            
+            cache_path_lstm = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.keras
+---
+Position 11504:
+tm = train_lstm_model(x_lstm_train, y_lstm_train, seq_length, validation_data=(x_lstm_val, y_lstm_val))
+                    model_lstm.save(cache_path_lstm)
+                    lstm_status = f"Trained
+---
+Position 12240:
+_lstm_test, y_lstm_test, scaler_y_train, df_test, seq_length)
+            lstm_metrics["training_status"] = lstm_status
+            
+            last_features_lstm = df[FEATURES].iloc[-seq_length:].va
+---
+Position 12375:
+          last_features_lstm = df[FEATURES].iloc[-seq_length:].values
+            scaled_last_features = scaler_x_train.transform(last_features_lstm)
+            input_seq = np.array([scaled_last_feat
+---
+Position 13197:
+   xs, ys = [], []
+                for i in range(seq_length, len(x_data)):
+                    xs.append(x_data[i-seq_length:i])
+                    ys.append(y_data[i])
+                return np.arr
+---
+Position 13262:
+(x_data)):
+                    xs.append(x_data[i-seq_length:i])
+                    ys.append(y_data[i])
+                return np.array(xs).reshape(len(xs), -1), np.array(ys)
+                
+      
+---
+Position 15875:
+uate_lr_performance(model_lr, x_lr_test, df_test, seq_length)
+            lr_metrics["training_status"] = lr_status
+            
+            last_features_lr = df[FEATURES].iloc[-seq_length:].values.f
+---
+Position 16004:
+            last_features_lr = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
+            predicted_lr_return = float(model_lr.predict(last_features_lr)[0])
+            predicted_lr_r
+---
+Position 24370:
+   xs, ys = [], []
+                for i in range(seq_length, len(x_data)):
+                    xs.append(x_data[i-seq_length:i])
+                    ys.append(y_data[i])
+                return np.arr
+---
+Position 24435:
+(x_data)):
+                    xs.append(x_data[i-seq_length:i])
+                    ys.append(y_data[i])
+                return np.array(xs).reshape(len(xs), -1), np.array(ys)
+                
+      
+---
+Position 26801:
+            last_features_lr = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
+            predicted_lr_return = float(model_lr.predict(last_features_lr)[0])
+            lr_predicted_c
+---
+Position 27610:
+et(idx)
+            if pos is not None and pos >= seq_length:
+                try:
+                    feat_seq = df[FEATURES].iloc[pos - seq_length : pos].values.flatten().reshape(1, -1)
+            
+---
+Position 27698:
+               feat_seq = df[FEATURES].iloc[pos - seq_length : pos].values.flatten().reshape(1, -1)
+                    pred_ret = float(model_lr.predict(feat_seq)[0])
+                    prev_close =
+---
