@@ -1,0 +1,300 @@
+Line 739:   const renderCharts = () => {
+Line 740:     destroyCharts();
+Line 741:     if (!predictionData || !chartHistory || chartHistory.length === 0) return;
+Line 742: 
+Line 743:     const ctxPrice = priceChartRef.current?.getContext("2d");
+Line 744:     const ctxRsi = rsiChartRef.current?.getContext("2d");
+Line 745:     const ctxMacd = macdChartRef.current?.getContext("2d");
+Line 746: 
+Line 747:     const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+Line 748:     const chartEvents = isTouchDevice ? ["click"] : ["mousemove", "mouseout", "click", "touchstart", "touchmove", "touchend"];
+Line 749: 
+Line 750:     const history = chartHistory.slice(-historyLimit);
+Line 751:     const labels = history.map(item => item.date);
+Line 752:     const closePrices = history.map(item => item.close);
+Line 753:     const ema20Prices = history.map(item => item.ema_20);
+Line 754:     const ema50Prices = history.map(item => item.ema_50);
+Line 755:     const bbUpperPrices = history.map(item => item.bb_upper);
+Line 756:     const bbLowerPrices = history.map(item => item.bb_lower);
+Line 757:     
+Line 758:     // Include prediction point only for daily (1d) interval
+Line 759:     let extendedLabels = [...labels];
+Line 760:     const isPendingData = predictionData && predictionData.prediction_status === "pending_data";
+Line 761:     if (predictionData && predictionData.prediction_date && !isPendingData) {
+Line 762:       extendedLabels.push(predictionData.prediction_date);
+Line 763:     }
+Line 764:     let datasets = [];
+Line 765:     if (chartType === "candle") {
+Line 766:       const candleColors = history.map(h => h.close >= h.open ? "rgba(16, 185, 129, 0.75)" : "rgba(239, 68, 68, 0.75)");
+Line 767:       const candleBorderColors = history.map(h => h.close >= h.open ? "#10b981" : "#ef4848");
+Line 768:       
+Line 769:       datasets.push({
+Line 770:         label: activeSymbol,
+Line 771:         type: "bar",
+Line 772:         data: history.map(h => [h.open, h.close]),
+Line 773:         backgroundColor: candleColors,
+Line 774:         borderColor: candleBorderColors,
+Line 775:         borderWidth: 1,
+Line 776:         barPercentage: 0.75,
+Line 777:         categoryPercentage: 0.95
+Line 778:       });
+Line 779:     } else {
+Line 780:       datasets.push({
+Line 781:         label: "Historical Close",
+Line 782:         type: "line",
+Line 783:         data: closePrices,
+Line 784:         borderColor: "#8b5cf6",
+Line 785:         backgroundColor: "rgba(139, 92, 246, 0.05)",
+Line 786:         borderWidth: 2.5,
+Line 787:         pointRadius: 0,
+Line 788:         tension: 0.15,
+Line 789:         fill: true,
+Line 790:       });
+Line 791:     }
+Line 792: 
+Line 793: 
+Line 794: 
+Line 795:     datasets.push(
+Line 796:       {
+Line 797:         label: "EMA 20",
+Line 798:         data: ema20Prices,
+Line 799:         borderColor: "rgba(59, 130, 246, 0.65)",
+Line 800:         borderWidth: 1.5,
+Line 801:         pointRadius: 0,
+Line 802:         fill: false,
+Line 803:         tension: 0.15,
+Line 804:         hidden: true,
+Line 805:       },
+Line 806:       {
+Line 807:         label: "EMA 50",
+Line 808:         data: ema50Prices,
+Line 809:         borderColor: "rgba(236, 72, 153, 0.65)",
+Line 810:         borderWidth: 1.5,
+Line 811:         pointRadius: 0,
+Line 812:         fill: false,
+Line 813:         tension: 0.15,
+Line 814:         hidden: true,
+Line 815:       },
+Line 816:       {
+Line 817:         label: "BB Upper",
+Line 818:         data: bbUpperPrices,
+Line 819:         borderColor: "rgba(245, 158, 11, 0.35)",
+Line 820:         borderWidth: 1,
+Line 821:         borderDash: [3, 3],
+Line 822:         pointRadius: 0,
+Line 823:         fill: false,
+Line 824:         hidden: true,
+Line 825:       },
+Line 826:       {
+Line 827:         label: "BB Lower",
+Line 828:         data: bbLowerPrices,
+Line 829:         borderColor: "rgba(245, 158, 11, 0.35)",
+Line 830:         borderWidth: 1,
+Line 831:         borderDash: [3, 3],
+Line 832:         pointRadius: 0,
+Line 833:         fill: false,
+Line 834:         hidden: true,
+Line 835:       }
+Line 836:     );
+Line 837: 
+Line 838:     // Add Prediction Point
+Line 839:     if (predictionData && predictionData.prediction_date && predictionData.predicted_close !== null && !isPendingData) {
+Line 840:       const predLabel = predictionData.model_type === "xgboost" 
+Line 841:         ? (lang === "tr" ? "XGBoost Tahmini" : "XGBoost Prediction") 
+Line 842:         : (lang === "tr" ? "LSTM Tahmini" : "LSTM Prediction");
+Line 843:         
+Line 844:       const lastClosePrice = closePrices[closePrices.length - 1];
+Line 845:       const isUp = predictionData.predicted_close >= lastClosePrice;
+Line 846:       const predColor = isUp ? "rgba(16, 185, 129, 0.95)" : "rgba(239, 68, 68, 0.95)";
+Line 847:       
+Line 848:       const predDataPoints = Array(labels.length - 1).fill(null);
+Line 849:       predDataPoints.push(lastClosePrice);
+Line 850:       predDataPoints.push(predictionData.predicted_close);
+Line 851:       
+Line 852:       datasets.push({
+Line 853:         label: predLabel,
+Line 854:         type: "line",
+Line 855:         data: predDataPoints,
+Line 856:         borderColor: predColor,
+Line 857:         borderWidth: 2.5,
+Line 858:         borderDash: [5, 5],
+Line 859:         pointRadius: 6,
+Line 860:         pointHoverRadius: 8,
+Line 861:         pointBackgroundColor: predColor,
+Line 862:         pointBorderColor: "#ffffff",
+Line 863:         pointBorderWidth: 1.5,
+Line 864:         fill: false,
+Line 865:         tension: 0,
+Line 866:       });
+Line 867:     }
+Line 868: 
+Line 869:     // Add Linear Regression Prediction Line (boydan boya)
+Line 870:     const hasLrHistory = history.some(h => h.lr_predicted_close !== null);
+Line 871:     if (predictionData && (hasLrHistory || (predictionData.lr_predicted_close !== null && !isPendingData))) {
+Line 872:       const lrLabel = lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction";
+Line 873:       const lrColor = "rgba(59, 130, 246, 0.9)"; // Sleek blue for LR
+Line 874:       
+Line 875:       const lrDataPoints = history.map(h => h.lr_predicted_close);
+Line 876:       if (predictionData.lr_predicted_close !== null && !isPendingData) {
+Line 877:         lrDataPoints.push(predictionData.lr_predicted_close);
+Line 878:       } else {
+Line 879:         lrDataPoints.push(null);
+Line 880:       }
+Line 881:       
+Line 882:       datasets.push({
+Line 883:         label: lrLabel,
+Line 884:         type: "line",
+Line 885:         data: lrDataPoints,
+Line 886:         borderColor: lrColor,
+Line 887:         borderWidth: 2,
+Line 888:         borderDash: [4, 4],
+Line 889:         pointRadius: (ctx) => {
+Line 890:           return ctx.dataIndex === lrDataPoints.length - 1 ? 6 : 0;
+Line 891:         },
+Line 892:         pointHoverRadius: (ctx) => {
+Line 893:           return ctx.dataIndex === lrDataPoints.length - 1 ? 8 : 0;
+Line 894:         },
+Line 895:         pointBackgroundColor: lrColor,
+Line 896:         pointBorderColor: "#ffffff",
+Line 897:         pointBorderWidth: 1.5,
+Line 898:         fill: false,
+Line 899:         tension: 0.1,
+Line 900:         hidden: true,
+Line 901:       });
+Line 902:     }
+Line 903: 
+Line 904:     // Add Support and Resistance Levels (All-symbols for premium, BTC-USD for everyone)
+Line 905:     const canShowSR = (activeSymbol === "BTC-USD") || (user && user.is_premium);
+Line 906:     
+Line 907:     if (canShowSR) {
+Line 908:       const { supports, resistances } = calculateSupportResistance(history);
+Line 909:       
+Line 910:       supports.forEach((val, idx) => {
+Line 911:         datasets.push({
+Line 912:           label: `${t("support")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
+Line 913:           data: Array(extendedLabels.length).fill(val),
+Line 914:           borderColor: "rgba(16, 185, 129, 0.7)",
+Line 915:           borderWidth: 1.5,
+Line 916:           borderDash: [6, 4],
+Line 917:           pointRadius: 0,
+Line 918:           fill: false,
+Line 919:           tension: 0,
+Line 920:           hidden: true,
+Line 921:         });
+Line 922:       });
+Line 923: 
+Line 924:       resistances.forEach((val, idx) => {
+Line 925:         datasets.push({
+Line 926:           label: `${t("resistance")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
+Line 927:           data: Array(extendedLabels.length).fill(val),
+Line 928:           borderColor: "rgba(239, 68, 68, 0.7)",
+Line 929:           borderWidth: 1.5,
+Line 930:           borderDash: [6, 4],
+Line 931:           pointRadius: 0,
+Line 932:           fill: false,
+Line 933:           tension: 0,
+Line 934:           hidden: true,
+Line 935:         });
+Line 936:       });
+Line 937:     }
+Line 938: 
+Line 939:     // Price Chart
+Line 940:     if (ctxPrice) {
+Line 941:       priceChartInst.current = new Chart(ctxPrice, {
+Line 942:         type: "line",
+Line 943:         data: {
+Line 944:           labels: extendedLabels,
+Line 945:           datasets: datasets
+Line 946:         },
+Line 947:         options: {
+Line 948:           events: chartEvents,
+Line 949:           responsive: true,
+Line 950:           maintainAspectRatio: false,
+Line 951:           plugins: {
+Line 952:             candlestickWicks: {
+Line 953:               enabled: chartType === "candle",
+Line 954:               history: history
+Line 955:             },
+Line 956:             legend: {
+Line 957:               labels: { color: "#9ca3af", font: { family: "Inter" } }
+Line 958:             },
+Line 959:             tooltip: {
+Line 960:               mode: "index",
+Line 961:               intersect: false,
+Line 962:             },
+Line 963:             zoom: {
+Line 964:               zoom: {
+Line 965:                 wheel: {
+Line 966:                   enabled: isChartFullscreen,
+Line 967:                   speed: 0.05,
+Line 968:                 },
+Line 969:                 pinch: {
+Line 970:                   enabled: isChartFullscreen
+Line 971:                 },
+Line 972:                 mode: "x",
+Line 973:                 onZoom: ({ chart }) => {
+Line 974:                   const lastIndex = chart.data.labels.length - 1;
+Line 975:                   if (chart.options.scales.x) {
+Line 976:                     chart.options.scales.x.max = lastIndex;
+Line 977:                   }
+Line 978:                   chart.update("none");
+Line 979:                 }
+Line 980:               },
+Line 981:               pan: {
+Line 982:                 enabled: isChartFullscreen,
+Line 983:                 mode: "x",
+Line 984:                 modifierKey: null,
+Line 985:               }
+Line 986:             }
+Line 987:           },
+Line 988:           scales: {
+Line 989:             x: {
+Line 990:               grid: { color: "rgba(255, 255, 255, 0.05)" },
+Line 991:               ticks: { color: "#9ca3af", maxTicksLimit: 8 }
+Line 992:             },
+Line 993:             y: {
+Line 994:               grid: { color: "rgba(255, 255, 255, 0.05)" },
+Line 995:               ticks: { color: "#9ca3af" }
+Line 996:             }
+Line 997:           }
+Line 998:         }
+Line 999:       });
+Line 1000:     }
+Line 1001: 
+Line 1002:     // RSI Chart
+Line 1003:     if (ctxRsi) {
+Line 1004:       const rsiValues = history.map(item => item.rsi);
+Line 1005:       rsiChartInst.current = new Chart(ctxRsi, {
+Line 1006:         type: "line",
+Line 1007:         data: {
+Line 1008:           labels: labels,
+Line 1009:           datasets: [{
+Line 1010:             label: "RSI (14)",
+Line 1011:             data: rsiValues,
+Line 1012:             borderColor: "#f59e0b",
+Line 1013:             borderWidth: 1.5,
+Line 1014:             pointRadius: 0,
+Line 1015:             tension: 0.1,
+Line 1016:           }]
+Line 1017:         },
+Line 1018:         options: {
+Line 1019:           events: chartEvents,
+Line 1020:           responsive: true,
+Line 1021:           maintainAspectRatio: false,
+Line 1022:           plugins: {
+Line 1023:             legend: { display: false }
+Line 1024:           },
+Line 1025:           scales: {
+Line 1026:             x: {
+Line 1027:               grid: { display: false },
+Line 1028:               ticks: { display: false }
+Line 1029:             },
+Line 1030:             y: {
+Line 1031:               min: 0,
+Line 1032:               max: 100,
+Line 1033:               grid: { color: "rgba(255, 255, 255, 0.05)" },
+Line 1034:               ticks: { color: "#9ca3af", stepSize: 20 },
+Line 1035:               // Draw horizontal helper lines at 30 and 70
+Line 1036:               border: { dash: [5, 5] }
+Line 1037:             }
+Line 1038:           }
