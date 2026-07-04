@@ -42,3 +42,34 @@ POPULAR_STOCKS = [
 ]
 
 AUTO_TRAINED_SYMBOLS = POPULAR_CRYPTOS + POPULAR_COMMODITIES + POPULAR_STOCKS
+
+FEATURES = [
+    "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
+    "BB_Upper", "BB_Lower", "BB_Width", "EMA_20", "EMA_50",
+    "Open", "Close", "Volume", "High", "Low", "ATR",
+    "Daily_Return", "Return_Lag1", "Return_Lag3", "Return_Lag7"
+]
+
+TICKER_NAMES = {
+    "BTC-USD": "Bitcoin USD",
+    "ETH-USD": "Ethereum USD",
+    "AAPL": "Apple Inc.",
+    "TSLA": "Tesla Inc.",
+    "GC=F": "Gold Futures",
+    "MSFT": "Microsoft Corporation",
+    "AMZN": "Amazon.com Inc.",
+    "NVDA": "NVIDIA Corporation",
+    "BTC-USDT": "Bitcoin USD",
+    "ETH-USDT": "Ethereum USD",
+    "UNI7083-USD": "Uniswap USD",
+    "THYAO.IS": "Türk Hava Yolları",
+    "EREGL.IS": "Ereğli Demir Çelik",
+    "GARAN.IS": "Garanti BBVA",
+    "KCHOL.IS": "Koç Holding",
+    "AKBNK.IS": "Akbank",
+    "ASELS.IS": "Aselsan",
+    "TUPRS.IS": "Tüpraş",
+    "SISE.IS": "Şişecam",
+    "TCELL.IS": "Turkcell",
+    "BIMAS.IS": "BİM Birleşik Mağazalar"
+}
