@@ -823,9 +823,7 @@ export default function Home() {
     if (predictionData && predictionData.prediction_date && predictionData.predicted_close !== null && !isPendingData) {
       const predLabel = predictionData.model_type === "xgboost" 
         ? (lang === "tr" ? "XGBoost Tahmini" : "XGBoost Prediction") 
-        : predictionData.model_type === "lstm" 
-        ? (lang === "tr" ? "LSTM Tahmini" : "LSTM Prediction") 
-        : (lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction");
+        : (lang === "tr" ? "LSTM Tahmini" : "LSTM Prediction");
         
       const lastClosePrice = closePrices[closePrices.length - 1];
       const isUp = predictionData.predicted_close >= lastClosePrice;
@@ -840,11 +838,38 @@ export default function Home() {
         type: "line",
         data: predDataPoints,
         borderColor: predColor,
-        borderWidth: 2,
+        borderWidth: 2.5,
         borderDash: [5, 5],
         pointRadius: 6,
         pointHoverRadius: 8,
         pointBackgroundColor: predColor,
+        pointBorderColor: "#ffffff",
+        pointBorderWidth: 1.5,
+        fill: false,
+        tension: 0,
+      });
+    }
+
+    // Add Linear Regression Prediction Line (Always plotted if available)
+    if (predictionData && predictionData.prediction_date && predictionData.lr_predicted_close !== null && !isPendingData) {
+      const lrLabel = lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction";
+      const lastClosePrice = closePrices[closePrices.length - 1];
+      const lrColor = "rgba(59, 130, 246, 0.95)"; // Sleek blue for LR
+      
+      const lrDataPoints = Array(labels.length - 1).fill(null);
+      lrDataPoints.push(lastClosePrice);
+      lrDataPoints.push(predictionData.lr_predicted_close);
+      
+      datasets.push({
+        label: lrLabel,
+        type: "line",
+        data: lrDataPoints,
+        borderColor: lrColor,
+        borderWidth: 2,
+        borderDash: [4, 4],
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        pointBackgroundColor: lrColor,
         pointBorderColor: "#ffffff",
         pointBorderWidth: 1.5,
         fill: false,
@@ -3442,26 +3467,6 @@ export default function Home() {
                     >
                       LSTM
                     </button>
-                    {activeSymbol === "BTC-USD" && (
-                      <button 
-                        onClick={() => !predictLoading && setModelType("linear_regression")}
-                        disabled={predictLoading}
-                        style={{
-                          flex: 1,
-                          background: modelType === "linear_regression" ? "rgba(255, 255, 255, 0.08)" : "transparent",
-                          border: "none",
-                          color: modelType === "linear_regression" ? "#ffffff" : "var(--text-muted)",
-                          fontSize: "11px",
-                          fontWeight: "600",
-                          padding: "6px 0",
-                          borderRadius: "6px",
-                          cursor: predictLoading ? "not-allowed" : "pointer",
-                          transition: "all 0.2s"
-                        }}
-                      >
-                        Linear Reg.
-                      </button>
-                    )}
                   </div>
 
                   {predictLoading ? (
