@@ -497,6 +497,17 @@ export default function Home() {
   const [newAutoTrainSymbol, setNewAutoTrainSymbol] = useState("");
   const [modelType, setModelType] = useState("xgboost");
 
+  const lastCloseVal = predictionData ? predictionData.last_close : null;
+  const xgbChangeVal = (predictionData && predictionData.xgb_predicted_close !== null && lastCloseVal)
+    ? ((predictionData.xgb_predicted_close - lastCloseVal) / lastCloseVal) * 100
+    : null;
+  const lstmChangeVal = (predictionData && predictionData.lstm_predicted_close !== null && lastCloseVal)
+    ? ((predictionData.lstm_predicted_close - lastCloseVal) / lastCloseVal) * 100
+    : null;
+  const lrChangeVal = (predictionData && predictionData.lr_predicted_close !== null && lastCloseVal)
+    ? ((predictionData.lr_predicted_close - lastCloseVal) / lastCloseVal) * 100
+    : null;
+
   const getPredictionHeader = () => {
     if (chartInterval === "1d") {
       return t("prediction_header");
@@ -3436,45 +3447,7 @@ export default function Home() {
               <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
                 {/* Prediction Highlight Card */}
                 <div className="glass-panel prediction-card" style={{ minHeight: "220px", display: "flex", flexDirection: "column", justifyContent: "flex-start", position: "relative", overflow: "hidden", padding: "20px" }}>
-                  {/* Model Type Selector */}
-                  <div style={{ display: "flex", background: "rgba(0, 0, 0, 0.25)", padding: "3px", borderRadius: "8px", marginBottom: "15px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
-                    <button 
-                      onClick={() => !predictLoading && setModelType("xgboost")}
-                      disabled={predictLoading}
-                      style={{
-                        flex: 1,
-                        background: modelType === "xgboost" ? "rgba(255, 255, 255, 0.08)" : "transparent",
-                        border: "none",
-                        color: modelType === "xgboost" ? "#ffffff" : "var(--text-muted)",
-                        fontSize: "11px",
-                        fontWeight: "600",
-                        padding: "6px 0",
-                        borderRadius: "6px",
-                        cursor: predictLoading ? "not-allowed" : "pointer",
-                        transition: "all 0.2s"
-                      }}
-                    >
-                      XGBoost
-                    </button>
-                    <button 
-                      onClick={() => !predictLoading && setModelType("lstm")}
-                      disabled={predictLoading}
-                      style={{
-                        flex: 1,
-                        background: modelType === "lstm" ? "rgba(255, 255, 255, 0.08)" : "transparent",
-                        border: "none",
-                        color: modelType === "lstm" ? "#ffffff" : "var(--text-muted)",
-                        fontSize: "11px",
-                        fontWeight: "600",
-                        padding: "6px 0",
-                        borderRadius: "6px",
-                        cursor: predictLoading ? "not-allowed" : "pointer",
-                        transition: "all 0.2s"
-                      }}
-                    >
-                      LSTM
-                    </button>
-                  </div>
+
 
                   {predictLoading ? (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, minHeight: "120px" }}>
@@ -3584,22 +3557,79 @@ export default function Home() {
                         {t("expected_close")}: {predictionData ? predictionData.expected_close_time : "---"}
                       </div>
                       
-                      {predictionData && predictionData.price_change_percent !== null && (
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "16px", fontWeight: "700", marginTop: "15px" }}>
-                          {predictionData.price_change_percent >= 0 ? (
-                            <>
-                              <TrendingUp style={{ color: "var(--accent-success)" }} />
-                              <span style={{ color: "var(--accent-success)" }}>
-                                +{predictionData.price_change_percent.toFixed(2)}% ({t("bullish")})
+                      {predictionData && (
+                        <div style={{ marginTop: "18px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase", marginBottom: "4px", display: "block" }}>
+                            {lang === "tr" ? "Model Sinyalleri & Getiri Oranları" : "Model Signals & Expected Changes"}:
+                          </span>
+
+                          {/* XGBoost Signal */}
+                          {xgbChangeVal !== null && (
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                              <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+                                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#a855f7" }}></span>
+                                XGBoost:
                               </span>
-                            </>
-                          ) : (
-                            <>
-                              <TrendingDown style={{ color: "var(--accent-danger)" }} />
-                              <span style={{ color: "var(--accent-danger)" }}>
-                                {predictionData.price_change_percent.toFixed(2)}% ({t("bearish")})
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+                                {xgbChangeVal >= 0 ? (
+                                  <>
+                                    <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+                                    <span style={{ color: "var(--accent-success)" }}>+{xgbChangeVal.toFixed(2)}% ({t("bullish")})</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+                                    <span style={{ color: "var(--accent-danger)" }}>{xgbChangeVal.toFixed(2)}% ({t("bearish")})</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* LSTM Signal */}
+                          {lstmChangeVal !== null && (
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                              <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+                                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#0ea5e9" }}></span>
+                                LSTM:
                               </span>
-                            </>
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+                                {lstmChangeVal >= 0 ? (
+                                  <>
+                                    <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+                                    <span style={{ color: "var(--accent-success)" }}>+{lstmChangeVal.toFixed(2)}% ({t("bullish")})</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+                                    <span style={{ color: "var(--accent-danger)" }}>{lstmChangeVal.toFixed(2)}% ({t("bearish")})</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Linear Regression Signal */}
+                          {lrChangeVal !== null && (
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                              <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+                                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#3b82f6" }}></span>
+                                {lang === "tr" ? "Lineer Reg." : "Linear Reg."}:
+                              </span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+                                {lrChangeVal >= 0 ? (
+                                  <>
+                                    <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+                                    <span style={{ color: "var(--accent-success)" }}>+{lrChangeVal.toFixed(2)}% ({t("bullish")})</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+                                    <span style={{ color: "var(--accent-danger)" }}>{lrChangeVal.toFixed(2)}% ({t("bearish")})</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
                           )}
                         </div>
                       )}
