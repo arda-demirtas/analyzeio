@@ -1,0 +1,156 @@
+Position 463:
+OLS, TICKER_NAMES, FEATURES
+from backend.indicators import calculate_rsi, calculate_macd, calculate_atr
+from backend.data_fetcher import fetch_binance_data, fetch_market_data, fetch_interval_history
+from backend.sentiment import analyze_text_sentiment, fetch_symbol_news, get_fundamental_analysis
+fro
+---
+Position 21378:
+          tech_text = "El pronóstico promedio de los modelos indica un impulso alcista de alta convicción (>0.2%). Se recomienda abrir una posición Long."
+        else:
+            tech_text = "Models' average prediction forecasts high-conviction upward momentum (>0.2%). Opening a Long position is r
+---
+Position 22519:
+          tech_text = "El pronóstico promedio de los modelos indica un impulso bajista de alta convicción (<-0.2%). Se recomienda abrir una posición Short o permanecer en Efectivo."
+        else:
+            tech_text = "Models' average prediction forecasts high-conviction downward momentum (<-0.2%)
+---
+Position 23624:
+tech_text = "El pronóstico promedio de los modelos indica una consolidación de precios de baja convicción (entre -0.2% y 0.2%). Se recomienda permanecer en Efectivo."
+        else:
+            tech_text = "Models' average prediction forecasts low-conviction price consolidation (between -0.2% and 0.2
+---
+Position 28666:
+           "ema_20": float(row["EMA_20"]),
+            "ema_50": float(row["EMA_50"]),
+            "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "s
+---
+Position 28683:
+0": float(row["EMA_20"]),
+            "ema_50": float(row["EMA_50"]),
+            "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(ro
+---
+Position 28694:
+ow["EMA_20"]),
+            "ema_50": float(row["EMA_50"]),
+            "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"
+---
+Position 28727:
+0": float(row["EMA_50"]),
+            "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd
+---
+Position 28757:
+        "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.
+---
+Position 28778:
+row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv":
+---
+Position 28793:
+"ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV
+---
+Position 28830:
+"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(r
+---
+Position 28973:
+: float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float
+---
+Position 28990:
+h_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"
+---
+Position 29001:
+Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Will
+---
+Position 29034:
+ow["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(ro
+---
+Position 29064:
+        "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+ 
+---
+Position 29081:
+oat(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+            "lr_pr
+---
+Position 29092:
+V"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+            "lr_predicted_clo
+---
+Position 29125:
+sna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+            "lr_predicted_close": lr_hist_val
+        })
+     
+---
+Position 29155:
+        "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+            "lr_predicted_close": lr_hist_val
+        })
+        
+    fundamental_result = g
+---
+Position 29179:
+["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+            "lr_predicted_close": lr_hist_val
+        })
+        
+    fundamental_result = get_fundamental_analysis(
+---
+Position 29197:
+in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+            "lr_predicted_close": lr_hist_val
+        })
+        
+    fundamental_result = get_fundamental_analysis(symbol, asset_name
+---
+Position 29237:
+0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+            "lr_predicted_close": lr_hist_val
+        })
+        
+    fundamental_result = get_fundamental_analysis(symbol, asset_name, lang=lang)
+
+    # 7. Log Prediction an
+---
