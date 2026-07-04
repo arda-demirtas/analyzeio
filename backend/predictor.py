@@ -1,658 +1,32 @@
 import os
-import sys
-import datetime
+import json
 import requests
-import numpy as np
+import datetime
 import pandas as pd
-import yfinance as yf
-from sklearn.preprocessing import MinMaxScaler
+import numpy as np
 import tensorflow as tf
 import xgboost as xgb
-from typing import Tuple, Dict, Any, List, Optional
+from typing import Dict, List, Any, Optional
 
-from backend.config import MODEL_CACHE_DIR, DEFAULT_SEQUENCE_LENGTH, AUTO_TRAINED_SYMBOLS
+# Import constants and sub-module functions for re-exporting (Facade pattern)
+from backend.config import MODEL_CACHE_DIR, DEFAULT_SEQUENCE_LENGTH, AUTO_TRAINED_SYMBOLS, TICKER_NAMES, FEATURES
+from backend.indicators import calculate_rsi, calculate_macd, calculate_atr
+from backend.data_fetcher import fetch_binance_data, fetch_market_data, fetch_interval_history
+from backend.sentiment import analyze_text_sentiment, fetch_symbol_news, get_fundamental_analysis
+from backend.prediction_engine import (
+    prepare_lstm_data, train_lstm_model, 
+    evaluate_model_performance, evaluate_xgb_performance
+)
 
-FEATURES = [
-    "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
-    "Open", "Close", "Volume", "High", "Low", 
-    "BB_Upper", "BB_Lower", "BB_Width",
-    "EMA_20", "EMA_50", "ATR", "Daily_Return",
-    "Return_3", "Return_7", "Volume_Change"
-]
-
-def calculate_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
-    """Calculates the Relative Strength Index (RSI) for a price series."""
-    delta = prices.diff()
-    gain = delta.clip(lower=0)
-    loss = -delta.clip(upper=0)
-    
-    # Use standard Exponential Moving Average for RSI
-    avg_gain = gain.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
-    avg_loss = loss.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
-    
-    rs = avg_gain / (avg_loss + 1e-10)
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
-
-def calculate_macd(prices: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9) -> Tuple[pd.Series, pd.Series, pd.Series]:
-    """Calculates the MACD Line, Signal Line, and MACD Histogram."""
-    fast_ema = prices.ewm(span=fast, adjust=False).mean()
-    slow_ema = prices.ewm(span=slow, adjust=False).mean()
-    macd_line = fast_ema - slow_ema
-    signal_line = macd_line.ewm(span=signal, adjust=False).mean()
-    macd_hist = macd_line - signal_line
-    return macd_line, signal_line, macd_hist
-
-def calculate_atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
-    """Calculates the Average True Range (ATR)."""
-    tr1 = high - low
-    tr2 = (high - close.shift(1)).abs()
-    tr3 = (low - close.shift(1)).abs()
-    tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
-    atr = tr.rolling(window=period).mean()
-    return atr
-
-# Dictionary of popular symbols to their readable names
-TICKER_NAMES = {
-    "BTC-USD": "Bitcoin USD",
-    "ETH-USD": "Ethereum USD",
-    "AAPL": "Apple Inc.",
-    "TSLA": "Tesla Inc.",
-    "GC=F": "Gold Futures",
-    "MSFT": "Microsoft Corporation",
-    "AMZN": "Amazon.com Inc.",
-    "NVDA": "NVIDIA Corporation",
-    "BTC-USDT": "Bitcoin USD",
-    "ETH-USDT": "Ethereum USD",
-    "UNI7083-USD": "Uniswap USD",
-    "THYAO.IS": "Türk Hava Yolları",
-    "EREGL.IS": "Ereğli Demir Çelik",
-    "GARAN.IS": "Garanti BBVA",
-    "KCHOL.IS": "Koç Holding",
-    "AKBNK.IS": "Akbank",
-    "ASELS.IS": "Aselsan",
-    "TUPRS.IS": "Tüpraş",
-    "SISE.IS": "Şişecam",
-    "TCELL.IS": "Turkcell",
-    "BIMAS.IS": "BİM Birleşik Mağazalar"
-}
-
-def fetch_binance_data(binance_symbol: str, interval: str) -> pd.DataFrame:
-    """
-    Fetches historical kline/candlestick data from Binance public API.
-    Paginates twice to retrieve up to 2000 candles for robust LSTM training.
-    """
-    bin_interval = interval
-    limit = 1000
-    url = "https://api.binance.com/api/v3/klines"
-    
-    all_klines = []
-    end_time = None
-    
-    for _ in range(2):
-        params = {
-            "symbol": binance_symbol,
-            "interval": bin_interval,
-            "limit": limit
-        }
-        if end_time:
-            params["endTime"] = end_time - 1
-            
-        r = requests.get(url, params=params, timeout=10)
-        if r.status_code != 200:
-            break
-        klines = r.json()
-        if not klines:
-            break
-        all_klines = klines + all_klines
-        end_time = klines[0][0]
-        if len(klines) < limit:
-            break
-            
-    if not all_klines:
-        raise ValueError(f"No data returned from Binance for {binance_symbol}")
-        
-    dates = [datetime.datetime.fromtimestamp(k[0] / 1000, datetime.timezone.utc).replace(tzinfo=None) for k in all_klines]
-    df = pd.DataFrame({
-        "Open": [float(k[1]) for k in all_klines],
-        "High": [float(k[2]) for k in all_klines],
-        "Low": [float(k[3]) for k in all_klines],
-        "Close": [float(k[4]) for k in all_klines],
-        "Volume": [float(k[5]) for k in all_klines]
-    }, index=dates)
-    df.index.name = "Date"
-    return df
-
-def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, str, bool, Optional[float]]:
-    """
-    Downloads historical market data from Binance (for crypto) or Yahoo Finance API,
-    resamples hourly to 4-hour if requested, computes indicators, and returns a DataFrame.
-    """
-    is_crypto = symbol.endswith("-USD")
-    df = None
-    current_price = None
-    meta = None
-    
-    if is_crypto:
-        binance_symbol = symbol.replace("-USD", "USDT")
-        df = fetch_binance_data(binance_symbol, interval)
-        if not df.empty:
-            current_price = float(df["Close"].iloc[-1])
-    else:
-        if interval == "15m":
-            range_param = "60d"
-            api_interval = "15m"
-        elif interval == "1h":
-            range_param = "365d"
-            api_interval = "1h"
-        elif interval == "4h":
-            range_param = "365d"
-            api_interval = "1h"  # Resample from hourly
-        elif interval == "1d":
-            range_param = "5y"
-            api_interval = "1d"
-        else:
-            raise ValueError(f"Unsupported interval: {interval}")
-
-        url = f"https://query2.finance.yahoo.com/v8/finance/chart/{symbol}?range={range_param}&interval={api_interval}"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
-        
-        try:
-            r = requests.get(url, headers=headers, timeout=15)
-            if r.status_code != 200:
-                raise ValueError(f"Failed to fetch data from Yahoo Finance: {r.status_code}")
-                
-            data = r.json()
-            result = data["chart"]["result"][0]
-            timestamps = result.get("timestamp", [])
-            quote = result["indicators"]["quote"][0]
-            meta = result.get("meta", {})
-            current_price = meta.get("regularMarketPrice")
-            
-            if not timestamps:
-                raise ValueError(f"No historical data returned for symbol: {symbol}")
-                
-            dates = [datetime.datetime.fromtimestamp(ts) for ts in timestamps]
-            df = pd.DataFrame({
-                "Open": quote["open"],
-                "High": quote["high"],
-                "Low": quote["low"],
-                "Close": quote["close"],
-                "Volume": quote["volume"]
-            }, index=dates)
-            df.index.name = "Date"
-            # Safely fill missing volume with 0
-            df["Volume"] = df["Volume"].fillna(0)
-            # Drop rows where core price information is missing
-            df = df.dropna(subset=["Open", "High", "Low", "Close"])
-        except Exception as e:
-            raise ValueError(f"No historical data found or failed to parse for symbol: {symbol}. Error: {e}")
-            
-    if df.empty:
-        raise ValueError(f"No historical data found for symbol: {symbol}")
-
-    # Resample to 4H if interval is 4h
-    if interval == "4h":
-        df = df.resample("4h").agg({
-            "Open": "first",
-            "High": "max",
-            "Low": "min",
-            "Close": "last",
-            "Volume": "sum"
-        }).dropna()
-        
-    # Get asset name from dictionary, fallback to meta or symbol
-    asset_name = TICKER_NAMES.get(symbol)
-    if not asset_name:
-        asset_name = symbol
-        
-    meta_dict = meta if meta is not None else {}
-    is_crypto = symbol.endswith("-USD") or meta_dict.get("instrumentType") == "CRYPTOCURRENCY"
-    
-    # For daily data, exclude today's incomplete candle if market is active
-    if interval == "1d":
-        last_row_date_str = df.index[-1].strftime("%Y-%m-%d")
-        now_utc = datetime.datetime.utcnow()
-        current_hour_utc = now_utc.hour
-        
-        if is_crypto:
-            today_str = now_utc.strftime("%Y-%m-%d")
-            # Close at 00:00 UTC. If before 23:00 UTC, exclude active daily candle.
-            close_hour_utc = 23
-        elif symbol.endswith(".IS"):
-            # BIST: Turkey is UTC+3
-            today_trt = (now_utc + datetime.timedelta(hours=3)).date()
-            today_str = today_trt.strftime("%Y-%m-%d")
-            # Close at 15:00 UTC (18:00 TRT). If before 15:00 UTC, exclude active daily candle.
-            close_hour_utc = 15
-        else:
-            # US Markets: Eastern time is UTC-4 (approximate DST, safe for daily rollover checks)
-            today_est = (now_utc - datetime.timedelta(hours=4)).date()
-            today_str = today_est.strftime("%Y-%m-%d")
-            # Close at 20:00 UTC (16:00 EST). If before 20:00 UTC, exclude active daily candle.
-            close_hour_utc = 20
-            
-        if last_row_date_str == today_str:
-            if current_hour_utc < close_hour_utc:
-                df = df.iloc[:-1]
-        
-    # Calculate indicators
-    df["RSI"] = calculate_rsi(df["Close"])
-    macd_line, signal_line, macd_hist = calculate_macd(df["Close"])
-    df["MACD"] = macd_line
-    df["MACD_Signal"] = signal_line
-    df["MACD_Hist"] = macd_hist
-    
-    # Bollinger Bands
-    sma_20 = df["Close"].rolling(window=20).mean()
-    std_20 = df["Close"].rolling(window=20).std()
-    df["BB_Upper"] = sma_20 + 2 * std_20
-    df["BB_Lower"] = sma_20 - 2 * std_20
-    
-    # EMAs
-    df["EMA_20"] = df["Close"].ewm(span=20, adjust=False).mean()
-    df["EMA_50"] = df["Close"].ewm(span=50, adjust=False).mean()
-    
-    # New Indicators
-    df["ATR"] = calculate_atr(df["High"], df["Low"], df["Close"])
-    df["BB_Width"] = (df["BB_Upper"] - df["BB_Lower"]) / (df["Close"] + 1e-10)
-    df["Daily_Return"] = df["Close"].pct_change()
-    df["Return_3"] = df["Close"].pct_change(3)
-    df["Return_7"] = df["Close"].pct_change(7)
-    df["Volume_Change"] = df["Volume"].pct_change().fillna(0)
-
-    
-    # Replace all infinite values (inf, -inf) with NaN
-    df = df.replace([np.inf, -np.inf], np.nan)
-    
-    # Drop rows with NaN values resulting from indicators
-    df = df.dropna(subset=FEATURES)
-    
-    return df, asset_name, is_crypto, current_price
-
-def prepare_lstm_data(
-    df: pd.DataFrame, 
-    seq_length: int, 
-    scaler_x: Optional[MinMaxScaler] = None, 
-    scaler_y: Optional[MinMaxScaler] = None
-) -> Tuple[np.ndarray, np.ndarray, MinMaxScaler, MinMaxScaler]:
-    """
-    Scales the data and creates sequences for LSTM training.
-    Features: RSI, MACD, MACD_Signal, MACD_Hist, Open, Close, Volume, High, Low, BB_Upper, BB_Lower, BB_Width, EMA_20, EMA_50, ATR, Daily_Return
-    Target: Daily_Return
-    """
-    features = FEATURES
-    feature_data = df[features].values
-    target_data = df[["Daily_Return"]].values
-    
-    # Normalize features and target separately
-    if scaler_x is None:
-        scaler_x = MinMaxScaler(feature_range=(0, 1))
-        scaled_x = scaler_x.fit_transform(feature_data)
-    else:
-        scaled_x = scaler_x.transform(feature_data)
-        
-    if scaler_y is None:
-        scaler_y = MinMaxScaler(feature_range=(0, 1))
-        scaled_y = scaler_y.fit_transform(target_data)
-    else:
-        scaled_y = scaler_y.transform(target_data)
-    
-    x_seq, y_val = [], []
-    for i in range(seq_length, len(scaled_x)):
-        x_seq.append(scaled_x[i-seq_length:i])
-        y_val.append(scaled_y[i])
-        
-    return np.array(x_seq), np.array(y_val), scaler_x, scaler_y
-
-def train_lstm_model(x_train: np.ndarray, y_train: np.ndarray, seq_length: int, use_early_stopping: bool = False) -> tf.keras.Model:
-    """Creates and trains an LSTM model with Dropout regularization."""
-    model = tf.keras.Sequential([
-        tf.keras.layers.Input(shape=(seq_length, len(FEATURES))),
-        tf.keras.layers.LSTM(units=50, return_sequences=False),
-        tf.keras.layers.Dropout(0.2),
-        tf.keras.layers.Dense(units=25, activation="relu"),
-        tf.keras.layers.Dense(units=1)
-    ])
-    
-    model.compile(optimizer="adam", loss="mean_squared_error")
-    
-    callbacks = []
-    if use_early_stopping:
-        callbacks.append(tf.keras.callbacks.EarlyStopping(
-            monitor="val_loss",
-            patience=7,
-            restore_best_weights=True
-        ))
-        validation_split = 0.1
-        epochs = 80
-    else:
-        validation_split = 0.0
-        epochs = 30
-        
-    model.fit(
-        x_train, 
-        y_train, 
-        epochs=epochs, 
-        batch_size=32, 
-        validation_split=validation_split, 
-        callbacks=callbacks, 
-        verbose=0
-    )
-    return model
-
-def evaluate_model_performance(
-    model: tf.keras.Model, 
-    x_test: np.ndarray, 
-    y_test: np.ndarray, 
-    scaler_y: MinMaxScaler, 
-    df_test: pd.DataFrame,
-    seq_length: int
+def get_prediction(
+    symbol: str, 
+    interval: str = "1d", 
+    seq_length: int = DEFAULT_SEQUENCE_LENGTH, 
+    lang: str = "en", 
+    force_retrain: bool = False, 
+    model_type: str = "xgboost", 
+    is_daemon: bool = False
 ) -> Dict[str, Any]:
-    """
-    Evaluates LSTM predictions on a test set.
-    Computes RMSE, MAPE, and Directional Accuracy.
-    """
-    if len(x_test) == 0:
-        return {"rmse": 0.0, "mape": 0.0, "directional_accuracy": 0.0}
-        
-    scaled_preds = model.predict(x_test, verbose=0)
-    preds_returns = scaler_y.inverse_transform(scaled_preds).flatten()
-    actual_returns = scaler_y.inverse_transform(y_test).flatten()
-    
-    # Reconstruct absolute close prices from return predictions
-    actual_prices = df_test["Close"].values[seq_length:]
-    prev_prices = df_test["Close"].values[seq_length-1:-1]
-    
-    preds = prev_prices * (1 + preds_returns)
-    actuals = actual_prices
-    
-    # Calculate RMSE
-    rmse = np.sqrt(np.mean((actuals - preds) ** 2))
-    
-    # Calculate MAPE
-    mape = np.mean(np.abs((actuals - preds) / (actuals + 1e-10))) * 100
-    
-    # Calculate Directional Accuracy using returns directly
-    correct_directions = 0
-    total_comparisons = len(preds_returns)
-    
-    for i in range(total_comparisons):
-        actual_up = actual_returns[i] > 0
-        pred_up = preds_returns[i] > 0
-        if actual_up == pred_up:
-            correct_directions += 1
-            
-    dir_acc = (correct_directions / total_comparisons * 100) if total_comparisons > 0 else 50.0
-    
-    return {
-        "rmse": float(rmse),
-        "mape": float(mape),
-        "directional_accuracy": float(dir_acc)
-    }
-
-def evaluate_xgb_performance(
-    model: xgb.XGBRegressor, 
-    x_test: np.ndarray, 
-    df_test: pd.DataFrame,
-    seq_length: int
-) -> Dict[str, Any]:
-    """
-    Evaluates XGBoost predictions on a test set.
-    Computes RMSE, MAPE, and Directional Accuracy.
-    """
-    if len(x_test) == 0:
-        return {"rmse": 0.0, "mape": 0.0, "directional_accuracy": 0.0}
-        
-    preds_returns = model.predict(x_test).flatten()
-    actual_prices = df_test["Close"].values[seq_length:]
-    prev_prices = df_test["Close"].values[seq_length-1:-1]
-    actual_returns = df_test["Daily_Return"].values[seq_length:]
-    
-    preds = prev_prices * (1 + preds_returns)
-    actuals = actual_prices
-    
-    rmse = np.sqrt(np.mean((actuals - preds) ** 2))
-    mape = np.mean(np.abs((actuals - preds) / (actuals + 1e-10))) * 100
-    
-    correct_directions = 0
-    total_comparisons = len(preds_returns)
-    
-    for i in range(total_comparisons):
-        actual_up = actual_returns[i] > 0
-        pred_up = preds_returns[i] > 0
-        if actual_up == pred_up:
-            correct_directions += 1
-            
-    dir_acc = (correct_directions / total_comparisons * 100) if total_comparisons > 0 else 50.0
-    
-    return {
-        "rmse": float(rmse),
-        "mape": float(mape),
-        "directional_accuracy": float(dir_acc)
-    }
-
-def get_fundamental_analysis(symbol: str, name: str, lang: str = "en") -> Dict[str, Any]:
-    """
-    Searches the web for recent news regarding the asset, computes headline sentiment,
-    and returns a recommendation and list of articles.
-    """
-    # Use name (e.g. Bitcoin) for search, fallback to symbol
-    search_query = name if name else symbol
-    
-    # Clean up generic suffixes to make the search query more relevant
-    search_query = search_query.replace(" USD", "").replace(" Inc.", "").replace(" Corporation", "").replace(" Futures", "")
-    
-    url = f"https://query2.finance.yahoo.com/v1/finance/search?q={search_query}&newsCount=6"
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
-    
-    articles = []
-    sentiment_score = 0.0
-    sentiment_class = "Neutral"
-    
-    recommendation = "No recent fundamental news articles could be analyzed for this asset."
-    if lang == "tr":
-        recommendation = "Bu varlık için yakın zamanda yayınlanmış temel analiz haber makalesi analiz edilemedi."
-    elif lang == "de":
-        recommendation = "Für diesen Vermögenswert konnten keine aktuellen fundamentalen Nachrichtenartikel analysiert werden."
-    elif lang == "ru":
-        recommendation = "Не удалось проанализировать недавние фундаментальные новости для этого актива."
-    elif lang == "zh":
-        recommendation = "无法分析该资产的近期基本面新闻文章。"
-    elif lang == "es":
-        recommendation = "No se pudieron analizar artículos de noticias fundamentales recientes para este activo."
-    
-    try:
-        r = requests.get(url, headers=headers, timeout=10)
-        if r.status_code == 200:
-            data = r.json()
-            raw_news = data.get("news", [])
-            
-            # Simple financial sentiment dictionary
-            pos_words = {
-                "surge", "bullish", "growth", "rise", "gain", "profit", "upbeat", "upgrade", 
-                "outperform", "soar", "rally", "boost", "positive", "high", "buy", "jump", 
-                "climb", "higher", "strong", "recovery", "success", "optimistic", "green", 
-                "breakout", "alliance", "partner", "acquire", "expanded", "soaring"
-            }
-            neg_words = {
-                "plunge", "bearish", "decline", "fall", "loss", "drop", "downbeat", "downgrade", 
-                "underperform", "plummet", "crash", "slump", "negative", "low", "sell", "sink", 
-                "slide", "lower", "weak", "panic", "failure", "pessimistic", "red", "breakdown", 
-                "worry", "concern", "fear", "lawsuit", "dispute", "investigation", "chilling"
-            }
-            
-            total_score = 0.0
-            valid_articles = 0
-            
-            for item in raw_news:
-                title = item.get("title")
-                publisher = item.get("publisher")
-                link = item.get("link")
-                if not title or not link:
-                    continue
-                    
-                # Clean title for sentiment check
-                clean_title = title.lower()
-                # Remove common punctuation
-                for char in [".", ",", "!", "?", "'", "\"", ":", ";", "(", ")", "-", "_", "$", "%"]:
-                    clean_title = clean_title.replace(char, " ")
-                
-                words = clean_title.split()
-                pos_count = sum(1 for w in words if w in pos_words)
-                neg_count = sum(1 for w in words if w in neg_words)
-                
-                # Single headline score
-                denom = pos_count + neg_count
-                art_score = (pos_count - neg_count) / denom if denom > 0 else 0.0
-                
-                # Determine article sentiment
-                if art_score > 0.0:
-                    art_sentiment = "Bullish"
-                elif art_score < 0.0:
-                    art_sentiment = "Bearish"
-                else:
-                    art_sentiment = "Neutral"
-                    
-                articles.append({
-                    "title": title,
-                    "publisher": publisher if publisher else "Web News",
-                    "link": link,
-                    "sentiment": art_sentiment
-                })
-                
-                total_score += art_score
-                valid_articles += 1
-                
-            if valid_articles > 0:
-                sentiment_score = total_score / valid_articles
-                
-            # Classify overall sentiment and construct localized recommendations
-            if sentiment_score > 0.12:
-                sentiment_class = "Bullish"
-                if lang == "tr":
-                    recommendation = (
-                        f"Son haber kapsamına göre {search_query} için temel analiz olumlu piyasa duyarlılığı gösteriyor. "
-                        f"Olumlu etkenler, kazanç raporları veya piyasa ortaklıkları kısa vadeli olumlu bir görünüme işaret ediyor. "
-                        f"Genellikle alım yapmak veya pozisyonları korumak önerilir."
-                    )
-                elif lang == "de":
-                    recommendation = (
-                        f"Die Fundamentalanalyse zeigt auf Basis der jüngsten Berichterstattung eine positive Marktstimmung für {search_query}. "
-                        f"Positive Treiber, Gewinnberichte oder Marktallianzen deuten auf einen günstigen kurzfristigen Ausblick hin. "
-                        f"Kauf oder Halten von Positionen wird generell empfohlen."
-                    )
-                elif lang == "ru":
-                    recommendation = (
-                        f"Фундаментальный анализ выявляет позитивные рыночные настроения для {search_query} на основе недавних новостей. "
-                        f"Положительные драйверы, отчеты о доходах или рыночные альянсы указывают на благоприятный краткосрочный прогноз. "
-                        f"Обычно рекомендуется покупать или удерживать позиции."
-                    )
-                elif lang == "zh":
-                    recommendation = (
-                        f"基于近期新闻报道，{search_query} 的基本面分析显示出积极的市场情绪。利好驱动因素、财报业绩或市场合作预示着短期前景良好。一般建议买入或持有仓位。"
-                    )
-                elif lang == "es":
-                    recommendation = (
-                        f"El análisis fundamental revela un sentimiento de mercado positivo para {search_query} según la cobertura de noticias reciente. "
-                        f"Los factores impulsores positivos, los informes de ganancias o las alianzas de mercado sugieren una perspectiva favorable a corto plazo. "
-                        f"Generalmente se recomienda comprar o mantener posiciones."
-                    )
-                else:
-                    recommendation = (
-                        f"Fundamental analysis reveals positive market sentiment for {search_query} "
-                        f"based on recent news coverage. Positive drivers, earnings reports, or market "
-                        f"alliances suggest a favorable short-term outlook. Buying or holding positions "
-                        f"is generally recommended."
-                    )
-            elif sentiment_score < -0.12:
-                sentiment_class = "Bearish"
-                if lang == "tr":
-                    recommendation = (
-                        f"Son olumsuz haber başlıkları nedeniyle {search_query} için temel analiz olumsuz duyarlılığa işaret ediyor. "
-                        f"Olası düzenleyici endişeler, satışlar veya sektördeki düşüş trendleri temkinli olmayı gerektiriyor. "
-                        f"Alım yapılması önerilmez; zarar durdurma seviyelerini daraltmayı veya maruziyeti azaltmayı düşünebilirsiniz."
-                    )
-                elif lang == "de":
-                    recommendation = (
-                        f"Die Fundamentalanalyse deutet aufgrund jüngster negativer Schlagzeilen auf eine negative Stimmung für {search_query} hin. "
-                        f"Potenzielle regulatorische Bedenken, Ausverkäufe oder Abwärtstrends im Sektor mahnen zur Vorsicht. "
-                        f"Ein Nachkauf wird nicht empfohlen; erwägen Sie die Verengung von Stop-Loss-Marken oder die Reduzierung des Risikos."
-                    )
-                elif lang == "ru":
-                    recommendation = (
-                        f"Фундаментальный анализ указывает на негативные настроения по {search_query} из-за недавних неблагоприятных новостей. "
-                        f"Возможные регуляторные проблемы, распродажи или нисходящие тренды в секторе призывают к осторожности. "
-                        f"Накапливать актив не рекомендуется; подумайте о подтягивании стоп-лоссов или снижении рисков."
-                    )
-                elif lang == "zh":
-                    recommendation = (
-                        f"由于近期负面新闻，{search_query} 的基本面分析显示出消极情绪。潜在的监管担忧、抛售或行业下行趋势提示需要保持谨慎。不建议加仓；可考虑收紧止损或降低风险敞口。"
-                    )
-                elif lang == "es":
-                    recommendation = (
-                        f"El análisis fundamental indica un sentimiento negativo para {search_query} debido a los titulares de noticias adversos recientes. "
-                        f"Las posibles preocupaciones regulatorias, las liquidaciones o las tendencias bajistas en el sector aconsejan precaución. "
-                        f"No se recomienda acumular; considere ajustar los stop-loss o reducir la exposición."
-                    )
-                else:
-                    recommendation = (
-                        f"Fundamental analysis indicates negative sentiment for {search_query} "
-                        f"due to recent adverse news headlines. Potential regulatory concerns, selloffs, "
-                        f"or downtrends in the sector advise caution. Accumulating is not recommended; "
-                        f"consider tightening stop-losses or reducing exposure."
-                    )
-            else:
-                sentiment_class = "Neutral"
-                if lang == "tr":
-                    recommendation = (
-                        f"{search_query} için temel haber göstergeleri şu anda dengeli veya nötr durumda. "
-                        f"Haber başlıkları olumlu ve temkinli göstergelerin bir karışımını sunuyor. "
-                        f"Ticaret kararları için bir 'Bekle' stratejisi veya bunun teknik göstergelerle birleştirilmesi önerilir."
-                    )
-                elif lang == "de":
-                    recommendation = (
-                        f"Die fundamentalen Nachrichtenindikatoren sind für {search_query} derzeit ausgeglichen oder neutral. "
-                        f"Die Schlagzeilen präsentieren eine Mischung aus positiven und vorsichtigen Kennzahlen. "
-                        f"Für Handelsentscheidungen wird eine 'Halten'-Strategie oder die Kombination mit technischen Indikatoren empfohlen."
-                    )
-                elif lang == "ru":
-                    recommendation = (
-                        f"Фундаментальные новостные индикаторы по {search_query} в настоящее время сбалансированы или нейтральны. "
-                        f"Заголовки новостей представляют собой смесь положительных и осторожных показателей. "
-                        f"Для торговых решений рекомендуется стратегия 'Удерживать' или сочетание этого с техническими индикаторами."
-                    )
-                elif lang == "zh":
-                    recommendation = (
-                        f"目前 {search_query} 的基本面新闻指标处于均衡或中性状态。新闻头条呈现出利好与谨慎指标的交织。建议采取“观望/持有”策略，或结合技术指标进行交易决策。"
-                    )
-                elif lang == "es":
-                    recommendation = (
-                        f"Los indicadores de noticias fundamentales son actualmente equilibrados o neutrales para {search_query}. "
-                        f"Los titulares de las noticias presentan una mezcla de métricas positivas y cautelosas. "
-                        f"Se aconseja una estrategia de 'Mantener' o combinar esto con indicadores técnicos para las decisiones operativas."
-                    )
-                else:
-                    recommendation = (
-                        f"Fundamental news indicators are currently balanced or neutral for {search_query}. "
-                        f"The news headlines present a mix of positive and cautious metrics. A 'Hold' "
-                        f"strategy or combining this with technical indicators is advised for trading decisions."
-                    )
-    except Exception as e:
-        print(f"Error fetching news for fundamental analysis: {e}")
-        
-    return {
-        "sentiment_score": sentiment_score,
-        "sentiment_class": sentiment_class,
-        "recommendation": recommendation,
-        "articles": articles
-    }
-
-def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_SEQUENCE_LENGTH, lang: str = "en", force_retrain: bool = False, model_type: str = "xgboost", is_daemon: bool = False) -> Dict[str, Any]:
     """
     Main function to coordinate market data retrieval, model loading/training,
     and predicting the next close price for a specific interval (15m, 1h, 4h, 1d).
@@ -736,7 +110,6 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
                 
                 if os.path.exists(meta_path):
                     try:
-                        import json
                         with open(meta_path, "r", encoding="utf-8") as f:
                             meta_data = json.load(f)
                         last_trained_str = meta_data.get("last_candle_start")
@@ -794,7 +167,6 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
                     training_status = f"Trained XGBoost model on 80% train data ({interval} timeframe)"
                     
                     try:
-                        import json
                         meta_path = cache_path.replace(".json", "_meta.json")
                         last_candle_start = df.index[-1]
                         with open(meta_path, "w", encoding="utf-8") as f:
@@ -831,7 +203,6 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
 
                 if os.path.exists(meta_path):
                     try:
-                        import json
                         with open(meta_path, "r", encoding="utf-8") as f:
                             meta_data = json.load(f)
                         
@@ -883,7 +254,6 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
 
                     # Save model metadata containing the start time of the last completed candle
                     try:
-                        import json
                         meta_path = cache_path.replace(".keras", "_meta.json")
                         last_candle_start = df.index[-1]
                         with open(meta_path, "w", encoding="utf-8") as f:
@@ -905,7 +275,6 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
             scaled_pred = model.predict(input_seq, verbose=0)
             predicted_return = float(scaler_y_train.inverse_transform(scaled_pred)[0][0])
 
-
         metrics["training_status"] = training_status
 
         # Sanity check: limit predicted daily return to realistic bounds to filter out data outliers
@@ -924,7 +293,6 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         # Reconstruct predicted absolute price
         predicted_close = last_close * (1 + predicted_return)
 
-    
     # Calculate expected close time of the predicted candle using UTC explicitly
     if interval == "1d":
         last_date_str = last_row.name.strftime("%Y-%m-%d")
@@ -1142,63 +510,6 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         "model_type": model_type
     }
 
-def fetch_interval_history(symbol: str, interval: str) -> List[Dict[str, Any]]:
-    """
-    Downloads historical data from Yahoo Finance for a specific interval,
-    calculates all technical indicators, and returns formatted history points.
-    """
-    df, asset_name, is_crypto, current_price = fetch_market_data(symbol, interval=interval)
-    
-    # Calculate indicators
-    df["RSI"] = calculate_rsi(df["Close"])
-    macd_line, signal_line, macd_hist = calculate_macd(df["Close"])
-    df["MACD"] = macd_line
-    df["MACD_Signal"] = signal_line
-    df["MACD_Hist"] = macd_hist
-    
-    sma_20 = df["Close"].rolling(window=20).mean()
-    std_20 = df["Close"].rolling(window=20).std()
-    df["BB_Upper"] = sma_20 + 2 * std_20
-    df["BB_Lower"] = sma_20 - 2 * std_20
-    
-    df["EMA_20"] = df["Close"].ewm(span=20, adjust=False).mean()
-    df["EMA_50"] = df["Close"].ewm(span=50, adjust=False).mean()
-    
-    df = df.dropna(subset=[
-        "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
-        "BB_Upper", "BB_Lower", "EMA_20", "EMA_50"
-    ])
-    
-    chart_limit = 730
-    df = df.tail(chart_limit)
-    
-    history_list = []
-    for idx, row in df.iterrows():
-        if interval == "1d":
-            date_str = idx.strftime("%Y-%m-%d")
-        else:
-            date_str = idx.strftime("%Y-%m-%d %H:%M")
-            
-        history_list.append({
-            "date": date_str,
-            "open": float(row["Open"]),
-            "close": float(row["Close"]),
-            "volume": float(row["Volume"]),
-            "high": float(row["High"]),
-            "low": float(row["Low"]),
-            "rsi": float(row["RSI"]),
-            "macd": float(row["MACD"]),
-            "macd_signal": float(row["MACD_Signal"]),
-            "macd_hist": float(row["MACD_Hist"]),
-            "bb_upper": float(row["BB_Upper"]),
-            "bb_lower": float(row["BB_Lower"]),
-            "ema_20": float(row["EMA_20"]),
-            "ema_50": float(row["EMA_50"]),
-        })
-        
-    return history_list
-
-
 def update_screener_cache(symbol: str, db) -> None:
     """Computes and updates the MarketScreener entry for a given symbol."""
     from backend.models import MarketScreener, PredictionLog
@@ -1214,8 +525,8 @@ def update_screener_cache(symbol: str, db) -> None:
             .first()
         )
         
-        # 2. Fetch history to compute price, RSI, MACD
-        df, _, _, _ = fetch_market_data(symbol_upper, interval="1d")
+        # 2. Get the latest daily market data for technical indicators
+        df, name, _, _ = fetch_market_data(symbol_upper, interval="1d")
         if df.empty:
             return
             
@@ -1255,80 +566,3 @@ def update_screener_cache(symbol: str, db) -> None:
         db.commit()
     except Exception as e:
         print(f"Error updating screener cache for {symbol}: {e}")
-
-
-def analyze_text_sentiment(title: str, summary: str = "") -> float:
-    """
-    Calculates a sentiment score between -1.0 (very bearish) and 1.0 (very bullish)
-    using key financial sentiment words.
-    """
-    pos_words = {
-        "bullish", "growth", "high", "gain", "breakout", "surpass", "profit", 
-        "positive", "strong", "rise", "soar", "rally", "jump", "buy", "upward",
-        "boğa", "yükseliş", "artış", "kâr", "güçlü", "rekor", "al", "kazanç", "pozitif"
-    }
-    neg_words = {
-        "bearish", "fall", "drop", "loss", "crash", "negative", "weak", "down", 
-        "decline", "slide", "plummet", "slump", "sell", "downward", "worry",
-        "ayı", "düşüş", "kayıp", "zayıf", "düşük", "sat", "korku", "risk", "negatif"
-    }
-    
-    score = 0.0
-    text = (title + " " + summary).lower()
-    
-    pos_count = sum(1 for w in pos_words if w in text)
-    neg_count = sum(1 for w in neg_words if w in text)
-    
-    total = pos_count + neg_count
-    if total > 0:
-        score = (pos_count - neg_count) / total
-    return score
-
-
-def fetch_symbol_news(symbol: str) -> List[Dict[str, Any]]:
-    """
-    Queries Yahoo Finance Search API to retrieve news articles for the symbol,
-    and runs NLP sentiment analysis on each article.
-    """
-    symbol_upper = symbol.upper().strip()
-    url = f"https://query2.finance.yahoo.com/v1/finance/search?q={symbol_upper}"
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
-    
-    articles = []
-    try:
-        r = requests.get(url, headers=headers, timeout=10)
-        if r.status_code == 200:
-            data = r.json()
-            raw_news = data.get("news", [])
-            for item in raw_news:
-                title = item.get("title", "")
-                publisher = item.get("publisher", "Yahoo Finance")
-                link = item.get("link", "")
-                pub_time = item.get("providerPublishTime", 0)
-                
-                # Perform sentiment analysis
-                score = analyze_text_sentiment(title)
-                
-                # Determine rating text and color badge
-                if score >= 0.1:
-                    rating = "BULLISH"
-                elif score <= -0.1:
-                    rating = "BEARISH"
-                else:
-                    rating = "NEUTRAL"
-                    
-                articles.append({
-                    "title": title,
-                    "publisher": publisher,
-                    "link": link,
-                    "time": pub_time,
-                    "score": score,
-                    "rating": rating
-                })
-    except Exception as e:
-        print(f"Error fetching news for {symbol}: {e}")
-        
-    return articles
-
