@@ -1,0 +1,25 @@
+Line 543:     if (chartInterval === "4h") return "Next 4 Hours Predicted Close";
+Line 544:     return t("prediction_header");
+Line 545:   };
+Line 546: 
+Line 547:   // Refs for Charts
+Line 548:   const priceChartRef = useRef(null);
+Line 549:   const rsiChartRef = useRef(null);
+Line 550:   const macdChartRef = useRef(null);
+Line 551:   const priceChartInst = useRef(null);
+Line 552:   const rsiChartInst = useRef(null);
+Line 553:   const macdChartInst = useRef(null);
+Line 554: 
+Line 555:   // 1. Check for token on mount
+Line 556:   useEffect(() => {
+Line 557:     const savedToken = localStorage.getItem("token");
+Line 558:     if (savedToken) {
+Line 559:       setToken(savedToken);
+Line 560:       fetchWatchlist(savedToken);
+Line 561:       fetchCurrentUser(savedToken);
+Line 562:     }
+Line 563:   }, []);
+Line 564: 
+Line 565:   // Clear chart tooltips on outside clicks/touches
+Line 566:   useEffect(() => {
+Line 567:     const handleOutsideClick = (e) => {
