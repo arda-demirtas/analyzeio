@@ -30,6 +30,7 @@ try:
     print("LSTM metrics:", res_eth.get("lstm_metrics"))
     print("Linear Regression prediction:", res_eth.get("lr_predicted_close"))
     print("Linear Regression metrics:", res_eth.get("lr_metrics"))
+    print("Technical Recommendation:", res_eth.get("technical_recommendation"))
 except Exception as e:
     print('Direct call failed:', e)
 """
