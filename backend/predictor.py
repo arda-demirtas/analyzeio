@@ -187,10 +187,17 @@ def get_prediction(
             
         else:
             # --- LSTM Model Flow ---
-            # Fit scalers ONLY on train data — test data must never influence the scaler
-            x_train, y_train, scaler_x_train, scaler_y_train = prepare_lstm_data(df_train, seq_length)
-            # Scale test data using the train scalers (no fit, only transform — no data leakage)
-            x_test, y_test, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x_train, scaler_y_train)
+            # Split train data into sub-train (85%) and validation (15%) for chronological early stopping
+            val_split = int(len(df_train) * 0.85)
+            df_train_sub = df_train.iloc[:val_split]
+            df_val = df_train.iloc[val_split - seq_length:]
+
+            # Fit scalers ONLY on train_sub data — validation & test data must never influence the scalers
+            x_lstm_train, y_lstm_train, scaler_x_train, scaler_y_train = prepare_lstm_data(df_train_sub, seq_length)
+            
+            # Scale validation and test data using the train_sub scalers (no data leakage!)
+            x_lstm_val, y_lstm_val, _, _ = prepare_lstm_data(df_val, seq_length, scaler_x_train, scaler_y_train)
+            x_lstm_test, y_lstm_test, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x_train, scaler_y_train)
 
             # Check if cached model exists for this specific interval
             cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.keras")
@@ -242,11 +249,11 @@ def get_prediction(
                     if not model_loaded:
                         raise ValueError(f"LSTM Model for {symbol} is currently being initialized/trained on the server. Please try again in a few minutes.")
                 else:
-                    # Train model ONLY on the 80% train split — test data is never used for training
-                    model = train_lstm_model(x_train, y_train, seq_length, use_early_stopping=True)
+                    # Train model ONLY on the train_sub split with explicit validation_data (no data leakage)
+                    model = train_lstm_model(x_lstm_train, y_lstm_train, seq_length, validation_data=(x_lstm_val, y_lstm_val))
 
                     # Evaluate on the held-out 20% test data (out-of-sample, read-only — no fine-tuning)
-                    metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
+                    metrics = evaluate_model_performance(model, x_lstm_test, y_lstm_test, scaler_y_train, df_test, seq_length)
 
                     # Save the model trained purely on train data
                     model.save(cache_path)
@@ -265,8 +272,8 @@ def get_prediction(
 
             # If the model was loaded (either cache hit or stale fallback), run evaluation on test set
             if model_loaded:
-                # Evaluate using train scalers (consistent with how the model was originally trained)
-                metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
+                # Evaluate using train_sub scalers (consistent with how the model was originally trained)
+                metrics = evaluate_model_performance(model, x_lstm_test, y_lstm_test, scaler_y_train, df_test, seq_length)
 
             # Predict the next close price using the last seq_length candles
             last_features = df[FEATURES].iloc[-seq_length:].values
