@@ -38,7 +38,7 @@ def check_and_train_assets(symbols_to_train=None):
     for idx, symbol in enumerate(symbols):
         try:
             print(f"[{idx+1}/{len(symbols)}] Training/Updating cache for {symbol} (1d)...")
-            res = get_prediction(symbol, interval="1d", force_retrain=False)
+            res = get_prediction(symbol, interval="1d", force_retrain=False, is_daemon=True)
             
             # Check if prediction is pending due to data lag
             if res.get("prediction_status") == "pending_data":
