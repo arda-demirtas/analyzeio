@@ -112,6 +112,7 @@ class PredictionResponse(BaseModel):
     prediction_status: Optional[str] = None
     prediction_error: Optional[str] = None
     model_type: Optional[str] = None
+    lr_predicted_close: Optional[float] = None
     fundamental_analysis: Optional[FundamentalAnalysisResult] = None
     technical_recommendation: Optional[TechnicalRecommendation] = None
 
