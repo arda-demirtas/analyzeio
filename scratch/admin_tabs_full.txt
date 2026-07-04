@@ -1,0 +1,60 @@
+Line 4336:                 }}
+Line 4337:               >
+Line 4338:                 🤖 Auto-Train List ({autoTrainSymbols.length})
+Line 4339:               </button>
+Line 4340:               <button 
+Line 4341:                 onClick={() => setAdminActiveTab("models")} 
+Line 4342:                 className={adminActiveTab === "models" ? "btn-primary" : "btn-secondary"}
+Line 4343:                 style={{ 
+Line 4344:                   flex: 1, 
+Line 4345:                   background: adminActiveTab === "models" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
+Line 4346:                   border: "none",
+Line 4347:                   fontWeight: "600"
+Line 4348:                 }}
+Line 4349:               >
+Line 4350:                 🧠 Model Cache ({adminStats ? adminStats.total_cached_models : 0})
+Line 4351:               </button>
+Line 4352:             </div>
+Line 4353:             
+Line 4354:             {/* Main Content Area (Scrollable) */}
+Line 4355:             <div style={{ flex: 1, overflowY: "auto", paddingRight: "5px" }}>
+Line 4356:               {adminLoading ? (
+Line 4357:                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "50px 0", gap: "15px" }}>
+Line 4358:                   <RefreshCw className="animate-spin" style={{ color: "#f59e0b", width: "32px", height: "32px" }} />
+Line 4359:                   <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>Loading Admin Data...</span>
+Line 4360:                 </div>
+Line 4361:               ) : adminActiveTab === "users" ? (
+Line 4362:                 <div>
+Line 4363:                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+Line 4364:                     <thead>
+Line 4365:                       <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)" }}>
+Line 4366:                         <th style={{ padding: "10px" }}>ID</th>
+Line 4367:                         <th style={{ padding: "10px" }}>Username</th>
+Line 4368:                         <th style={{ padding: "10px" }}>Email</th>
+Line 4369:                         <th style={{ padding: "10px" }}>Membership</th>
+Line 4370:                         <th style={{ padding: "10px", textAlign: "right" }}>Actions</th>
+Line 4371:                       </tr>
+Line 4372:                     </thead>
+Line 4373:                     <tbody>
+Line 4374:                       {adminUsers.map(u => (
+Line 4375:                         <tr key={u.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.03)" }}>
+Line 4376:                           <td style={{ padding: "12px 10px", color: "var(--text-muted)" }}>{u.id}</td>
+Line 4377:                           <td style={{ padding: "12px 10px", fontWeight: "600" }}>{u.username}</td>
+Line 4378:                           <td style={{ padding: "12px 10px" }}>{u.email}</td>
+Line 4379:                           <td style={{ padding: "12px 10px" }}>
+Line 4380:                             {u.is_premium ? (
+Line 4381:                               <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "700" }}>
+Line 4382:                                 ★ Premium
+Line 4383:                               </span>
+Line 4384:                             ) : (
+Line 4385:                               <span style={{ background: "rgba(255, 255, 255, 0.05)", color: "var(--text-muted)", padding: "2px 8px", borderRadius: "10px", fontSize: "11px" }}>
+Line 4386:                                 Standard
+Line 4387:                               </span>
+Line 4388:                             )}
+Line 4389:                           </td>
+Line 4390:                           <td style={{ padding: "12px 10px", textAlign: "right" }}>
+Line 4391:                             <button
+Line 4392:                               onClick={() => handleAdminTogglePremium(u.id)}
+Line 4393:                               className="btn-secondary"
+Line 4394:                               style={{
+Line 4395:                                 padding: "4px 10px",
