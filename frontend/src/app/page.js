@@ -850,15 +850,18 @@ export default function Home() {
       });
     }
 
-    // Add Linear Regression Prediction Line (Always plotted if available)
-    if (predictionData && predictionData.prediction_date && predictionData.lr_predicted_close !== null && !isPendingData) {
+    // Add Linear Regression Prediction Line (boydan boya)
+    const hasLrHistory = history.some(h => h.lr_predicted_close !== null);
+    if (predictionData && (hasLrHistory || (predictionData.lr_predicted_close !== null && !isPendingData))) {
       const lrLabel = lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction";
-      const lastClosePrice = closePrices[closePrices.length - 1];
-      const lrColor = "rgba(59, 130, 246, 0.95)"; // Sleek blue for LR
+      const lrColor = "rgba(59, 130, 246, 0.9)"; // Sleek blue for LR
       
-      const lrDataPoints = Array(labels.length - 1).fill(null);
-      lrDataPoints.push(lastClosePrice);
-      lrDataPoints.push(predictionData.lr_predicted_close);
+      const lrDataPoints = history.map(h => h.lr_predicted_close);
+      if (predictionData.lr_predicted_close !== null && !isPendingData) {
+        lrDataPoints.push(predictionData.lr_predicted_close);
+      } else {
+        lrDataPoints.push(null);
+      }
       
       datasets.push({
         label: lrLabel,
@@ -867,13 +870,17 @@ export default function Home() {
         borderColor: lrColor,
         borderWidth: 2,
         borderDash: [4, 4],
-        pointRadius: 6,
-        pointHoverRadius: 8,
+        pointRadius: (ctx) => {
+          return ctx.dataIndex === lrDataPoints.length - 1 ? 6 : 0;
+        },
+        pointHoverRadius: (ctx) => {
+          return ctx.dataIndex === lrDataPoints.length - 1 ? 8 : 0;
+        },
         pointBackgroundColor: lrColor,
         pointBorderColor: "#ffffff",
         pointBorderWidth: 1.5,
         fill: false,
-        tension: 0,
+        tension: 0.1,
       });
     }
 
