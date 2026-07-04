@@ -1,0 +1,65 @@
+Line 4261:                 <input 
+Line 4262:                   type="text" 
+Line 4263:                   placeholder={lang === "tr" ? "Konu" : "Subject"}
+Line 4264:                   className="input-field"
+Line 4265:                   value={contactSubject}
+Line 4266:                   onChange={(e) => setContactSubject(e.target.value)}
+Line 4267:                   required
+Line 4268:                 />
+Line 4269:                 
+Line 4270:                 <textarea 
+Line 4271:                   placeholder={lang === "tr" ? "Mesajınız..." : "Your Message..."}
+Line 4272:                   className="input-field"
+Line 4273:                   rows="4"
+Line 4274:                   value={contactMessage}
+Line 4275:                   onChange={(e) => setContactMessage(e.target.value)}
+Line 4276:                   style={{ resize: "none" }}
+Line 4277:                   required
+Line 4278:                 />
+Line 4279:                 
+Line 4280:                 <button type="submit" className="btn-primary" style={{ marginTop: "5px" }}>
+Line 4281:                   {lang === "tr" ? "Gönder" : "Send Message"}
+Line 4282:                 </button>
+Line 4283:                 
+Line 4284:                 <div style={{ fontSize: "11px", color: "var(--text-dark)", textAlign: "center", marginTop: "5px" }}>
+Line 4285:                   {lang === "tr" ? "Doğrudan Destek: " : "Direct Support: "} 
+Line 4286:                   <a href="mailto:support@analyzeio.com" style={{ color: "var(--accent-primary)", textDecoration: "none" }}>support@analyzeio.com</a>
+Line 4287:                 </div>
+Line 4288:               </form>
+Line 4289:             )}
+Line 4290:           </div>
+Line 4291:         </div>
+Line 4292:       )}
+Line 4293: 
+Line 4294:       {/* Admin Panel Modal */}
+Line 4295:       {showAdminModal && (
+Line 4296:         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+Line 4297:           <div className="glass-panel" style={{ width: "100%", maxWidth: "800px", maxHeight: "85vh", display: "flex", flexDirection: "column", padding: "25px", overflow: "hidden" }}>
+Line 4298:             
+Line 4299:             {/* Header */}
+Line 4300:             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "15px" }}>
+Line 4301:               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+Line 4302:                 <Shield style={{ color: "#f59e0b", width: "22px", height: "22px" }} />
+Line 4303:                 <h3 style={{ fontSize: "20px", fontWeight: "700", margin: 0, color: "#f59e0b" }}>Admin Control Panel</h3>
+Line 4304:               </div>
+Line 4305:               <button 
+Line 4306:                 onClick={() => setShowAdminModal(false)} 
+Line 4307:                 className="btn-secondary" 
+Line 4308:                 style={{ minWidth: "auto", padding: "6px 12px", fontSize: "12px" }}
+Line 4309:               >
+Line 4310:                 ✕ Close
+Line 4311:               </button>
+Line 4312:             </div>
+Line 4313:             
+Line 4314:             {/* Tabs */}
+Line 4315:             <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+Line 4316:               <button 
+Line 4317:                 onClick={() => setAdminActiveTab("users")} 
+Line 4318:                 className={adminActiveTab === "users" ? "btn-primary" : "btn-secondary"}
+Line 4319:                 style={{ 
+Line 4320:                   flex: 1, 
+Line 4321:                   background: adminActiveTab === "users" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
+Line 4322:                   border: "none",
+Line 4323:                   fontWeight: "600"
+Line 4324:                 }}
+Line 4325:               >
