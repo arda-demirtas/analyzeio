@@ -1,0 +1,99 @@
+Line 4416:                           </td>
+Line 4417:                         </tr>
+Line 4418:                       ))}
+Line 4419:                     </tbody>
+Line 4420:                   </table>
+Line 4421:                 </div>
+Line 4422:               ) : adminActiveTab === "auto_train" ? (
+Line 4423:                 <div>
+Line 4424:                   {/* Add symbol form */}
+Line 4425:                   <form onSubmit={handleAddAutoTrainSymbol} style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+Line 4426:                     <input 
+Line 4427:                       type="text" 
+Line 4428:                       placeholder="e.g. SOL-USD, AAPL, Gold" 
+Line 4429:                       value={newAutoTrainSymbol}
+Line 4430:                       onChange={(e) => setNewAutoTrainSymbol(e.target.value)}
+Line 4431:                       style={{ 
+Line 4432:                         flex: 1, 
+Line 4433:                         background: "rgba(255, 255, 255, 0.03)", 
+Line 4434:                         border: "1px solid rgba(255, 255, 255, 0.08)", 
+Line 4435:                         borderRadius: "6px", 
+Line 4436:                         padding: "8px 12px", 
+Line 4437:                         color: "var(--text-main)",
+Line 4438:                         fontSize: "13px"
+Line 4439:                       }} 
+Line 4440:                     />
+Line 4441:                     <button 
+Line 4442:                       type="submit" 
+Line 4443:                       className="btn-primary"
+Line 4444:                       style={{ 
+Line 4445:                         background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", 
+Line 4446:                         border: "none", 
+Line 4447:                         padding: "8px 16px",
+Line 4448:                         fontSize: "13px",
+Line 4449:                         fontWeight: "600",
+Line 4450:                         minWidth: "120px"
+Line 4451:                       }}
+Line 4452:                     >
+Line 4453:                       + Add Asset
+Line 4454:                     </button>
+Line 4455:                   </form>
+Line 4456: 
+Line 4457:                   <h4 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-muted)" }}>
+Line 4458:                     Auto-Trained Assets List ({autoTrainSymbols.length})
+Line 4459:                   </h4>
+Line 4460: 
+Line 4461:                   <div style={{ overflowX: "auto", maxHeight: "400px" }}>
+Line 4462:                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+Line 4463:                       <thead>
+Line 4464:                         <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)" }}>
+Line 4465:                           <th style={{ padding: "10px" }}>Asset Symbol</th>
+Line 4466:                           <th style={{ padding: "10px" }}>Model Status</th>
+Line 4467:                           <th style={{ padding: "10px" }}>Last Trained At</th>
+Line 4468:                           <th style={{ padding: "10px", textAlign: "right" }}>Actions</th>
+Line 4469:                         </tr>
+Line 4470:                       </thead>
+Line 4471:                       <tbody>
+Line 4472:                         {autoTrainSymbols.length === 0 ? (
+Line 4473:                           <tr>
+Line 4474:                             <td colSpan={4} style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
+Line 4475:                               No auto-trained assets found.
+Line 4476:                             </td>
+Line 4477:                           </tr>
+Line 4478:                         ) : (
+Line 4479:                           autoTrainSymbols.map((item) => (
+Line 4480:                             <tr key={item.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.03)" }}>
+Line 4481:                               <td style={{ padding: "12px 10px" }}>
+Line 4482:                                 <strong style={{ fontSize: "13.5px", color: "var(--text-main)" }}>{item.symbol}</strong>
+Line 4483:                               </td>
+Line 4484:                               <td style={{ padding: "12px 10px" }}>
+Line 4485:                                 {item.is_trained ? (
+Line 4486:                                   <span style={{ background: "rgba(16, 185, 129, 0.15)", color: "var(--accent-success)", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "700" }}>
+Line 4487:                                     ✓ Trained
+Line 4488:                                   </span>
+Line 4489:                                 ) : (
+Line 4490:                                   <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "700" }}>
+Line 4491:                                     ⏳ Pending Data
+Line 4492:                                   </span>
+Line 4493:                                 )}
+Line 4494:                               </td>
+Line 4495:                               <td style={{ padding: "12px 10px", color: "var(--text-muted)", fontFamily: "monospace" }}>
+Line 4496:                                 {item.last_trained_at || "Never (Needs 1st run)"}
+Line 4497:                               </td>
+Line 4498:                               <td style={{ padding: "12px 10px", textAlign: "right" }}>
+Line 4499:                                 <button 
+Line 4500:                                   onClick={() => handleDeleteAutoTrainSymbol(item.symbol)}
+Line 4501:                                   className="btn-secondary"
+Line 4502:                                   style={{ 
+Line 4503:                                     padding: "4px 8px", 
+Line 4504:                                     fontSize: "11px",
+Line 4505:                                     minWidth: "auto",
+Line 4506:                                     borderColor: "rgba(239, 68, 68, 0.4)",
+Line 4507:                                     color: "var(--accent-danger)"
+Line 4508:                                   }}
+Line 4509:                                   title="Remove from Auto-Train List"
+Line 4510:                                 >
+Line 4511:                                   Remove
+Line 4512:                                 </button>
+Line 4513:                               </td>
+Line 4514:                             </tr>
