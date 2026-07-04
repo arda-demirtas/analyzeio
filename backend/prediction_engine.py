@@ -3,7 +3,7 @@ import pandas as pd
 import tensorflow as tf
 import xgboost as xgb
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Ridge, LinearRegression
 from typing import Tuple, Dict, Any, Optional
 
 from backend.config import FEATURES
@@ -173,14 +173,14 @@ def evaluate_xgb_performance(
         "directional_accuracy": float(dir_acc)
     }
 
-def train_lr_model(x_train: np.ndarray, y_train: np.ndarray) -> LinearRegression:
-    """Trains a simple Linear Regression model."""
-    model = LinearRegression()
+def train_lr_model(x_train: np.ndarray, y_train: np.ndarray) -> Ridge:
+    """Trains a stable Ridge Regression model to prevent multicollinearity."""
+    model = Ridge(alpha=10000.0)
     model.fit(x_train, y_train)
     return model
 
 def evaluate_lr_performance(
-    model: LinearRegression, 
+    model: Any, 
     x_test: np.ndarray, 
     df_test: pd.DataFrame,
     seq_length: int
