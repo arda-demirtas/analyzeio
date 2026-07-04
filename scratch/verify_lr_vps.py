@@ -19,15 +19,21 @@ import requests
 
 # Get prediction with model_type=linear_regression
 try:
-    r = requests.get('http://127.0.0.1:8000/api/predict?symbol=BTC-USD&interval=1d&lang=tr&model_type=xgboost', timeout=30)
-    print('Status Code:', r.status_code)
-    data = r.json()
-    print('Predicted Close (XGBoost):', data.get('predicted_close'))
-    print('LR Predicted Close:', data.get('lr_predicted_close'))
-    print('Model Type:', data.get('model_type'))
-    print('Metrics:', data.get('metrics'))
+    from backend.predictor import get_prediction
+    
+    # 1. Test ETH-USD
+    print("Direct Prediction for ETH-USD...")
+    res_eth = get_prediction("ETH-USD", interval="1d", model_type="xgboost", is_daemon=True)
+    print("ETH-USD Predicted Close (XGBoost):", res_eth.get("predicted_close"))
+    print("ETH-USD LR Predicted Close:", res_eth.get("lr_predicted_close"))
+    
+    # 2. Test AAPL
+    print("\\nDirect Prediction for AAPL...")
+    res_aapl = get_prediction("AAPL", interval="1d", model_type="xgboost", is_daemon=True)
+    print("AAPL Predicted Close (XGBoost):", res_aapl.get("predicted_close"))
+    print("AAPL LR Predicted Close:", res_aapl.get("lr_predicted_close"))
 except Exception as e:
-    print('Request failed:', e)
+    print('Direct call failed:', e)
 """
 
 ssh.exec_command("cat > /tmp/predict_test_lr.py << 'PYEOF'\n" + py_code + "\nPYEOF")
