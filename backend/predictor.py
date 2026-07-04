@@ -652,7 +652,7 @@ def get_fundamental_analysis(symbol: str, name: str, lang: str = "en") -> Dict[s
         "articles": articles
     }
 
-def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_SEQUENCE_LENGTH, lang: str = "en", force_retrain: bool = False, model_type: str = "xgboost") -> Dict[str, Any]:
+def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_SEQUENCE_LENGTH, lang: str = "en", force_retrain: bool = False, model_type: str = "xgboost", is_daemon: bool = False) -> Dict[str, Any]:
     """
     Main function to coordinate market data retrieval, model loading/training,
     and predicting the next close price for a specific interval (15m, 1h, 4h, 1d).
@@ -760,7 +760,7 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
             if not model_loaded:
                 is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
                 
-                if is_auto_trained_asset and not force_retrain:
+                if is_auto_trained_asset and not force_retrain and not is_daemon:
                     if os.path.exists(cache_path):
                         try:
                             model = xgb.XGBRegressor()
@@ -857,7 +857,7 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
             if not model_loaded:
                 is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
 
-                if is_auto_trained_asset and not force_retrain:
+                if is_auto_trained_asset and not force_retrain and not is_daemon:
                     # Standard user request: do NOT train on the fly. Try loading stale/older cached model
                     if os.path.exists(cache_path):
                         try:
