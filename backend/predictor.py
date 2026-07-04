@@ -133,16 +133,11 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
     meta = None
     
     if is_crypto:
-        try:
-            binance_symbol = symbol.replace("-USD", "USDT")
-            df = fetch_binance_data(binance_symbol, interval)
-            if not df.empty:
-                current_price = float(df["Close"].iloc[-1])
-        except Exception as e:
-            print(f"Binance fetch failed for {symbol}, falling back to Yahoo Finance: {e}")
-            df = None
-
-    if df is None:
+        binance_symbol = symbol.replace("-USD", "USDT")
+        df = fetch_binance_data(binance_symbol, interval)
+        if not df.empty:
+            current_price = float(df["Close"].iloc[-1])
+    else:
         if interval == "15m":
             range_param = "60d"
             api_interval = "15m"
