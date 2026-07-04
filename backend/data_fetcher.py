@@ -5,7 +5,10 @@ import numpy as np
 from typing import Tuple, List, Dict, Any, Optional
 
 from backend.config import TICKER_NAMES, FEATURES
-from backend.indicators import calculate_rsi, calculate_macd, calculate_atr
+from backend.indicators import (
+    calculate_rsi, calculate_macd, calculate_atr,
+    calculate_stoch_rsi, calculate_obv, calculate_cci, calculate_williams_r
+)
 
 def fetch_binance_data(binance_symbol: str, interval: str) -> pd.DataFrame:
     """
@@ -187,6 +190,15 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
     
     # New Indicators
     df["ATR"] = calculate_atr(df["High"], df["Low"], df["Close"])
+    
+    # Calculate StochRSI, OBV, CCI, and Williams %R
+    stoch_k, stoch_d = calculate_stoch_rsi(df["RSI"])
+    df["Stoch_K"] = stoch_k
+    df["Stoch_D"] = stoch_d
+    df["OBV"] = calculate_obv(df["Close"], df["Volume"])
+    df["CCI"] = calculate_cci(df["High"], df["Low"], df["Close"])
+    df["Williams_R"] = calculate_williams_r(df["High"], df["Low"], df["Close"])
+    
     df["BB_Width"] = (df["BB_Upper"] - df["BB_Lower"]) / (df["Close"] + 1e-10)
     df["Daily_Return"] = df["Close"].pct_change()
     df["Return_Lag1"] = df["Daily_Return"].shift(1)
@@ -253,6 +265,12 @@ def fetch_interval_history(symbol: str, interval: str) -> List[Dict[str, Any]]:
             "bb_lower": float(row["BB_Lower"]),
             "ema_20": float(row["EMA_20"]),
             "ema_50": float(row["EMA_50"]),
+            "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
         })
         
     return history_list
