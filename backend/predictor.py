@@ -7,6 +7,7 @@ import pandas as pd
 import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
+import xgboost as xgb
 from typing import Tuple, Dict, Any, List, Optional
 
 from backend.config import MODEL_CACHE_DIR, DEFAULT_SEQUENCE_LENGTH, AUTO_TRAINED_SYMBOLS
@@ -392,6 +393,47 @@ def evaluate_model_performance(
         "directional_accuracy": float(dir_acc)
     }
 
+def evaluate_xgb_performance(
+    model: xgb.XGBRegressor, 
+    x_test: np.ndarray, 
+    df_test: pd.DataFrame,
+    seq_length: int
+) -> Dict[str, Any]:
+    """
+    Evaluates XGBoost predictions on a test set.
+    Computes RMSE, MAPE, and Directional Accuracy.
+    """
+    if len(x_test) == 0:
+        return {"rmse": 0.0, "mape": 0.0, "directional_accuracy": 0.0}
+        
+    preds_returns = model.predict(x_test).flatten()
+    actual_prices = df_test["Close"].values[seq_length:]
+    prev_prices = df_test["Close"].values[seq_length-1:-1]
+    actual_returns = df_test["Daily_Return"].values[seq_length:]
+    
+    preds = prev_prices * (1 + preds_returns)
+    actuals = actual_prices
+    
+    rmse = np.sqrt(np.mean((actuals - preds) ** 2))
+    mape = np.mean(np.abs((actuals - preds) / (actuals + 1e-10))) * 100
+    
+    correct_directions = 0
+    total_comparisons = len(preds_returns)
+    
+    for i in range(total_comparisons):
+        actual_up = actual_returns[i] > 0
+        pred_up = preds_returns[i] > 0
+        if actual_up == pred_up:
+            correct_directions += 1
+            
+    dir_acc = (correct_directions / total_comparisons * 100) if total_comparisons > 0 else 50.0
+    
+    return {
+        "rmse": float(rmse),
+        "mape": float(mape),
+        "directional_accuracy": float(dir_acc)
+    }
+
 def get_fundamental_analysis(symbol: str, name: str, lang: str = "en") -> Dict[str, Any]:
     """
     Searches the web for recent news regarding the asset, computes headline sentiment,
@@ -610,10 +652,11 @@ def get_fundamental_analysis(symbol: str, name: str, lang: str = "en") -> Dict[s
         "articles": articles
     }
 
-def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_SEQUENCE_LENGTH, lang: str = "en", force_retrain: bool = False) -> Dict[str, Any]:
+def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_SEQUENCE_LENGTH, lang: str = "en", force_retrain: bool = False, model_type: str = "xgboost") -> Dict[str, Any]:
     """
     Main function to coordinate market data retrieval, model loading/training,
     and predicting the next close price for a specific interval (15m, 1h, 4h, 1d).
+    Supports 'xgboost' (default) and 'lstm' architectures.
     """
     # 1. Download and clean data
     df, asset_name, is_crypto, current_price = fetch_market_data(symbol, interval=interval)
@@ -665,100 +708,205 @@ def get_prediction(symbol: str, interval: str = "1d", seq_length: int = DEFAULT_
         df_train = df.iloc[:split_idx]
         df_test = df.iloc[split_idx - seq_length:]  # overlap for sequences needed to build sequences
 
-        # Fit scalers ONLY on train data — test data must never influence the scaler
-        x_train, y_train, scaler_x_train, scaler_y_train = prepare_lstm_data(df_train, seq_length)
-        # Scale test data using the train scalers (no fit, only transform — no data leakage)
-        x_test, y_test, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x_train, scaler_y_train)
-
-        # 3. Check if cached model exists for this specific interval
-        cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.keras")
-        model_loaded = False
-
-        # Check if cached model exists and is up to date relative to the latest completed candle start
-        if not force_retrain and os.path.exists(cache_path):
-            meta_path = cache_path.replace(".keras", "_meta.json")
-            is_cache_valid = False
-
-            if os.path.exists(meta_path):
-                try:
-                    import json
-                    with open(meta_path, "r", encoding="utf-8") as f:
-                        meta_data = json.load(f)
-                    
-                    last_trained_str = meta_data.get("last_candle_start")
-                    if last_trained_str:
-                        last_trained_candle_start = datetime.datetime.strptime(last_trained_str, "%Y-%m-%d %H:%M:%S")
-                        last_candle_start = df.index[-1]
+        if model_type == "xgboost":
+            # --- XGBoost Model Flow ---
+            # Validation split for early stopping
+            val_split = int(len(df_train) * 0.85)
+            df_train_sub = df_train.iloc[:val_split]
+            df_val = df_train.iloc[val_split - seq_length:]
+            
+            def make_raw_xgb_sequences(x_data, y_data):
+                xs, ys = [], []
+                for i in range(seq_length, len(x_data)):
+                    xs.append(x_data[i-seq_length:i])
+                    ys.append(y_data[i])
+                return np.array(xs).reshape(len(xs), -1), np.array(ys)
+                
+            x_xgb_train, y_xgb_train = make_raw_xgb_sequences(df_train_sub[FEATURES].values, df_train_sub["Daily_Return"].values)
+            x_xgb_val, y_xgb_val = make_raw_xgb_sequences(df_val[FEATURES].values, df_val["Daily_Return"].values)
+            x_xgb_test, y_xgb_test = make_raw_xgb_sequences(df_test[FEATURES].values, df_test["Daily_Return"].values)
+            
+            cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.json")
+            model_loaded = False
+            
+            # Check if cached model exists and is up to date
+            if not force_retrain and os.path.exists(cache_path):
+                meta_path = cache_path.replace(".json", "_meta.json")
+                is_cache_valid = False
+                
+                if os.path.exists(meta_path):
+                    try:
+                        import json
+                        with open(meta_path, "r", encoding="utf-8") as f:
+                            meta_data = json.load(f)
+                        last_trained_str = meta_data.get("last_candle_start")
+                        if last_trained_str:
+                            last_trained_candle_start = datetime.datetime.strptime(last_trained_str, "%Y-%m-%d %H:%M:%S")
+                            last_candle_start = df.index[-1]
+                            if last_candle_start <= last_trained_candle_start:
+                                is_cache_valid = True
+                    except Exception as meta_err:
+                        print(f"Error reading model metadata: {meta_err}")
                         
-                        # Cache is valid if the last completed candle start is NOT newer than the trained one
-                        if last_candle_start <= last_trained_candle_start:
-                            is_cache_valid = True
-                except Exception as meta_err:
-                    print(f"Error reading model metadata: {meta_err}")
+                if is_cache_valid:
+                    try:
+                        model = xgb.XGBRegressor()
+                        model.load_model(cache_path)
+                        model_loaded = True
+                        training_status = f"Loaded cached XGBoost model ({interval} - fully up-to-date)"
+                    except Exception:
+                        pass
+                        
+            if not model_loaded:
+                is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
+                
+                if is_auto_trained_asset and not force_retrain:
+                    if os.path.exists(cache_path):
+                        try:
+                            model = xgb.XGBRegressor()
+                            model.load_model(cache_path)
+                            model_loaded = True
+                            training_status = f"Loaded cached XGBoost model ({interval} - Stale/Fallback)"
+                        except Exception:
+                            pass
+                    if not model_loaded:
+                        raise ValueError(f"XGBoost Model for {symbol} is currently being initialized/trained on the server. Please try again in a few minutes.")
+                else:
+                    model = xgb.XGBRegressor(
+                        n_estimators=500,
+                        max_depth=6,
+                        learning_rate=0.03,
+                        subsample=0.8,
+                        colsample_bytree=0.8,
+                        reg_alpha=0.1,
+                        reg_lambda=1,
+                        early_stopping_rounds=15,
+                        random_state=42,
+                        n_jobs=-1
+                    )
+                    model.fit(
+                        x_xgb_train, y_xgb_train,
+                        eval_set=[(x_xgb_val, y_xgb_val)],
+                        verbose=False
+                    )
+                    metrics = evaluate_xgb_performance(model, x_xgb_test, df_test, seq_length)
+                    model.save_model(cache_path)
+                    training_status = f"Trained XGBoost model on 80% train data ({interval} timeframe)"
+                    
+                    try:
+                        import json
+                        meta_path = cache_path.replace(".json", "_meta.json")
+                        last_candle_start = df.index[-1]
+                        with open(meta_path, "w", encoding="utf-8") as f:
+                            json.dump({
+                                "last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S")
+                            }, f)
+                    except Exception as meta_err:
+                        print(f"Error saving model metadata for {symbol}: {meta_err}")
+                        
+            if model_loaded:
+                metrics = evaluate_xgb_performance(model, x_xgb_test, df_test, seq_length)
+                
+            metrics["training_status"] = training_status
+            
+            # Predict the next close price using the last seq_length candles
+            last_features = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
+            predicted_return = float(model.predict(last_features)[0])
+            
+        else:
+            # --- LSTM Model Flow ---
+            # Fit scalers ONLY on train data — test data must never influence the scaler
+            x_train, y_train, scaler_x_train, scaler_y_train = prepare_lstm_data(df_train, seq_length)
+            # Scale test data using the train scalers (no fit, only transform — no data leakage)
+            x_test, y_test, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x_train, scaler_y_train)
 
-            if is_cache_valid:
-                try:
-                    model = tf.keras.models.load_model(cache_path)
-                    model_loaded = True
-                    training_status = f"Loaded cached model ({interval} - fully up-to-date)"
-                except Exception:
-                    pass  # If load fails, we will re-train
+            # Check if cached model exists for this specific interval
+            cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.keras")
+            model_loaded = False
 
-        if not model_loaded:
-            is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
+            # Check if cached model exists and is up to date relative to the latest completed candle start
+            if not force_retrain and os.path.exists(cache_path):
+                meta_path = cache_path.replace(".keras", "_meta.json")
+                is_cache_valid = False
 
-            if is_auto_trained_asset and not force_retrain:
-                # Standard user request: do NOT train on the fly. Try loading stale/older cached model
-                if os.path.exists(cache_path):
+                if os.path.exists(meta_path):
+                    try:
+                        import json
+                        with open(meta_path, "r", encoding="utf-8") as f:
+                            meta_data = json.load(f)
+                        
+                        last_trained_str = meta_data.get("last_candle_start")
+                        if last_trained_str:
+                            last_trained_candle_start = datetime.datetime.strptime(last_trained_str, "%Y-%m-%d %H:%M:%S")
+                            last_candle_start = df.index[-1]
+                            
+                            # Cache is valid if the last completed candle start is NOT newer than the trained one
+                            if last_candle_start <= last_trained_candle_start:
+                                is_cache_valid = True
+                    except Exception as meta_err:
+                        print(f"Error reading model metadata: {meta_err}")
+
+                if is_cache_valid:
                     try:
                         model = tf.keras.models.load_model(cache_path)
                         model_loaded = True
-                        training_status = f"Loaded cached model ({interval} - Stale/Fallback)"
+                        training_status = f"Loaded cached LSTM model ({interval} - fully up-to-date)"
                     except Exception:
-                        pass
+                        pass  # If load fails, we will re-train
 
-                # If still not loaded (e.g. no cache file exists yet), raise error
-                if not model_loaded:
-                    raise ValueError(f"Model for {symbol} is currently being initialized/trained on the server. Please try again in a few minutes.")
-            else:
-                # Train model ONLY on the 80% train split — test data is never used for training
-                model = train_lstm_model(x_train, y_train, seq_length, use_early_stopping=True)
+            if not model_loaded:
+                is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
 
-                # Evaluate on the held-out 20% test data (out-of-sample, read-only — no fine-tuning)
+                if is_auto_trained_asset and not force_retrain:
+                    # Standard user request: do NOT train on the fly. Try loading stale/older cached model
+                    if os.path.exists(cache_path):
+                        try:
+                            model = tf.keras.models.load_model(cache_path)
+                            model_loaded = True
+                            training_status = f"Loaded cached LSTM model ({interval} - Stale/Fallback)"
+                        except Exception:
+                            pass
+
+                    # If still not loaded (e.g. no cache file exists yet), raise error
+                    if not model_loaded:
+                        raise ValueError(f"LSTM Model for {symbol} is currently being initialized/trained on the server. Please try again in a few minutes.")
+                else:
+                    # Train model ONLY on the 80% train split — test data is never used for training
+                    model = train_lstm_model(x_train, y_train, seq_length, use_early_stopping=True)
+
+                    # Evaluate on the held-out 20% test data (out-of-sample, read-only — no fine-tuning)
+                    metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
+
+                    # Save the model trained purely on train data
+                    model.save(cache_path)
+                    training_status = f"Trained LSTM model on 80% train data ({interval} timeframe)"
+
+                    # Save model metadata containing the start time of the last completed candle
+                    try:
+                        import json
+                        meta_path = cache_path.replace(".keras", "_meta.json")
+                        last_candle_start = df.index[-1]
+                        with open(meta_path, "w", encoding="utf-8") as f:
+                            json.dump({
+                                "last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S")
+                            }, f)
+                    except Exception as meta_err:
+                        print(f"Error saving model metadata for {symbol}: {meta_err}")
+
+            # If the model was loaded (either cache hit or stale fallback), run evaluation on test set
+            if model_loaded:
+                # Evaluate using train scalers (consistent with how the model was originally trained)
                 metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
 
-                # Save the model trained purely on train data
-                model.save(cache_path)
-                training_status = f"Trained model on 80% train data ({interval} timeframe)"
+            # Predict the next close price using the last seq_length candles
+            last_features = df[FEATURES].iloc[-seq_length:].values
+            scaled_last_features = scaler_x_train.transform(last_features)
+            input_seq = np.array([scaled_last_features])
+            scaled_pred = model.predict(input_seq, verbose=0)
+            predicted_return = float(scaler_y_train.inverse_transform(scaled_pred)[0][0])
 
-                # Save model metadata containing the start time of the last completed candle
-                try:
-                    import json
-                    meta_path = cache_path.replace(".keras", "_meta.json")
-                    last_candle_start = df.index[-1]
-                    with open(meta_path, "w", encoding="utf-8") as f:
-                        json.dump({
-                            "last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S")
-                        }, f)
-                except Exception as meta_err:
-                    print(f"Error saving model metadata for {symbol}: {meta_err}")
-
-        # If the model was loaded (either cache hit or stale fallback), run evaluation on test set
-        if model_loaded:
-            # Evaluate using train scalers (consistent with how the model was originally trained)
-            metrics = evaluate_model_performance(model, x_test, y_test, scaler_y_train, df_test, seq_length)
 
         metrics["training_status"] = training_status
-
-        # 5. Predict the next close price using the last seq_length candles
-        # Scale using train scaler — this is correct because the model was trained with those scale parameters
-        last_features = df[FEATURES].iloc[-seq_length:].values
-        scaled_last_features = scaler_x_train.transform(last_features)
-
-        # Shape for prediction: (1, seq_length, num_features)
-        input_seq = np.array([scaled_last_features])
-        scaled_pred = model.predict(input_seq, verbose=0)
-        predicted_return = float(scaler_y_train.inverse_transform(scaled_pred)[0][0])
 
         # Sanity check: limit predicted daily return to realistic bounds to filter out data outliers
         max_ret = 0.15 if is_crypto else 0.08
