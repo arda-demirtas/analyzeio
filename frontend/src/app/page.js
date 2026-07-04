@@ -1829,7 +1829,7 @@ export default function Home() {
           <div className="auth-header">
             <h1 className="logo-text" style={{ fontSize: "36px", marginBottom: "10px" }}>analyzeio</h1>
             <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>
-              Secure & Professional LSTM Stock & Crypto Predictor
+              Secure & Professional AI Stock & Crypto Predictor
             </p>
           </div>
           
@@ -2914,8 +2914,8 @@ export default function Home() {
                       </h4>
                       <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0, lineHeight: "1.5" }}>
                         {lang === "tr" 
-                          ? "BTC dışındaki bu sembolde LSTM yapay zeka fiyat tahminlerini görmek ve grafikteki otomatik 5'er adet destek/direnç seviyelerini açmak için Premium üyeliğe yükseltin." 
-                          : "Upgrade to Premium to view LSTM neural network price predictions and access automatic Support & Resistance overlay levels on this asset."}
+                          ? "BTC dışındaki bu sembolde yapay zeka fiyat tahminlerini görmek ve grafikteki otomatik 5'er adet destek/direnç seviyelerini açmak için Premium üyeliğe yükseltin." 
+                          : "Upgrade to Premium to view AI machine learning price predictions and access automatic Support & Resistance overlay levels on this asset."}
                       </p>
                     </div>
                     {user ? (
@@ -3587,7 +3587,15 @@ export default function Home() {
 
                 {/* Model Information & Metrics */}
                 <div className="glass-panel">
-                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>{t("analytics_title")}</h3>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px" }}>
+                    {(() => {
+                      let title = t("analytics_title");
+                      if (predictionData && predictionData.model_type === "xgboost") {
+                        title = title.replace("LSTM", "XGBoost");
+                      }
+                      return title;
+                    })()}
+                  </h3>
                   
                   <div className="stats-list">
                     <div className="stats-row">
@@ -3619,7 +3627,9 @@ export default function Home() {
                   </div>
                   
                   <div style={{ marginTop: "20px", fontSize: "12px", color: "var(--text-muted)", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "15px" }}>
-                    * The model calculates 19 normalized indicators (including RSI, MACD Signal/Hist, Bollinger Band Width, ATR, and short/weekly return lags) to feed into a deep LSTM network.
+                    {lang === "tr" 
+                      ? `* Model, RSI, MACD, Bollinger Bantları, ATR ve fiyat gecikmeleri dahil 19 göstergeyi hesaplayarak bunları optimize edilmiş bir ${predictionData && predictionData.model_type === "xgboost" ? "XGBoost karar ağaçları modeline" : "derin LSTM yapay sinir ağına"} besler.`
+                      : `* The model calculates 19 normalized indicators (including RSI, MACD, Bollinger Bands, ATR, and return lags) to feed into ${predictionData && predictionData.model_type === "xgboost" ? "an optimized XGBoost regressor" : "a deep LSTM neural network"}.`}
                   </div>
                 </div>
 
@@ -3827,13 +3837,13 @@ export default function Home() {
             <div style={{ fontSize: "14px", lineHeight: "1.6", color: "var(--text-main)", display: "flex", flexDirection: "column", gap: "12px" }}>
               <p>
                 {lang === "tr" 
-                  ? "analyzeio, hisse senetleri ve kripto para birimleri için LSTM (Long Short-Term Memory) tabanlı derin öğrenme modelleri sunan gelişmiş bir piyasa tahmin ve teknik analiz platformudur."
-                  : "analyzeio is an advanced market prediction and technical analysis platform offering LSTM (Long Short-Term Memory) deep learning models for stocks and cryptocurrencies."}
+                  ? "analyzeio, hisse senetleri ve kripto para birimleri için gelişmiş XGBoost ve LSTM tabanlı makine öğrenimi tahmin modelleri sunan gelişmiş bir piyasa tahmin ve teknik analiz platformudur."
+                  : "analyzeio is an advanced market prediction and technical analysis platform offering optimized XGBoost and LSTM machine learning models for stocks and cryptocurrencies."}
               </p>
               <p>
                 {lang === "tr"
-                  ? "Sistemimiz, her bir varlık için son 60 günlük veriyi indirir, RSI, MACD, Bollinger Bantları ve EMA gibi 19 temel teknik göstergeyi gerçek zamanlı hesaplar ve yapay sinir ağımızı optimize ederek bir sonraki işlem gününün kapanış fiyatını tahmin eder."
-                  : "Our system downloads the latest 60 days of daily price action for each asset, computes 19 key technical indicators (including RSI, MACD, Bollinger Bands, and EMAs) in real-time, and optimizes our neural network to predict the next trading day's close."}
+                  ? "Sistemimiz, her bir varlık için son verileri indirir, RSI, MACD, Bollinger Bantları ve EMA gibi 19 temel teknik göstergeyi gerçek zamanlı hesaplar, tahmin modellerini optimize ederek bir sonraki işlem periyodunun kapanış fiyatını tahmin eder."
+                  : "Our system downloads the latest price action for each asset, computes 19 key technical indicators (including RSI, MACD, Bollinger Bands, and EMAs) in real-time, and optimizes prediction models to estimate the next period's close price."}
               </p>
               <p>
                 {lang === "tr"
