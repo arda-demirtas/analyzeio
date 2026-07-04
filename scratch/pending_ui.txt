@@ -1,0 +1,60 @@
+Line 3506:                       <h4 style={{ fontSize: "14px", fontWeight: "700", color: "#f59e0b", marginBottom: "6px" }}>
+Line 3507:                         {lang === "tr" ? "Tahmin Beklemede" : "Prediction Pending"}
+Line 3508:                       </h4>
+Line 3509:                       <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 12px 0", lineHeight: "1.5" }}>
+Line 3510:                         {predictionData.prediction_error || (lang === "tr" ? "En son günlük mum verisi bekleniyor." : "Waiting for the latest daily candle data.")}
+Line 3511:                       </p>
+Line 3512:                       <button onClick={() => loadPrediction(activeSymbol, chartInterval)} className="btn-secondary" style={{ fontSize: "11px", height: "30px", padding: "0 15px", marginTop: "5px" }}>
+Line 3513:                         <RefreshCw style={{ width: "10px", marginRight: "5px" }} /> {lang === "tr" ? "Yeniden Sorgula" : "Query Again"}
+Line 3514:                       </button>
+Line 3515:                     </div>
+Line 3516:                   ) : predictionData && predictionData.predicted_close === null ? (
+Line 3517:                     <div style={{ textAlign: "center", padding: "10px" }}>
+Line 3518:                       <span style={{ fontSize: "28px", display: "block", marginBottom: "8px" }}>🔒</span>
+Line 3519:                       <h4 style={{ fontSize: "14px", fontWeight: "700", color: "#f59e0b", marginBottom: "6px" }}>
+Line 3520:                         ★ {t("premium_badge")} {t("expected_close")}
+Line 3521:                       </h4>
+Line 3522:                       <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 12px 0", lineHeight: "1.4" }}>
+Line 3523:                         {t("premium_only_msg")}
+Line 3524:                       </p>
+Line 3525:                       <button onClick={handlePremiumToggle} className="btn-primary" style={{ fontSize: "11px", height: "30px", padding: "0 15px", background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", border: "none" }}>
+Line 3526:                         ★ {t("premium_upgrade")}
+Line 3527:                       </button>
+Line 3528:                     </div>
+Line 3529:                   ) : (
+Line 3530:                     <>
+Line 3531:                       <span className="prediction-label" style={{ marginBottom: "12px", display: "block" }}>
+Line 3532:                         {lang === "tr" ? "Model Tahmin Fiyatları" : "Model Prediction Prices"}
+Line 3533:                       </span>
+Line 3534:                       
+Line 3535:                       <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", marginBottom: "15px" }}>
+Line 3536:                         {/* XGBoost Box */}
+Line 3537:                         <div style={{ 
+Line 3538:                           padding: "10px 14px", 
+Line 3539:                           background: "rgba(168, 85, 247, 0.04)", 
+Line 3540:                           border: "1px solid rgba(168, 85, 247, 0.15)", 
+Line 3541:                           borderRadius: "var(--border-radius-md)",
+Line 3542:                           display: "flex",
+Line 3543:                           justifyContent: "space-between",
+Line 3544:                           alignItems: "center"
+Line 3545:                         }}>
+Line 3546:                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+Line 3547:                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a855f7", boxShadow: "0 0 8px #a855f7" }}></span>
+Line 3548:                             <span style={{ fontSize: "13px", fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
+Line 3549:                           </div>
+Line 3550:                           <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
+Line 3551:                             {predictionData && predictionData.xgb_predicted_close !== null
+Line 3552:                               ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+Line 3553:                               : "---"}
+Line 3554:                           </span>
+Line 3555:                         </div>
+Line 3556: 
+Line 3557:                         {/* LSTM Box */}
+Line 3558:                         <div style={{ 
+Line 3559:                           padding: "10px 14px", 
+Line 3560:                           background: "rgba(14, 165, 233, 0.04)", 
+Line 3561:                           border: "1px solid rgba(14, 165, 233, 0.15)", 
+Line 3562:                           borderRadius: "var(--border-radius-md)",
+Line 3563:                           display: "flex",
+Line 3564:                           justifyContent: "space-between",
+Line 3565:                           alignItems: "center"
