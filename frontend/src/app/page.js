@@ -495,6 +495,7 @@ export default function Home() {
   const [adminLoading, setAdminLoading] = useState(false);
   const [autoTrainSymbols, setAutoTrainSymbols] = useState([]);
   const [newAutoTrainSymbol, setNewAutoTrainSymbol] = useState("");
+  const [mockTradingState, setMockTradingState] = useState(null);
   const [modelType, setModelType] = useState("xgboost");
 
   const lastCloseVal = predictionData ? predictionData.last_close : null;
@@ -1756,6 +1757,40 @@ export default function Home() {
     };
   };
 
+  const fetchMockTradingState = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/mock-trading`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMockTradingState(data);
+      }
+    } catch (err) {
+      console.error("Error fetching mock trading state:", err);
+    }
+  };
+
+  const handleResetMockTrading = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    if (!window.confirm(lang === "tr" ? "Simülasyonu sıfırlamak istediğinize emin misiniz? Bakiye $2,000.00 olacaktır." : "Are you sure you want to reset the simulation? Balance will return to $2,000.00.")) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/mock-trading/reset`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMockTradingState(data);
+      }
+    } catch (err) {
+      console.error("Error resetting mock trading:", err);
+    }
+  };
+
   const fetchAdminData = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -1784,6 +1819,8 @@ export default function Home() {
         const symbolsData = await symbolsRes.json();
         setAutoTrainSymbols(Array.isArray(symbolsData) ? symbolsData : []);
       }
+      
+      await fetchMockTradingState();
     } catch (err) {
       console.error("Error fetching admin data:", err);
     } finally {
@@ -4312,6 +4349,18 @@ export default function Home() {
               >
                 🧠 Model Cache ({adminStats ? adminStats.total_cached_models : 0})
               </button>
+              <button 
+                onClick={() => setAdminActiveTab("mock_trading")} 
+                className={adminActiveTab === "mock_trading" ? "btn-primary" : "btn-secondary"}
+                style={{ 
+                  flex: 1, 
+                  background: adminActiveTab === "mock_trading" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
+                  border: "none",
+                  fontWeight: "600"
+                }}
+              >
+                💸 Mock Trading
+              </button>
             </div>
             
             {/* Main Content Area (Scrollable) */}
@@ -4469,7 +4518,7 @@ export default function Home() {
                     </table>
                   </div>
                 </div>
-              ) : (
+              ) : adminActiveTab === "models" ? (
                 <div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "20px" }}>
                     <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
@@ -4495,6 +4544,87 @@ export default function Home() {
                         <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255, 255, 255, 0.01)", padding: "8px 12px", borderRadius: "6px", border: "1px solid rgba(255, 255, 255, 0.03)", fontSize: "12.5px" }}>
                           <span style={{ fontFamily: "monospace", color: "var(--text-main)" }}>{filename}</span>
                           <span className="badge badge-success" style={{ fontSize: "10px", padding: "2px 8px" }}>Active</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {/* Mock Trading Tab Contents */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "20px" }}>
+                    <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                      <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Cash Balance</span>
+                      <strong style={{ fontSize: "22px", color: "#10b981" }}>
+                        ${mockTradingState ? mockTradingState.balance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "2,000.00"}
+                      </strong>
+                    </div>
+                    <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                      <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Active Position</span>
+                      {mockTradingState && mockTradingState.position ? (
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <strong style={{ fontSize: "16px", color: "#f59e0b" }}>
+                            {mockTradingState.position.symbol} ({mockTradingState.position.qty.toFixed(4)} Units)
+                          </strong>
+                          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                            at ${mockTradingState.position.entry_price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      ) : (
+                        <strong style={{ fontSize: "16px", color: "var(--text-muted)", fontStyle: "italic" }}>
+                          No Active Position (Cash)
+                        </strong>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+                    <h4 style={{ fontSize: "14px", fontWeight: "700", margin: 0, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-muted)" }}>
+                      Simulation Progress & Transaction Logs
+                    </h4>
+                    <button 
+                      onClick={handleResetMockTrading} 
+                      className="btn-secondary" 
+                      style={{ 
+                        fontSize: "11px", 
+                        padding: "4px 10px", 
+                        borderColor: "rgba(239, 68, 68, 0.3)", 
+                        color: "var(--accent-danger)",
+                        minWidth: "auto"
+                      }}
+                    >
+                      Reset Simulation
+                    </button>
+                  </div>
+
+                  <div style={{ 
+                    maxHeight: "350px", 
+                    overflowY: "auto", 
+                    background: "rgba(0,0,0,0.2)", 
+                    borderRadius: "8px", 
+                    border: "1px solid rgba(255,255,255,0.05)", 
+                    padding: "10px 15px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px"
+                  }}>
+                    {mockTradingState && mockTradingState.logs && mockTradingState.logs.length === 0 ? (
+                      <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
+                        No logs generated yet.
+                      </div>
+                    ) : (
+                      mockTradingState && [...mockTradingState.logs].reverse().map((log, idx) => (
+                        <div key={idx} style={{ 
+                          fontSize: "12px", 
+                          lineHeight: "1.4", 
+                          paddingBottom: "8px", 
+                          borderBottom: "1px solid rgba(255,255,255,0.03)", 
+                          color: "var(--text-main)" 
+                        }}>
+                          <span style={{ color: "#f59e0b", fontWeight: "600", marginRight: "8px", fontFamily: "monospace" }}>
+                            [{log.timestamp}]
+                          </span>
+                          <span>{log.event}</span>
                         </div>
                       ))
                     )}
