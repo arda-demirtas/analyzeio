@@ -42,7 +42,12 @@ def prepare_lstm_data(
         
     return np.array(x_seq), np.array(y_val), scaler_x, scaler_y
 
-def train_lstm_model(x_train: np.ndarray, y_train: np.ndarray, seq_length: int, use_early_stopping: bool = False) -> tf.keras.Model:
+def train_lstm_model(
+    x_train: np.ndarray, 
+    y_train: np.ndarray, 
+    seq_length: int, 
+    validation_data: Optional[Tuple[np.ndarray, np.ndarray]] = None
+) -> tf.keras.Model:
     """Creates and trains an LSTM model with Dropout regularization."""
     model = tf.keras.Sequential([
         tf.keras.layers.Input(shape=(seq_length, len(FEATURES))),
@@ -55,16 +60,14 @@ def train_lstm_model(x_train: np.ndarray, y_train: np.ndarray, seq_length: int, 
     model.compile(optimizer="adam", loss="mean_squared_error")
     
     callbacks = []
-    if use_early_stopping:
+    if validation_data is not None:
         callbacks.append(tf.keras.callbacks.EarlyStopping(
             monitor="val_loss",
             patience=7,
             restore_best_weights=True
         ))
-        validation_split = 0.1
         epochs = 80
     else:
-        validation_split = 0.0
         epochs = 30
         
     model.fit(
@@ -72,7 +75,7 @@ def train_lstm_model(x_train: np.ndarray, y_train: np.ndarray, seq_length: int, 
         y_train, 
         epochs=epochs, 
         batch_size=32, 
-        validation_split=validation_split, 
+        validation_data=validation_data, 
         callbacks=callbacks, 
         verbose=0
     )
