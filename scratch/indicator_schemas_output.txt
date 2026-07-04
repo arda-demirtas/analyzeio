@@ -1,0 +1,60 @@
+Position 1272:
+ = True
+
+
+# Machine Learning / Prediction Schemas
+class IndicatorPoint(BaseModel):
+    date: str
+    open: float
+    close: float
+    volume: float
+    high: Optional[float] = None
+    low: Optional[float] = None
+    rsi: Optional[float] = None
+    macd: Optional[float] = None
+    macd_signal: Optional[float] = None
+    macd_hist: Optional[float] = None
+    bb_upper: Optional[float] = None
+    bb_lower: Optional[float] = None
+    ema_20: Optional[float] = None
+    ema_50: Optional[float] = None
+    lr_predicted_close: Optional[float] = None
+
+class PredictionMetrics(BaseModel):
+    rmse: float
+    mape: float
+    directional_accuracy: float  # Percentage of days predicted direction matches actual direction
+    training_status: str
+
+class NewsArticle(BaseModel):
+    title: str
+    publisher: str
+    link: str
+    sentiment: str  # "Bullish"
+---
+Position 2396:
+STRONG_BUY", "STRONG_SELL", "HOLD"
+    text: str
+
+class PredictionResponse(BaseModel):
+    symbol: str
+    name: str
+    last_date: str
+    last_close: float
+    predicted_close: Optional[float] = None
+    prediction_date: Optional[str] = None
+    expected_close_time: Optional[str] = None
+    price_change_percent: Optional[float] = None
+    current_price: Optional[float] = None
+    metrics: Optional[PredictionMetrics] = None
+    history: List[IndicatorPoint]
+    prediction_status: Optional[str] = None
+    prediction_error: Optional[str] = None
+    model_type: Optional[str] = None
+    xgb_predicted_close: Optional[float] = None
+    lstm_predicted_close: Optional[float] = None
+    lr_predicted_close: Optional[float] = None
+    xgb_metrics: Optional[PredictionMetrics] = None
+    lstm_metrics: Optional[PredictionMetrics] = None
+    lr_metrics
+---
