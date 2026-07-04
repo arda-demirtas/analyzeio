@@ -1,0 +1,100 @@
+Line 121:             # Drop rows where core price information is missing
+Line 122:             df = df.dropna(subset=["Open", "High", "Low", "Close"])
+Line 123:         except Exception as e:
+Line 124:             raise ValueError(f"No historical data found or failed to parse for symbol: {symbol}. Error: {e}")
+Line 125:             
+Line 126:     if df.empty:
+Line 127:         raise ValueError(f"No historical data found for symbol: {symbol}")
+Line 128: 
+Line 129:     # Resample to 4H if interval is 4h
+Line 130:     if interval == "4h":
+Line 131:         df = df.resample("4h").agg({
+Line 132:             "Open": "first",
+Line 133:             "High": "max",
+Line 134:             "Low": "min",
+Line 135:             "Close": "last",
+Line 136:             "Volume": "sum"
+Line 137:         }).dropna()
+Line 138:         
+Line 139:     # Get asset name from dictionary, fallback to meta or symbol
+Line 140:     asset_name = TICKER_NAMES.get(symbol)
+Line 141:     if not asset_name:
+Line 142:         asset_name = symbol
+Line 143:         
+Line 144:     meta_dict = meta if meta is not None else {}
+Line 145:     is_crypto = symbol.endswith("-USD") or meta_dict.get("instrumentType") == "CRYPTOCURRENCY"
+Line 146:     
+Line 147:     # For daily data, exclude today's incomplete candle if market is active
+Line 148:     if interval == "1d":
+Line 149:         last_row_date_str = df.index[-1].strftime("%Y-%m-%d")
+Line 150:         now_utc = datetime.datetime.utcnow()
+Line 151:         current_hour_utc = now_utc.hour
+Line 152:         
+Line 153:         if is_crypto:
+Line 154:             today_str = now_utc.strftime("%Y-%m-%d")
+Line 155:             # Close at 00:00 UTC. If before 23:00 UTC, exclude active daily candle.
+Line 156:             close_hour_utc = 23
+Line 157:         elif symbol.endswith(".IS"):
+Line 158:             # BIST: Turkey is UTC+3
+Line 159:             today_trt = (now_utc + datetime.timedelta(hours=3)).date()
+Line 160:             today_str = today_trt.strftime("%Y-%m-%d")
+Line 161:             # Close at 15:00 UTC (18:00 TRT). If before 15:00 UTC, exclude active daily candle.
+Line 162:             close_hour_utc = 15
+Line 163:         else:
+Line 164:             # US Markets: Eastern time is UTC-4 (approximate DST, safe for daily rollover checks)
+Line 165:             today_est = (now_utc - datetime.timedelta(hours=4)).date()
+Line 166:             today_str = today_est.strftime("%Y-%m-%d")
+Line 167:             # Close at 20:00 UTC (16:00 EST). If before 20:00 UTC, exclude active daily candle.
+Line 168:             close_hour_utc = 20
+Line 169:             
+Line 170:         if last_row_date_str == today_str:
+Line 171:             if current_hour_utc < close_hour_utc:
+Line 172:                 df = df.iloc[:-1]
+Line 173:         
+Line 174:     # Calculate indicators
+Line 175:     df["RSI"] = calculate_rsi(df["Close"])
+Line 176:     macd_line, signal_line, macd_hist = calculate_macd(df["Close"])
+Line 177:     df["MACD"] = macd_line
+Line 178:     df["MACD_Signal"] = signal_line
+Line 179:     df["MACD_Hist"] = macd_hist
+Line 180:     
+Line 181:     # Bollinger Bands
+Line 182:     sma_20 = df["Close"].rolling(window=20).mean()
+Line 183:     std_20 = df["Close"].rolling(window=20).std()
+Line 184:     df["BB_Upper"] = sma_20 + 2 * std_20
+Line 185:     df["BB_Lower"] = sma_20 - 2 * std_20
+Line 186:     
+Line 187:     # EMAs
+Line 188:     df["EMA_20"] = df["Close"].ewm(span=20, adjust=False).mean()
+Line 189:     df["EMA_50"] = df["Close"].ewm(span=50, adjust=False).mean()
+Line 190:     
+Line 191:     # New Indicators
+Line 192:     df["ATR"] = calculate_atr(df["High"], df["Low"], df["Close"])
+Line 193:     
+Line 194:     # Calculate StochRSI, OBV, CCI, and Williams %R
+Line 195:     stoch_k, stoch_d = calculate_stoch_rsi(df["RSI"])
+Line 196:     df["Stoch_K"] = stoch_k
+Line 197:     df["Stoch_D"] = stoch_d
+Line 198:     df["OBV"] = calculate_obv(df["Close"], df["Volume"])
+Line 199:     df["CCI"] = calculate_cci(df["High"], df["Low"], df["Close"])
+Line 200:     df["Williams_R"] = calculate_williams_r(df["High"], df["Low"], df["Close"])
+Line 201:     
+Line 202:     df["BB_Width"] = (df["BB_Upper"] - df["BB_Lower"]) / (df["Close"] + 1e-10)
+Line 203:     df["Daily_Return"] = df["Close"].pct_change()
+Line 204:     df["Return_Lag1"] = df["Daily_Return"].shift(1)
+Line 205:     df["Return_Lag3"] = df["Daily_Return"].shift(3)
+Line 206:     df["Return_Lag7"] = df["Daily_Return"].shift(7)
+Line 207: 
+Line 208:     # Replace all infinite values (inf, -inf) with NaN
+Line 209:     df = df.replace([np.inf, -np.inf], np.nan)
+Line 210:     
+Line 211:     # Drop rows with NaN values resulting from indicators
+Line 212:     df = df.dropna(subset=FEATURES)
+Line 213:     
+Line 214:     return df, asset_name, is_crypto, current_price
+Line 215: 
+Line 216: def fetch_interval_history(symbol: str, interval: str) -> List[Dict[str, Any]]:
+Line 217:     """
+Line 218:     Downloads historical data from Yahoo Finance for a specific interval,
+Line 219:     calculates all technical indicators, and returns formatted history points.
+Line 220:     """
