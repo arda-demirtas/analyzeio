@@ -1,0 +1,50 @@
+Line 526:     chart_limit = 730
+Line 527:     history_df = df.tail(chart_limit)
+Line 528:     df_indices = {dt: idx for idx, dt in enumerate(df.index)}
+Line 529:     
+Line 530:     history_list = []
+Line 531:     for idx, row in history_df.iterrows():
+Line 532:         if interval == "1d":
+Line 533:             date_str = idx.strftime("%Y-%m-%d")
+Line 534:         else:
+Line 535:             date_str = idx.strftime("%Y-%m-%d %H:%M")
+Line 536:             
+Line 537:         lr_hist_val = None
+Line 538:         if model_lr is not None:
+Line 539:             pos = df_indices.get(idx)
+Line 540:             if pos is not None and pos >= seq_length:
+Line 541:                 try:
+Line 542:                     feat_seq = df[FEATURES].iloc[pos - seq_length : pos].values.flatten().reshape(1, -1)
+Line 543:                     pred_ret = float(model_lr.predict(feat_seq)[0])
+Line 544:                     prev_close = float(df["Close"].iloc[pos - 1])
+Line 545:                     lr_hist_val = float(prev_close * (1 + pred_ret))
+Line 546:                 except Exception:
+Line 547:                     pass
+Line 548:             
+Line 549:         history_list.append({
+Line 550:             "date": date_str,
+Line 551:             "open": float(row["Open"]),
+Line 552:             "close": float(row["Close"]),
+Line 553:             "volume": float(row["Volume"]),
+Line 554:             "high": float(row["High"]),
+Line 555:             "low": float(row["Low"]),
+Line 556:             "rsi": float(row["RSI"]),
+Line 557:             "macd": float(row["MACD"]),
+Line 558:             "macd_signal": float(row["MACD_Signal"]),
+Line 559:             "macd_hist": float(row["MACD_Hist"]),
+Line 560:             "bb_upper": float(row["BB_Upper"]),
+Line 561:             "bb_lower": float(row["BB_Lower"]),
+Line 562:             "ema_20": float(row["EMA_20"]),
+Line 563:             "ema_50": float(row["EMA_50"]),
+Line 564:             "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+Line 565:             "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+Line 566:             "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+Line 567:             "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+Line 568:             "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+Line 569:             "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
+Line 570:             "lr_predicted_close": lr_hist_val
+Line 571:         })
+Line 572:         
+Line 573:     fundamental_result = get_fundamental_analysis(symbol, asset_name, lang=lang)
+Line 574: 
+Line 575:     # 7. Log Prediction and resolve past pending predictions in database
