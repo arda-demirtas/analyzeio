@@ -59,6 +59,22 @@ def score_symbol_for_trading(symbol: str) -> float:
     # 1. 3-Model predictions average expected return
     try:
         res = get_prediction(symbol, interval="1d", force_retrain=False)
+        # Check if predictions are pending, locked, or unavailable
+        if res.get("predicted_close") is None or res.get("xgb_predicted_close") is None or res.get("lstm_predicted_close") is None or res.get("lr_predicted_close") is None:
+            return -999.0
+            
+        last_date_str = res.get("last_date")
+        if last_date_str:
+            try:
+                # Yahoo Finance dates may be formatted as YYYY-MM-DD or with time; extract date part
+                last_dt = datetime.datetime.strptime(last_date_str.split()[0], "%Y-%m-%d")
+                now_utc = datetime.datetime.utcnow()
+                # Skip if data is older than 2 calendar days (allows weekend gap for traditional stock markets)
+                if (now_utc - last_dt).days > 2:
+                    return -999.0
+            except Exception:
+                pass
+
         last_close = res.get("last_close")
         if not last_close:
             return -999.0
