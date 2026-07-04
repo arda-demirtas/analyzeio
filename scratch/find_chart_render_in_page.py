@@ -1,0 +1,15 @@
+with open("c:/Users/h1z1a/Desktop/Analyzeio/frontend/src/app/page.js", "r", encoding="utf-8") as f:
+    content = f.read()
+
+import re
+matches = [m.start() for m in re.finditer(r"(?:<Line|<Bar|<Area|ResponsiveContainer|chartType)", content)]
+output = []
+for m in matches:
+    start = max(0, m - 150)
+    end = min(len(content), m + 200)
+    output.append(f"Position {m}:\n{content[start:end]}\n---")
+
+with open("c:/Users/h1z1a/Desktop/Analyzeio/scratch/chart_render_output.txt", "w", encoding="utf-8") as f_out:
+    f_out.writelines("\n".join(output))
+
+print(f"Found {len(matches)} chart components. Written to scratch/chart_render_output.txt")
