@@ -1,0 +1,36 @@
+Line 2464:   const activeHistory = (predictionData && chartHistory && chartHistory.length > 0) ? chartHistory : (predictionData ? predictionData.history : []);
+Line 3226:                       {getRsiBadge(activeHistory[activeHistory.length - 1]?.rsi)}
+Line 3228:                         activeHistory[activeHistory.length - 1]?.macd,
+Line 3229:                         activeHistory[activeHistory.length - 1]?.macd_hist
+Line 3231:                       <span className="badge badge-info">Open: ${activeHistory[activeHistory.length - 1]?.open?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+Line 3232:                       <span className="badge badge-info">Close: ${activeHistory[activeHistory.length - 1]?.close?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+Line 3233:                       <span className="badge badge-info">High: ${activeHistory[activeHistory.length - 1]?.high?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+Line 3234:                       <span className="badge badge-info">Low: ${activeHistory[activeHistory.length - 1]?.low?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+Line 3235:                       <span className="badge badge-info">Vol: {activeHistory[activeHistory.length - 1]?.volume?.toLocaleString("en-US")}</span>
+Line 3236:                       <span className="badge badge-info">EMA 20: ${activeHistory[activeHistory.length - 1]?.ema_20?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+Line 3237:                       <span className="badge badge-info">EMA 50: ${activeHistory[activeHistory.length - 1]?.ema_50?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+Line 3238:                       <span className="badge badge-info">BB Upper: ${activeHistory[activeHistory.length - 1]?.bb_upper?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+Line 3239:                       <span className="badge badge-info">BB Lower: ${activeHistory[activeHistory.length - 1]?.bb_lower?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
+Line 3468:                           const rsi = activeHistory[activeHistory.length - 1]?.rsi;
+Line 3492:                           const hist = activeHistory[activeHistory.length - 1]?.macd_hist;
+Line 3515:                           const k = activeHistory[activeHistory.length - 1]?.stoch_k;
+Line 3539:                           {activeHistory[activeHistory.length - 1]?.atr?.toFixed(3) || "---"}
+Line 3579:                           const cci = activeHistory[activeHistory.length - 1]?.cci;
+Line 3603:                           const w = activeHistory[activeHistory.length - 1]?.williams_r;
+Line 3630:                           {activeHistory[activeHistory.length - 1]?.rsi?.toFixed(2) || "---"}
+Line 3633:                           const rsi = activeHistory[activeHistory.length - 1]?.rsi;
+Line 3644:                           {activeHistory[activeHistory.length - 1]?.macd?.toFixed(2) || "---"}
+Line 3647:                           const hist = activeHistory[activeHistory.length - 1]?.macd_hist;
+Line 3658:                             const ema20 = activeHistory[activeHistory.length - 1]?.ema_20;
+Line 3659:                             const ema50 = activeHistory[activeHistory.length - 1]?.ema_50;
+Line 3667:                           const ema20 = activeHistory[activeHistory.length - 1]?.ema_20;
+Line 3668:                           const ema50 = activeHistory[activeHistory.length - 1]?.ema_50;
+Line 3669:                           const close = activeHistory[activeHistory.length - 1]?.close;
+Line 3682:                             const upper = activeHistory[activeHistory.length - 1]?.bb_upper;
+Line 3683:                             const lower = activeHistory[activeHistory.length - 1]?.bb_lower;
+Line 3691:                           const upper = activeHistory[activeHistory.length - 1]?.bb_upper;
+Line 3692:                           const lower = activeHistory[activeHistory.length - 1]?.bb_lower;
+Line 3693:                           const close = activeHistory[activeHistory.length - 1]?.close;
+Line 3705:                           {activeHistory[activeHistory.length - 1]?.volume?.toLocaleString("en-US") || "---"}
+Line 3708:                           const history = activeHistory;
+Line 3727:                           const { supports, resistances } = calculateSupportResistance(activeHistory);
