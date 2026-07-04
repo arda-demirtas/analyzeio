@@ -2,6 +2,7 @@ import os
 import json
 import requests
 import datetime
+import pickle
 import pandas as pd
 import numpy as np
 import tensorflow as tf
@@ -15,7 +16,8 @@ from backend.data_fetcher import fetch_binance_data, fetch_market_data, fetch_in
 from backend.sentiment import analyze_text_sentiment, fetch_symbol_news, get_fundamental_analysis
 from backend.prediction_engine import (
     prepare_lstm_data, train_lstm_model, 
-    evaluate_model_performance, evaluate_xgb_performance
+    evaluate_model_performance, evaluate_xgb_performance,
+    train_lr_model, evaluate_lr_performance
 )
 
 def get_prediction(
@@ -178,6 +180,77 @@ def get_prediction(
                         
             if model_loaded:
                 metrics = evaluate_xgb_performance(model, x_xgb_test, df_test, seq_length)
+                
+            metrics["training_status"] = training_status
+            
+            # Predict the next close price using the last seq_length candles
+            last_features = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
+            predicted_return = float(model.predict(last_features)[0])
+            
+        elif model_type == "linear_regression":
+            if symbol != "BTC-USD":
+                raise ValueError("Linear Regression is currently only available for Bitcoin (BTC-USD).")
+                
+            def make_raw_lr_sequences(x_data, y_data):
+                xs, ys = [], []
+                for i in range(seq_length, len(x_data)):
+                    xs.append(x_data[i-seq_length:i])
+                    ys.append(y_data[i])
+                return np.array(xs).reshape(len(xs), -1), np.array(ys)
+                
+            x_lr_train, y_lr_train = make_raw_lr_sequences(df_train[FEATURES].values, df_train["Daily_Return"].values)
+            x_lr_test, y_lr_test = make_raw_lr_sequences(df_test[FEATURES].values, df_test["Daily_Return"].values)
+            
+            cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model_lr.pkl")
+            model_loaded = False
+            
+            # Check if cached model exists and is up to date
+            if not force_retrain and os.path.exists(cache_path):
+                meta_path = cache_path.replace("_lr.pkl", "_lr_meta.json")
+                is_cache_valid = False
+                
+                if os.path.exists(meta_path):
+                    try:
+                        with open(meta_path, "r", encoding="utf-8") as f:
+                            meta_data = json.load(f)
+                        last_trained_str = meta_data.get("last_candle_start")
+                        if last_trained_str:
+                            last_trained_candle_start = datetime.datetime.strptime(last_trained_str, "%Y-%m-%d %H:%M:%S")
+                            last_candle_start = df.index[-1]
+                            if last_candle_start <= last_trained_candle_start:
+                                is_cache_valid = True
+                    except Exception as meta_err:
+                        print(f"Error reading linear regression model metadata: {meta_err}")
+                        
+                if is_cache_valid:
+                    try:
+                        with open(cache_path, "rb") as f:
+                            model = pickle.load(f)
+                        model_loaded = True
+                        training_status = f"Loaded cached Linear Regression model ({interval} - fully up-to-date)"
+                    except Exception:
+                        pass
+                        
+            if not model_loaded:
+                model = train_lr_model(x_lr_train, y_lr_train)
+                metrics = evaluate_lr_performance(model, x_lr_test, df_test, seq_length)
+                
+                with open(cache_path, "wb") as f:
+                    pickle.dump(model, f)
+                training_status = f"Trained Linear Regression model on 80% train data ({interval} timeframe)"
+                
+                try:
+                    meta_path = cache_path.replace("_lr.pkl", "_lr_meta.json")
+                    last_candle_start = df.index[-1]
+                    with open(meta_path, "w", encoding="utf-8") as f:
+                        json.dump({
+                            "last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S")
+                        }, f)
+                except Exception as meta_err:
+                    print(f"Error saving linear regression model metadata for {symbol}: {meta_err}")
+                    
+            if model_loaded:
+                metrics = evaluate_lr_performance(model, x_lr_test, df_test, seq_length)
                 
             metrics["training_status"] = training_status
             
