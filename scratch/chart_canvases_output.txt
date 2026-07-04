@@ -1,0 +1,144 @@
+Position 26336:
+ Close";
+    if (chartInterval === "4h") return "Next 4 Hours Predicted Close";
+    return t("prediction_header");
+  };
+
+  // Refs for Charts
+  const priceChartRef = useRef(null);
+  const rsiChartRef = useRef(null);
+  const macdChartRef = useRef(null);
+  const priceChartInst = useRef(null);
+  const rsiChartInst = useRef(null);
+  const macdChartInst
+---
+Position 26374:
+") return "Next 4 Hours Predicted Close";
+    return t("prediction_header");
+  };
+
+  // Refs for Charts
+  const priceChartRef = useRef(null);
+  const rsiChartRef = useRef(null);
+  const macdChartRef = useRef(null);
+  const priceChartInst = useRef(null);
+  const rsiChartInst = useRef(null);
+  const macdChartInst = useRef(null);
+
+  // 1. Check for to
+---
+Position 26410:
+ose";
+    return t("prediction_header");
+  };
+
+  // Refs for Charts
+  const priceChartRef = useRef(null);
+  const rsiChartRef = useRef(null);
+  const macdChartRef = useRef(null);
+  const priceChartInst = useRef(null);
+  const rsiChartInst = useRef(null);
+  const macdChartInst = useRef(null);
+
+  // 1. Check for token on mount
+  useEffect(() => {
+   
+---
+Position 26952:
+ Clear chart tooltips on outside clicks/touches
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      const isClickInsideChart = 
+        priceChartRef.current?.contains(e.target) || 
+        rsiChartRef.current?.contains(e.target) || 
+        macdChartRef.current?.contains(e.target);
+
+      if (!isClickInsideChart) {
+        [priceChar
+---
+Position 27006:
+ffect(() => {
+    const handleOutsideClick = (e) => {
+      const isClickInsideChart = 
+        priceChartRef.current?.contains(e.target) || 
+        rsiChartRef.current?.contains(e.target) || 
+        macdChartRef.current?.contains(e.target);
+
+      if (!isClickInsideChart) {
+        [priceChartInst.current, rsiChartInst.current, macdChartInst.cur
+---
+Position 27058:
+{
+      const isClickInsideChart = 
+        priceChartRef.current?.contains(e.target) || 
+        rsiChartRef.current?.contains(e.target) || 
+        macdChartRef.current?.contains(e.target);
+
+      if (!isClickInsideChart) {
+        [priceChartInst.current, rsiChartInst.current, macdChartInst.current].forEach(chart => {
+          if (chart) {
+    
+---
+Position 32698:
+onst renderCharts = () => {
+    destroyCharts();
+    if (!predictionData || !chartHistory || chartHistory.length === 0) return;
+
+    const ctxPrice = priceChartRef.current?.getContext("2d");
+    const ctxRsi = rsiChartRef.current?.getContext("2d");
+    const ctxMacd = macdChartRef.current?.getContext("2d");
+
+    const isTouchDevice = typeof window 
+---
+Position 32758:
+edictionData || !chartHistory || chartHistory.length === 0) return;
+
+    const ctxPrice = priceChartRef.current?.getContext("2d");
+    const ctxRsi = rsiChartRef.current?.getContext("2d");
+    const ctxMacd = macdChartRef.current?.getContext("2d");
+
+    const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.ma
+---
+Position 32817:
+ return;
+
+    const ctxPrice = priceChartRef.current?.getContext("2d");
+    const ctxRsi = rsiChartRef.current?.getContext("2d");
+    const ctxMacd = macdChartRef.current?.getContext("2d");
+
+    const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+    const chartEvents = isTouchDevice ? 
+---
+Position 138403:
+r: "var(--accent-primary)", width: "28px", height: "28px" }} />
+                      </div>
+                    )}
+
+                    <canvas ref={priceChartRef} />
+                  </div>
+                </div>
+
+                {/* Technical Indicators Chart Card */}
+                <div className="glass-panel">
+                  <h3 style={{ 
+---
+Position 139019:
+", textTransform: "uppercase" }}>{t("rsi_title")}</h4>
+                      <div className="indicator-wrapper">
+                        <canvas ref={rsiChartRef} />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "8px", 
+---
+Position 139367:
+, textTransform: "uppercase" }}>{t("macd_title")}</h4>
+                      <div className="indicator-wrapper">
+                        <canvas ref={macdChartRef} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Summary of Technical Signals */}
+                  <div style={{ marginTop: "25
+---
