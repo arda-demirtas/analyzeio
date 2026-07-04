@@ -1,0 +1,35 @@
+Line 76:     change_percent = None
+Line 77:     metrics = None
+Line 78:     xgb_predicted_close = None
+Line 79:     lstm_predicted_close = None
+Line 80:     lr_predicted_close = None
+Line 81:     
+Line 82:     xgb_metrics = None
+Line 83:     lstm_metrics = None
+Line 84:     lr_metrics = None
+Line 85:     
+Line 86:     model_lr = None
+Line 87: 
+Line 88:     if not is_pending_data:
+Line 89:         split_idx = int(len(df) * 0.8)
+Line 90:         df_train = df.iloc[:split_idx]
+Line 91:         df_test = df.iloc[split_idx - seq_length:]
+Line 92:         
+Line 93:         # Max/min return bounds
+Line 94:         max_ret = 0.15 if is_crypto else 0.08
+Line 95:         min_ret = -0.15 if is_crypto else -0.08
+Line 96: 
+Line 97:         # A. XGBoost Flow
+Line 98:         try:
+Line 99:             val_split = int(len(df_train) * 0.85)
+Line 100:             df_train_sub = df_train.iloc[:val_split]
+Line 101:             df_val = df_train.iloc[val_split - seq_length:]
+Line 102:             
+Line 103:             def make_raw_xgb_sequences(x_data, y_data):
+Line 104:                 xs, ys = [], []
+Line 105:                 for i in range(seq_length, len(x_data)):
+Line 106:                     xs.append(x_data[i-seq_length:i])
+Line 107:                     ys.append(y_data[i])
+Line 108:                 return np.array(xs).reshape(len(xs), -1), np.array(ys)
+Line 109:                 
+Line 110:             x_xgb_train, y_xgb_train = make_raw_xgb_sequences(df_train_sub[FEATURES].values, df_train_sub["Daily_Return"].values)
