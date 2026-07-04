@@ -1,0 +1,80 @@
+Line 101: 
+Line 102:   // Read initial language, history limit and register chart zoom on client mount
+Line 103:   useEffect(() => {
+Line 104:     const savedLang = localStorage.getItem("lang");
+Line 105:     if (savedLang) {
+Line 106:       setLang(savedLang);
+Line 107:     }
+Line 108:     const savedLimit = localStorage.getItem("historyLimit");
+Line 109:     if (savedLimit) {
+Line 110:       const parsed = parseInt(savedLimit, 10);
+Line 111:       if (!isNaN(parsed) && parsed >= 180 && parsed <= 720) {
+Line 112:         setHistoryLimit(parsed);
+Line 113:       }
+Line 114:     }
+Line 115:     
+Line 116:     // Dynamically register zoom plugin on the client side
+Line 117:     const initZoomPlugin = async () => {
+Line 118:       try {
+Line 119:         const zoomPlugin = (await import("chartjs-plugin-zoom")).default;
+Line 120:         Chart.register(zoomPlugin);
+Line 121:       } catch (err) {
+Line 122:         console.error("Zoom plugin registration failed:", err);
+Line 123:       }
+Line 124:     };
+Line 125:     initZoomPlugin();
+Line 126:   }, []);
+Line 127: 
+Line 128:   const changeLanguage = (newLang) => {
+Line 129:     setLang(newLang);
+Line 130:     localStorage.setItem("lang", newLang);
+Line 131:   };
+Line 132: 
+Line 133:   const LOCAL_TRANSLATIONS = {
+Line 134:     en: {
+Line 135:       ai_screener: "AI Market Screener",
+Line 136:       news_sentiment: "News Sentiment Analysis",
+Line 137:       news_gauge: "Overall Sentiment",
+Line 138:       screener_title: "AI Market Screener",
+Line 139:       screener_all: "All Assets",
+Line 140:       screener_bullish: "AI: Bullish",
+Line 141:       screener_bearish: "AI: Bearish",
+Line 142:       screener_oversold: "Oversold (RSI < 35)",
+Line 143:       screener_overbought: "Overbought (RSI > 65)",
+Line 144:       screener_asset: "Asset",
+Line 145:       screener_price: "Price",
+Line 146:       screener_pred_change: "AI Pred Change",
+Line 147:       screener_rsi: "RSI (14)",
+Line 148:       screener_macd: "MACD Signal",
+Line 149:       news_title_sec: "Latest News & AI Sentiment",
+Line 150:       news_sentiment_score: "Sentiment Score",
+Line 151:       rating_bullish: "Bullish",
+Line 152:       rating_bearish: "Bearish",
+Line 153:       rating_neutral: "Neutral"
+Line 154:     },
+Line 155:     tr: {
+Line 156:       ai_screener: "AI Market Tarayıcı",
+Line 157:       news_sentiment: "Haber Duyarlılık Analizi",
+Line 158:       news_gauge: "Genel Duyarlılık",
+Line 159:       screener_title: "AI Market Tarayıcı",
+Line 160:       screener_all: "Tüm Varlıklar",
+Line 161:       screener_bullish: "AI: Boğa",
+Line 162:       screener_bearish: "AI: Ayı",
+Line 163:       screener_oversold: "Aşırı Satım (RSI < 35)",
+Line 164:       screener_overbought: "Aşırı Alım (RSI > 65)",
+Line 165:       screener_asset: "Varlık",
+Line 166:       screener_price: "Fiyat",
+Line 167:       screener_pred_change: "AI Tahmin Değişim",
+Line 168:       screener_rsi: "RSI (14)",
+Line 169:       screener_macd: "MACD Sinyali",
+Line 170:       news_title_sec: "Son Haberler & Yapay Zeka Analizi",
+Line 171:       news_sentiment_score: "Duyarlılık Skoru",
+Line 172:       rating_bullish: "Boğa",
+Line 173:       rating_bearish: "Ayı",
+Line 174:       rating_neutral: "Yatay"
+Line 175:     }
+Line 176:   };
+Line 177: 
+Line 178:   const t = (key) => {
+Line 179:     if (LOCAL_TRANSLATIONS[lang]?.[key]) {
+Line 180:       return LOCAL_TRANSLATIONS[lang][key];
