@@ -74,6 +74,7 @@ class IndicatorPoint(BaseModel):
     bb_lower: Optional[float] = None
     ema_20: Optional[float] = None
     ema_50: Optional[float] = None
+    lr_predicted_close: Optional[float] = None
 
 class PredictionMetrics(BaseModel):
     rmse: float
