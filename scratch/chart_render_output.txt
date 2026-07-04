@@ -1,0 +1,115 @@
+Position 7728:
+terval] = useState("1d");
+  const [chartHistory, setChartHistory] = useState([]);
+  const [chartLoading, setChartLoading] = useState(false);
+  const [chartType, setChartType] = useState("line");
+  const [isChartFullscreen, setIsChartFullscreen] = useState(false);
+  const [historyLimit, setHistoryLimit] = useState(300);
+
+  // Comments state variable
+---
+Position 29729:
+() => {
+        clearTimeout(timer);
+        document.body.style.overflow = "";
+      };
+    }
+  }, [isChartFullscreen]);
+
+  // Re-render charts when chartType changes
+  useEffect(() => {
+    if (predictionData && chartHistory && chartHistory.length > 0) {
+      renderCharts();
+    }
+  }, [chartType]);
+
+  // Helper: Destroy existing charts
+  const 
+---
+Position 29870:
+rts when chartType changes
+  useEffect(() => {
+    if (predictionData && chartHistory && chartHistory.length > 0) {
+      renderCharts();
+    }
+  }, [chartType]);
+
+  // Helper: Destroy existing charts
+  const destroyCharts = () => {
+    if (priceChartInst.current) {
+      priceChartInst.current.destroy();
+      priceChartInst.current = null;
+    }
+
+---
+Position 33883:
+& predictionData.prediction_date && !isPendingData) {
+      extendedLabels.push(predictionData.prediction_date);
+    }
+    let datasets = [];
+    if (chartType === "candle") {
+      const candleColors = history.map(h => h.close >= h.open ? "rgba(16, 185, 129, 0.75)" : "rgba(239, 68, 68, 0.75)");
+      const candleBorderColors = history.map(h => h.c
+---
+Position 39770:
+Events,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            candlestickWicks: {
+              enabled: chartType === "candle",
+              history: history
+            },
+            legend: {
+              labels: { color: "#9ca3af", font: { family: "Inter" } }
+            },
+            tooltip: {
+
+---
+Position 91668:
+ height: "36px", fontSize: "13px", padding: 0, justifyContent: "center", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <LineChart style={{ width: "14px" }} /> {lang === "tr" ? "Grafik" : "Dashboard"}
+          </button>
+          <button 
+            onClick={() => { setShowScreener(true); setSidebarOpen(false); }}
+  
+---
+Position 132711:
+             <h3 style={{ fontSize: "18px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+                      <LineChart style={{ color: "var(--accent-primary)" }} /> {t("chart_title")}
+                    </h3>
+                    
+                    {/* Price Chart Header Actions */}
+                    <d
+---
+Position 134847:
+, 255, 0.06)" }}>
+                        <button
+                          onClick={() => setChartType("line")}
+                          className={chartType === "line" ? "btn-primary" : "btn-secondary"}
+                          style={{ padding: "4px 8px", fontSize: "11px", height: "auto", border: "none", fontWeight: "600" }}
+                  
+---
+Position 135284:
+      </button>
+                        <button
+                          onClick={() => setChartType("candle")}
+                          className={chartType === "candle" ? "btn-primary" : "btn-secondary"}
+                          style={{ padding: "4px 8px", fontSize: "11px", height: "auto", border: "none", fontWeight: "600" }}
+                
+---
+Position 185523:
+    <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <LineChart style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} />
+                    {lang === "tr" ? "Model Analitiği & Karşılaştırma" : "Model Analytics & Comparison"}
+       
+---
+Position 193870:
+  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <LineChart style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} /> {t("accuracy_title")}
+                    </h3>
+                    
+                    {accuracyLoading ? (
+  
+---
