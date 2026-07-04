@@ -511,6 +511,68 @@ def get_prediction(
         
     fundamental_result = get_fundamental_analysis(symbol, asset_name, lang=lang)
     
+    # Calculate Linear Regression prediction specifically for BTC-USD
+    lr_predicted_close = None
+    if symbol == "BTC-USD" and not is_pending_data:
+        try:
+            split_idx_lr = int(len(df) * 0.8)
+            df_train_lr = df.iloc[:split_idx_lr]
+            
+            def make_raw_lr_sequences_bg(x_data, y_data):
+                xs, ys = [], []
+                for i in range(seq_length, len(x_data)):
+                    xs.append(x_data[i-seq_length:i])
+                    ys.append(y_data[i])
+                return np.array(xs).reshape(len(xs), -1), np.array(ys)
+                
+            x_lr_train_bg, y_lr_train_bg = make_raw_lr_sequences_bg(df_train_lr[FEATURES].values, df_train_lr["Daily_Return"].values)
+            
+            cache_path_lr = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model_lr.pkl")
+            lr_model_loaded = False
+            
+            if not force_retrain and os.path.exists(cache_path_lr):
+                meta_path_lr = cache_path_lr.replace("_lr.pkl", "_lr_meta.json")
+                is_cache_valid = False
+                if os.path.exists(meta_path_lr):
+                    try:
+                        with open(meta_path_lr, "r", encoding="utf-8") as f:
+                            meta_data = json.load(f)
+                        last_trained_str = meta_data.get("last_candle_start")
+                        if last_trained_str:
+                            last_trained_candle_start = datetime.datetime.strptime(last_trained_str, "%Y-%m-%d %H:%M:%S")
+                            last_candle_start = df.index[-1]
+                            if last_candle_start <= last_trained_candle_start:
+                                is_cache_valid = True
+                    except Exception:
+                        pass
+                if is_cache_valid:
+                    try:
+                        with open(cache_path_lr, "rb") as f:
+                            model_lr = pickle.load(f)
+                        lr_model_loaded = True
+                    except Exception:
+                        pass
+            
+            if not lr_model_loaded:
+                model_lr = train_lr_model(x_lr_train_bg, y_lr_train_bg)
+                with open(cache_path_lr, "wb") as f:
+                    pickle.dump(model_lr, f)
+                try:
+                    meta_path_lr = cache_path_lr.replace("_lr.pkl", "_lr_meta.json")
+                    last_candle_start = df.index[-1]
+                    with open(meta_path_lr, "w", encoding="utf-8") as f:
+                        json.dump({
+                            "last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S")
+                        }, f)
+                except Exception:
+                    pass
+                    
+            last_features_lr = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
+            predicted_lr_return = float(model_lr.predict(last_features_lr)[0])
+            lr_predicted_close = float(last_close * (1 + predicted_lr_return))
+        except Exception as lr_err:
+            print(f"Error calculating linear regression background prediction: {lr_err}")
+
     # 7. Log Prediction and resolve past pending predictions in database
     from backend.database import SessionLocal
     from backend.models import PredictionLog
@@ -587,7 +649,8 @@ def get_prediction(
         "technical_recommendation": technical_recommendation,
         "prediction_status": "pending_data" if is_pending_data else "success",
         "prediction_error": pending_error_msg,
-        "model_type": model_type
+        "model_type": model_type,
+        "lr_predicted_close": lr_predicted_close
     }
 
 def update_screener_cache(symbol: str, db) -> None:
