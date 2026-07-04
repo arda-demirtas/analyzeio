@@ -1,6 +1,12 @@
 with open("c:/Users/h1z1a/Desktop/Analyzeio/frontend/src/app/page.js", "r", encoding="utf-8") as f:
     lines = f.readlines()
 
-for idx, line in enumerate(lines):
-    if "/api/predict" in line or "/predict?" in line:
-        print(f"Line {idx+1}: {line.strip()}")
+output = []
+for idx in range(1400, 1450):
+    if idx < len(lines):
+        output.append(f"Line {idx+1}: {lines[idx]}")
+
+with open("c:/Users/h1z1a/Desktop/Analyzeio/scratch/api_predict.txt", "w", encoding="utf-8") as f_out:
+    f_out.writelines(output)
+
+print("api_predict code written to scratch/api_predict.txt")
