@@ -9,6 +9,9 @@ def run(cmd):
     _, stdout, stderr = ssh.exec_command(cmd)
     return (stdout.read() + stderr.read()).decode("utf-8", errors="replace")
 
+# Force delete old cache
+run("rm -f /var/www/analyzeio/model_cache/BTC-USD_1d_model_lr*")
+
 py_code = """
 import sys
 sys.path.append("/var/www/analyzeio")
@@ -16,10 +19,11 @@ import requests
 
 # Get prediction with model_type=linear_regression
 try:
-    r = requests.get('http://127.0.0.1:8000/api/predict?symbol=BTC-USD&interval=1d&lang=tr&model_type=linear_regression', timeout=30)
+    r = requests.get('http://127.0.0.1:8000/api/predict?symbol=BTC-USD&interval=1d&lang=tr&model_type=xgboost', timeout=30)
     print('Status Code:', r.status_code)
     data = r.json()
-    print('Predicted Close:', data.get('predicted_close'))
+    print('Predicted Close (XGBoost):', data.get('predicted_close'))
+    print('LR Predicted Close:', data.get('lr_predicted_close'))
     print('Model Type:', data.get('model_type'))
     print('Metrics:', data.get('metrics'))
 except Exception as e:
