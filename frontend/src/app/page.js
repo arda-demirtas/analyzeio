@@ -800,6 +800,7 @@ export default function Home() {
         pointRadius: 0,
         fill: false,
         tension: 0.15,
+        hidden: true,
       },
       {
         label: "EMA 50",
@@ -809,6 +810,7 @@ export default function Home() {
         pointRadius: 0,
         fill: false,
         tension: 0.15,
+        hidden: true,
       },
       {
         label: "BB Upper",
@@ -818,6 +820,7 @@ export default function Home() {
         borderDash: [3, 3],
         pointRadius: 0,
         fill: false,
+        hidden: true,
       },
       {
         label: "BB Lower",
@@ -827,6 +830,7 @@ export default function Home() {
         borderDash: [3, 3],
         pointRadius: 0,
         fill: false,
+        hidden: true,
       }
     );
 
@@ -892,6 +896,7 @@ export default function Home() {
         pointBorderWidth: 1.5,
         fill: false,
         tension: 0.1,
+        hidden: true,
       });
     }
 
@@ -911,6 +916,7 @@ export default function Home() {
           pointRadius: 0,
           fill: false,
           tension: 0,
+          hidden: true,
         });
       });
 
@@ -924,6 +930,7 @@ export default function Home() {
           pointRadius: 0,
           fill: false,
           tension: 0,
+          hidden: true,
         });
       });
     }
