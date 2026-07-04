@@ -3491,31 +3491,9 @@ export default function Home() {
                     </div>
                   ) : (
                     <>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                        <span className="prediction-label" style={{ margin: 0 }}>
-                          {lang === "tr" ? "Model Tahmin Fiyatları" : "Model Prediction Prices"}
-                        </span>
-                        <button 
-                          onClick={() => loadPrediction(activeSymbol, chartInterval, modelType, true)} 
-                          className="btn-secondary" 
-                          style={{ 
-                            fontSize: "10px", 
-                            height: "24px", 
-                            padding: "0 10px", 
-                            margin: 0, 
-                            display: "flex", 
-                            alignItems: "center", 
-                            gap: "4px",
-                            background: "rgba(255,255,255,0.03)",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                            borderRadius: "4px"
-                          }}
-                          title={lang === "tr" ? "Modelleri elle sıfırdan eğit ve hesapla" : "Force retrain and calculate models from scratch"}
-                        >
-                          <RefreshCw style={{ width: "10px", height: "10px" }} />
-                          {lang === "tr" ? "Yeniden Hesapla" : "Recalculate"}
-                        </button>
-                      </div>
+                      <span className="prediction-label" style={{ marginBottom: "12px", display: "block" }}>
+                        {lang === "tr" ? "Model Tahmin Fiyatları" : "Model Prediction Prices"}
+                      </span>
                       
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", marginBottom: "15px" }}>
                         {/* XGBoost Box */}
