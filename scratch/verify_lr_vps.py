@@ -9,8 +9,8 @@ def run(cmd):
     _, stdout, stderr = ssh.exec_command(cmd)
     return (stdout.read() + stderr.read()).decode("utf-8", errors="replace")
 
-# Force delete old cache
-run("rm -f /var/www/analyzeio/model_cache/BTC-USD_1d_model_lr*")
+# Force delete all old cached models
+run("rm -rf /var/www/analyzeio/model_cache/*")
 
 py_code = """
 import sys
