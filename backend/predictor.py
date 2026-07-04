@@ -561,6 +561,12 @@ def get_prediction(
             "bb_lower": float(row["BB_Lower"]),
             "ema_20": float(row["EMA_20"]),
             "ema_50": float(row["EMA_50"]),
+            "atr": float(row["ATR"]) if "ATR" in row and not pd.isna(row["ATR"]) else 0.0,
+            "stoch_k": float(row["Stoch_K"]) if "Stoch_K" in row and not pd.isna(row["Stoch_K"]) else 50.0,
+            "stoch_d": float(row["Stoch_D"]) if "Stoch_D" in row and not pd.isna(row["Stoch_D"]) else 50.0,
+            "obv": float(row["OBV"]) if "OBV" in row and not pd.isna(row["OBV"]) else 0.0,
+            "cci": float(row["CCI"]) if "CCI" in row and not pd.isna(row["CCI"]) else 0.0,
+            "williams_r": float(row["Williams_R"]) if "Williams_R" in row and not pd.isna(row["Williams_R"]) else -50.0,
             "lr_predicted_close": lr_hist_val
         })
         
