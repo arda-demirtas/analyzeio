@@ -1,0 +1,100 @@
+Line 1041:               grid: { color: "rgba(255, 255, 255, 0.05)" },
+Line 1042:               ticks: { color: "#9ca3af" }
+Line 1043:             }
+Line 1044:           }
+Line 1045:         }
+Line 1046:       });
+Line 1047:     }
+Line 1048: 
+Line 1049:     // RSI Chart
+Line 1050:     if (ctxRsi) {
+Line 1051:       const rsiValues = history.map(item => item.rsi);
+Line 1052:       rsiChartInst.current = new Chart(ctxRsi, {
+Line 1053:         type: "line",
+Line 1054:         data: {
+Line 1055:           labels: labels,
+Line 1056:           datasets: [{
+Line 1057:             label: "RSI (14)",
+Line 1058:             data: rsiValues,
+Line 1059:             borderColor: "#f59e0b",
+Line 1060:             borderWidth: 1.5,
+Line 1061:             pointRadius: 0,
+Line 1062:             tension: 0.1,
+Line 1063:           }]
+Line 1064:         },
+Line 1065:         options: {
+Line 1066:           events: chartEvents,
+Line 1067:           responsive: true,
+Line 1068:           maintainAspectRatio: false,
+Line 1069:           plugins: {
+Line 1070:             legend: { display: false }
+Line 1071:           },
+Line 1072:           scales: {
+Line 1073:             x: {
+Line 1074:               grid: { display: false },
+Line 1075:               ticks: { display: false }
+Line 1076:             },
+Line 1077:             y: {
+Line 1078:               min: 0,
+Line 1079:               max: 100,
+Line 1080:               grid: { color: "rgba(255, 255, 255, 0.05)" },
+Line 1081:               ticks: { color: "#9ca3af", stepSize: 20 },
+Line 1082:               // Draw horizontal helper lines at 30 and 70
+Line 1083:               border: { dash: [5, 5] }
+Line 1084:             }
+Line 1085:           }
+Line 1086:         }
+Line 1087:       });
+Line 1088:     }
+Line 1089: 
+Line 1090:     // MACD Chart
+Line 1091:     if (ctxMacd) {
+Line 1092:       const macdValues = history.map(item => item.macd);
+Line 1093:       const signalValues = history.map(item => item.macd_signal);
+Line 1094:       const histValues = history.map(item => item.macd_hist);
+Line 1095:       
+Line 1096:       macdChartInst.current = new Chart(ctxMacd, {
+Line 1097:         type: "bar",
+Line 1098:         data: {
+Line 1099:           labels: labels,
+Line 1100:           datasets: [
+Line 1101:             {
+Line 1102:               type: "line",
+Line 1103:               label: "MACD",
+Line 1104:               data: macdValues,
+Line 1105:               borderColor: "#3b82f6",
+Line 1106:               borderWidth: 1.5,
+Line 1107:               pointRadius: 0,
+Line 1108:               tension: 0.1,
+Line 1109:             },
+Line 1110:             {
+Line 1111:               type: "line",
+Line 1112:               label: "Signal",
+Line 1113:               data: signalValues,
+Line 1114:               borderColor: "#ec4899",
+Line 1115:               borderWidth: 1.5,
+Line 1116:               pointRadius: 0,
+Line 1117:               tension: 0.1,
+Line 1118:             },
+Line 1119:             {
+Line 1120:               label: "Histogram",
+Line 1121:               data: histValues,
+Line 1122:               backgroundColor: histValues.map(h => h >= 0 ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.4)"),
+Line 1123:               borderWidth: 0,
+Line 1124:               barPercentage: 0.8
+Line 1125:             }
+Line 1126:           ]
+Line 1127:         },
+Line 1128:         options: {
+Line 1129:           events: chartEvents,
+Line 1130:           responsive: true,
+Line 1131:           maintainAspectRatio: false,
+Line 1132:           plugins: {
+Line 1133:             legend: { display: false }
+Line 1134:           },
+Line 1135:           scales: {
+Line 1136:             x: {
+Line 1137:               grid: { display: false },
+Line 1138:               ticks: { display: false }
+Line 1139:             },
+Line 1140:             y: {
