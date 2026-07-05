@@ -1,0 +1,2 @@
+Line 23: def get_prediction(
+Line 720: def update_screener_cache(symbol: str, db) -> None:
