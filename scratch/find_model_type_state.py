@@ -1,6 +1,17 @@
 with open("c:/Users/h1z1a/Desktop/Analyzeio/frontend/src/app/page.js", "r", encoding="utf-8") as f:
-    lines = f.readlines()
+    content = f.read()
 
-for idx, line in enumerate(lines):
-    if "const [modeltype" in line.lower():
-        print(f"Line {idx+1}: {line.strip()}")
+import re
+matches = [m.start() for m in re.finditer(r"modelType|setModelType", content)]
+print(f"Found {len(matches)} occurrences")
+
+output = []
+for m in matches:
+    start = max(0, m - 50)
+    end = min(len(content), m + 150)
+    output.append(f"Position {m}:\n{content[start:end]}\n---")
+
+with open("scratch/model_type_refs.txt", "w", encoding="utf-8") as f_out:
+    f_out.writelines("\n".join(output))
+
+print("Results written to scratch/model_type_refs.txt")
