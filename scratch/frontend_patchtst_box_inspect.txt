@@ -1,0 +1,165 @@
+4046:                             {predictionData && predictionData.lr_predicted_close !== null
+4047:                               ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+4048:                               : "---"}
+4049:                           </span>
+4050:                         </div>
+4051: 
+4052:                         {/* PatchTST Box (Visible only for BTC-USD) */}
+4053:                         {activeSymbol === "BTC-USD" && (
+4054:                           <div style={{ 
+4055:                             padding: "10px 14px", 
+4056:                             background: "rgba(245, 158, 11, 0.04)", 
+4057:                             border: "1px solid rgba(245, 158, 11, 0.2)", 
+4058:                             borderRadius: "var(--border-radius-md)",
+4059:                             display: "flex",
+4060:                             justifyContent: "space-between",
+4061:                             alignItems: "center"
+4062:                           }}>
+4063:                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+4064:                               <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f59e0b", boxShadow: "0 0 8px #f59e0b" }}></span>
+4065:                               <span style={{ fontSize: "13px", fontWeight: "600", color: "#fef3c7" }}>PatchTST</span>
+4066:                             </div>
+4067:                             <div>
+4068:                               {patchTstLoading ? (
+4069:                                 <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-muted)" }}>
+4070:                                   <RefreshCw className="animate-spin" style={{ width: "12px", color: "#f59e0b" }} />
+4071:                                   <span>{lang === "tr" ? "Hesaplanıyor..." : "Calculating..."}</span>
+4072:                                 </div>
+4073:                               ) : patchTstData && patchTstData.patchtst_predicted_close !== null ? (
+4074:                                 <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
+4075:                                   {`$${patchTstData.patchtst_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`}
+4076:                                 </span>
+4077:                               ) : (
+4078:                                 <button 
+4079:                                   onClick={handleApplyPatchTst}
+4080:                                   className="btn-primary" 
+4081:                                   style={{ 
+4082:                                     fontSize: "11px", 
+4083:                                     height: "26px", 
+4084:                                     padding: "0 10px", 
+4085:                                     background: "linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)", 
+4086:                                     border: "none",
+4087:                                     borderRadius: "6px",
+4088:                                     fontWeight: "700",
+4089:                                     color: "#ffffff"
+4090:                                   }}
+4091:                                 >
+4092:                                   {lang === "tr" ? "PatchTST Uygula" : "Apply PatchTST"}
+4093:                                 </button>
+4094:                               )}
+4095:                             </div>
+4096:                           </div>
+4097:                         )}
+4098:                       </div>
+4099: 
+4100:                       <div style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", width: "100%" }}>
+4101:                         {t("expected_close")}: {predictionData ? predictionData.expected_close_time : "---"}
+4102:                       </div>
+4103:                       
+4104:                       {predictionData && (
+4105:                         <div style={{ marginTop: "18px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
+4106:                           <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase", marginBottom: "4px", display: "block" }}>
+4107:                             {lang === "tr" ? "Model Sinyalleri & Getiri Oranları" : "Model Signals & Expected Changes"}:
+4108:                           </span>
+4109: 
+4110:                           {/* XGBoost Signal */}
+4111:                           {xgbChangeVal !== null && (
+4112:                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+4113:                               <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+4114:                                 <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#a855f7" }}></span>
+4115:                                 XGBoost:
+4116:                               </span>
+4117:                               <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+4118:                                 {xgbChangeVal >= 0 ? (
+4119:                                   <>
+4120:                                     <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+4121:                                     <span style={{ color: "var(--accent-success)" }}>+{xgbChangeVal.toFixed(2)}% ({t("bullish")})</span>
+4122:                                   </>
+4123:                                 ) : (
+4124:                                   <>
+4125:                                     <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+4126:                                     <span style={{ color: "var(--accent-danger)" }}>{xgbChangeVal.toFixed(2)}% ({t("bearish")})</span>
+4127:                                   </>
+4128:                                 )}
+4129:                               </div>
+4130:                             </div>
+4131:                           )}
+4132: 
+4133:                           {/* LSTM Signal */}
+4134:                           {lstmChangeVal !== null && (
+4135:                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+4136:                               <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+4137:                                 <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#0ea5e9" }}></span>
+4138:                                 LSTM:
+4139:                               </span>
+4140:                               <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+4141:                                 {lstmChangeVal >= 0 ? (
+4142:                                   <>
+4143:                                     <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+4144:                                     <span style={{ color: "var(--accent-success)" }}>+{lstmChangeVal.toFixed(2)}% ({t("bullish")})</span>
+4145:                                   </>
+4146:                                 ) : (
+4147:                                   <>
+4148:                                     <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+4149:                                     <span style={{ color: "var(--accent-danger)" }}>{lstmChangeVal.toFixed(2)}% ({t("bearish")})</span>
+4150:                                   </>
+4151:                                 )}
+4152:                               </div>
+4153:                             </div>
+4154:                           )}
+4155: 
+4156:                           {/* Linear Regression Signal */}
+4157:                           {lrChangeVal !== null && (
+4158:                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+4159:                               <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+4160:                                 <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#3b82f6" }}></span>
+4161:                                 {lang === "tr" ? "Lineer Reg." : "Linear Reg."}:
+4162:                               </span>
+4163:                               <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+4164:                                 {lrChangeVal >= 0 ? (
+4165:                                   <>
+4166:                                     <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+4167:                                     <span style={{ color: "var(--accent-success)" }}>+{lrChangeVal.toFixed(2)}% ({t("bullish")})</span>
+4168:                                   </>
+4169:                                 ) : (
+4170:                                   <>
+4171:                                     <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+4172:                                     <span style={{ color: "var(--accent-danger)" }}>{lrChangeVal.toFixed(2)}% ({t("bearish")})</span>
+4173:                                   </>
+4174:                                 )}
+4175:                               </div>
+4176:                             </div>
+4177:                           )}
+4178: 
+4179:                           {/* PatchTST Signal */}
+4180:                           {activeSymbol === "BTC-USD" && patchTstData && patchTstData.patchtst_predicted_close !== null && (() => {
+4181:                             const lastPrice = predictionData ? predictionData.last_close : null;
+4182:                             if (!lastPrice) return null;
+4183:                             const patchTstChangeVal = ((patchTstData.patchtst_predicted_close - lastPrice) / lastPrice) * 100;
+4184:                             return (
+4185:                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+4186:                                 <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+4187:                                   <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#f59e0b" }}></span>
+4188:                                   PatchTST:
+4189:                                 </span>
+4190:                                 <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+4191:                                   {patchTstChangeVal >= 0 ? (
+4192:                                     <>
+4193:                                       <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+4194:                                       <span style={{ color: "var(--accent-success)" }}>+{patchTstChangeVal.toFixed(2)}% ({t("bullish")})</span>
+4195:                                     </>
+4196:                                   ) : (
+4197:                                     <>
+4198:                                       <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+4199:                                       <span style={{ color: "var(--accent-danger)" }}>{patchTstChangeVal.toFixed(2)}% ({t("bearish")})</span>
+4200:                                     </>
+4201:                                   )}
+4202:                                 </div>
+4203:                               </div>
+4204:                             );
+4205:                           })()}
+4206:                         </div>
+4207:                       )}
+4208:                       
+4209: 
+4210:                     </>
