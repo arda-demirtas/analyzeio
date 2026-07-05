@@ -4398,6 +4398,28 @@ export default function Home() {
                             {predictionData && predictionData.lr_metrics && predictionData.lr_metrics.directional_accuracy !== null ? `${predictionData.lr_metrics.directional_accuracy.toFixed(1)}%` : "---"}
                           </td>
                         </tr>
+
+                        {/* PatchTST row */}
+                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                          <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#f59e0b" }}></span>
+                            <span style={{ fontWeight: "600", color: "#fef3c7" }}>PatchTST</span>
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+                            {predictionData && predictionData.patchtst_predicted_close !== null
+                              ? `$${predictionData.patchtst_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.patchtst_metrics && predictionData.patchtst_metrics.rmse !== null ? `$${predictionData.patchtst_metrics.rmse.toFixed(1)}` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.patchtst_metrics && predictionData.patchtst_metrics.mape !== null ? `${predictionData.patchtst_metrics.mape.toFixed(2)}%` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
+                            {predictionData && predictionData.patchtst_metrics && predictionData.patchtst_metrics.directional_accuracy !== null ? `${predictionData.patchtst_metrics.directional_accuracy.toFixed(1)}%` : "---"}
+                          </td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>
