@@ -1,0 +1,232 @@
+--- XGBoost Block ---96:         max_ret = 0.15 if is_crypto else 0.08
+97:         min_ret = -0.15 if is_crypto else -0.08
+98: 
+99:         # A. XGBoost Flow
+100:         try:
+101:             val_split = int(len(df_train) * 0.85)
+102:             df_train_sub = df_train.iloc[:val_split]
+103:             df_val = df_train.iloc[val_split - seq_length:]
+104:             
+105:             def make_raw_xgb_sequences(x_data, y_data):
+106:                 xs, ys = [], []
+107:                 for i in range(seq_length, len(x_data)):
+108:                     xs.append(x_data[i-seq_length:i])
+109:                     ys.append(y_data[i])
+110:                 return np.array(xs).reshape(len(xs), -1), np.array(ys)
+111:                 
+112:             x_xgb_train, y_xgb_train = make_raw_xgb_sequences(df_train_sub[FEATURES].values, df_train_sub["Daily_Return"].values)
+113:             x_xgb_val, y_xgb_val = make_raw_xgb_sequences(df_val[FEATURES].values, df_val["Daily_Return"].values)
+114:             x_xgb_test, y_xgb_test = make_raw_xgb_sequences(df_test[FEATURES].values, df_test["Daily_Return"].values)
+115:             
+116:             cache_path_xgb = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.json")
+117:             xgb_loaded = False
+118:             
+119:             if not force_retrain and os.path.exists(cache_path_xgb):
+120:                 meta_path_xgb = cache_path_xgb.replace(".json", "_meta.json")
+121:                 is_cache_valid = False
+122:                 if os.path.exists(meta_path_xgb):
+123:                     try:
+124:                         with open(meta_path_xgb, "r", encoding="utf-8") as f:
+125:                             meta_data = json.load(f)
+126:                         last_trained_str = meta_data.get("last_candle_start")
+127:                         if last_trained_str:
+128:                             last_trained_candle_start = datetime.datetime.strptime(last_trained_str, "%Y-%m-%d %H:%M:%S")
+129:                             last_candle_start = df.index[-1]
+130:                             if last_candle_start <= last_trained_candle_start:
+131:                                 is_cache_valid = True
+132:                     except Exception:
+133:                         pass
+134:                 if is_cache_valid:
+135:                     try:
+136:                         model_xgb = xgb.XGBRegressor()
+137:                         model_xgb.load_model(cache_path_xgb)
+138:                         xgb_loaded = True
+139:                         xgb_status = f"Loaded cached XGBoost model ({interval})"
+140:                     except Exception:
+141:                         pass
+142:             
+143:             if not xgb_loaded:
+144:                 is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
+145:                 if is_auto_trained_asset and not force_retrain and not is_daemon:
+146:                     if os.path.exists(cache_path_xgb):
+147:                         try:
+148:                             model_xgb = xgb.XGBRegressor()
+149:                             model_xgb.load_model(cache_path_xgb)
+150:                             xgb_loaded = True
+151:                             xgb_status = f"Loaded cached XGBoost model ({interval} - Fallback)"
+152:                         except Exception:
+153:                             pass
+154:                     if not xgb_loaded:
+155:                         raise ValueError(f"XGBoost Model for {symbol} is currently training.")
+156:                 else:
+157:                     model_xgb = xgb.XGBRegressor(
+158:                         n_estimators=500, max_depth=6, learning_rate=0.03,
+159:                         subsample=0.8, colsample_bytree=0.8, reg_alpha=0.1, reg_lambda=1,
+160:                         early_stopping_rounds=15, random_state=42, n_jobs=-1
+161:                     )
+162:                     model_xgb.fit(
+163:                         x_xgb_train, y_xgb_train,
+164:                         eval_set=[(x_xgb_val, y_xgb_val)],
+165:                         verbose=False
+166:                     )
+167:                     model_xgb.save_model(cache_path_xgb)
+168:                     xgb_status = f"Trained XGBoost model ({interval})"
+169:                     try:
+170:                         meta_path_xgb = cache_path_xgb.replace(".json", "_meta.json")
+171:                         last_candle_start = df.index[-1]
+172:                         with open(meta_path_xgb, "w", encoding="utf-8") as f:
+173:                             json.dump({"last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S")}, f)
+174:                     except Exception:
+175:                         pass
+176:             
+177:             xgb_metrics = evaluate_xgb_performance(model_xgb, x_xgb_test, df_test, seq_length)
+178:             xgb_metrics["training_status"] = xgb_status
+179:             
+180:             last_features_xgb = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
+181:             pred_ret_xgb = float(model_xgb.predict(last_features_xgb)[0])
+182:             pred_ret_xgb = max(min(pred_ret_xgb, max_ret), min_ret)
+183:             xgb_predicted_close = float(df["Close"].iloc[-1] * (1 + pred_ret_xgb))
+184:         except Exception as e:
+185:             print(f"Error in XGBoost flow: {e}")
+
+--- LSTM Block ---186: 
+187:         # B. LSTM Flow
+188:         try:
+189:             val_split = int(len(df_train) * 0.85)
+190:             df_train_sub = df_train.iloc[:val_split]
+191:             df_val = df_train.iloc[val_split - seq_length:]
+192:             
+193:             x_lstm_train, y_lstm_train, scaler_x_train, scaler_y_train = prepare_lstm_data(df_train_sub, seq_length)
+194:             x_lstm_val, y_lstm_val, _, _ = prepare_lstm_data(df_val, seq_length, scaler_x_train, scaler_y_train)
+195:             x_lstm_test, y_lstm_test, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x_train, scaler_y_train)
+196:             
+197:             cache_path_lstm = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.keras")
+198:             lstm_loaded = False
+199:             
+200:             if not force_retrain and os.path.exists(cache_path_lstm):
+201:                 meta_path_lstm = cache_path_lstm.replace(".keras", "_meta.json")
+202:                 is_cache_valid = False
+203:                 if os.path.exists(meta_path_lstm):
+204:                     try:
+205:                         with open(meta_path_lstm, "r", encoding="utf-8") as f:
+206:                             meta_data = json.load(f)
+207:                         last_trained_str = meta_data.get("last_candle_start")
+208:                         if last_trained_str:
+209:                             last_trained_candle_start = datetime.datetime.strptime(last_trained_str, "%Y-%m-%d %H:%M:%S")
+210:                             last_candle_start = df.index[-1]
+211:                             if last_candle_start <= last_trained_candle_start:
+212:                                 is_cache_valid = True
+213:                     except Exception:
+214:                         pass
+215:                 if is_cache_valid:
+216:                     try:
+217:                         model_lstm = tf.keras.models.load_model(cache_path_lstm)
+218:                         lstm_loaded = True
+219:                         lstm_status = f"Loaded cached LSTM model ({interval})"
+220:                     except Exception:
+221:                         pass
+222:             
+223:             if not lstm_loaded:
+224:                 is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
+225:                 if is_auto_trained_asset and not force_retrain and not is_daemon:
+226:                     if os.path.exists(cache_path_lstm):
+227:                         try:
+228:                             model_lstm = tf.keras.models.load_model(cache_path_lstm)
+229:                             lstm_loaded = True
+230:                             lstm_status = f"Loaded cached LSTM model ({interval} - Fallback)"
+231:                         except Exception:
+232:                             pass
+233:                     if not lstm_loaded:
+234:                         raise ValueError(f"LSTM Model for {symbol} is currently training.")
+235:                 else:
+236:                     model_lstm = train_lstm_model(x_lstm_train, y_lstm_train, seq_length, validation_data=(x_lstm_val, y_lstm_val))
+237:                     model_lstm.save(cache_path_lstm)
+238:                     lstm_status = f"Trained LSTM model ({interval})"
+239:                     try:
+240:                         meta_path_lstm = cache_path_lstm.replace(".keras", "_meta.json")
+241:                         last_candle_start = df.index[-1]
+242:                         with open(meta_path_lstm, "w", encoding="utf-8") as f:
+243:                             json.dump({"last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S")}, f)
+244:                     except Exception:
+245:                         pass
+246:             
+247:             lstm_metrics = evaluate_model_performance(model_lstm, x_lstm_test, y_lstm_test, scaler_y_train, df_test, seq_length)
+248:             lstm_metrics["training_status"] = lstm_status
+249:             
+250:             last_features_lstm = df[FEATURES].iloc[-seq_length:].values
+251:             scaled_last_features = scaler_x_train.transform(last_features_lstm)
+252:             input_seq = np.array([scaled_last_features])
+253:             scaled_pred = model_lstm.predict(input_seq, verbose=0)
+254:             pred_ret_lstm = float(scaler_y_train.inverse_transform(scaled_pred)[0][0])
+255:             pred_ret_lstm = max(min(pred_ret_lstm, max_ret), min_ret)
+256:             lstm_predicted_close = float(df["Close"].iloc[-1] * (1 + pred_ret_lstm))
+257:         except Exception as e:
+258:             print(f"Error in LSTM flow: {e}")
+259: 
+260:         # C. Linear Regression Flow
+
+--- LR Block ---261:         try:
+262:             split_idx_lr = int(len(df) * 0.8)
+263:             df_train_lr = df.iloc[:split_idx_lr]
+264:             
+265:             def make_raw_lr_sequences_bg(x_data, y_data):
+266:                 xs, ys = [], []
+267:                 for i in range(seq_length, len(x_data)):
+268:                     xs.append(x_data[i-seq_length:i])
+269:                     ys.append(y_data[i])
+270:                 return np.array(xs).reshape(len(xs), -1), np.array(ys)
+271:                 
+272:             x_lr_train, y_lr_train = make_raw_lr_sequences_bg(df_train_lr[FEATURES].values, df_train_lr["Daily_Return"].values)
+273:             x_lr_test, y_lr_test = make_raw_lr_sequences_bg(df_test[FEATURES].values, df_test["Daily_Return"].values)
+274:             
+275:             cache_path_lr = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model_lr.pkl")
+276:             lr_model_loaded = False
+277:             
+278:             if not force_retrain and os.path.exists(cache_path_lr):
+279:                 meta_path_lr = cache_path_lr.replace("_lr.pkl", "_lr_meta.json")
+280:                 is_cache_valid = False
+281:                 if os.path.exists(meta_path_lr):
+282:                     try:
+283:                         with open(meta_path_lr, "r", encoding="utf-8") as f:
+284:                             meta_data = json.load(f)
+285:                         last_trained_str = meta_data.get("last_candle_start")
+286:                         if last_trained_str:
+287:                             last_trained_candle_start = datetime.datetime.strptime(last_trained_str, "%Y-%m-%d %H:%M:%S")
+288:                             last_candle_start = df.index[-1]
+289:                             if last_candle_start <= last_trained_candle_start:
+290:                                 is_cache_valid = True
+291:                     except Exception:
+292:                         pass
+293:                 if is_cache_valid:
+294:                     try:
+295:                         with open(cache_path_lr, "rb") as f:
+296:                             model_lr = pickle.load(f)
+297:                         lr_model_loaded = True
+298:                         lr_status = f"Loaded cached Linear Regression model ({interval})"
+299:                     except Exception:
+300:                         pass
+301:             
+302:             if not lr_model_loaded:
+303:                 model_lr = train_lr_model(x_lr_train, y_lr_train)
+304:                 with open(cache_path_lr, "wb") as f:
+305:                     pickle.dump(model_lr, f)
+306:                 try:
+307:                     meta_path_lr = cache_path_lr.replace("_lr.pkl", "_lr_meta.json")
+308:                     last_candle_start = df.index[-1]
+309:                     with open(meta_path_lr, "w", encoding="utf-8") as f:
+310:                         json.dump({"last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S")}, f)
+311:                 except Exception:
+312:                     pass
+313:                 lr_status = f"Trained Linear Regression model ({interval})"
+314:                     
+315:             lr_metrics = evaluate_lr_performance(model_lr, x_lr_test, df_test, seq_length)
+316:             lr_metrics["training_status"] = lr_status
+317:             
+318:             last_features_lr = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
+319:             predicted_lr_return = float(model_lr.predict(last_features_lr)[0])
+320:             predicted_lr_return = max(min(predicted_lr_return, max_ret), min_ret)
+321:             lr_predicted_close = float(df["Close"].iloc[-1] * (1 + predicted_lr_return))
+322:         except Exception as lr_err:
+323:             print(f"Error calculating linear regression prediction: {lr_err}")
+324: 
+325:         # D. PatchTST Flow
