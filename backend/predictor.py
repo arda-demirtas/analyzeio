@@ -338,10 +338,10 @@ def get_prediction(
             df_train_tst = df_clean.iloc[:split_idx_tst]
             df_test_tst = df_clean.iloc[split_idx_tst:]
             
-            X_train_tst = df_train_tst[existing_tst_features].values
-            y_train_tst = df_train_tst["Daily_Return"].values
-            X_test_tst = df_test_tst[existing_tst_features].values
-            y_test_tst = df_test_tst["Daily_Return"].values
+            X_train_tst = df_train_tst[existing_tst_features].iloc[:-1].values
+            y_train_tst = df_train_tst["Daily_Return"].iloc[1:].values
+            X_test_tst = df_test_tst[existing_tst_features].iloc[:-1].values
+            y_test_tst = df_test_tst["Daily_Return"].iloc[1:].values
             
             scaler_x_tst = StandardScaler()
             X_train_tst_scaled = scaler_x_tst.fit_transform(X_train_tst)
@@ -351,12 +351,12 @@ def get_prediction(
             model_tst.fit(X_train_tst_scaled, y_train_tst)
             
             test_preds_ret = model_tst.predict(X_test_tst_scaled)
-            test_preds_close = df_test_tst["Close"].values * (1 + test_preds_ret)
+            test_preds_close = df_test_tst["Close"].iloc[:-1].values * (1 + test_preds_ret)
             
-            tst_rmse = float(np.sqrt(np.mean((test_preds_close - df_test_tst["Close"].values) ** 2)))
-            tst_mape = float(np.mean(np.abs((df_test_tst["Close"].values - test_preds_close) / df_test_tst["Close"].values)) * 100)
+            tst_rmse = float(np.sqrt(np.mean((test_preds_close - df_test_tst["Close"].iloc[1:].values) ** 2)))
+            tst_mape = float(np.mean(np.abs((df_test_tst["Close"].iloc[1:].values - test_preds_close) / df_test_tst["Close"].iloc[1:].values)) * 100)
             
-            act_dir = np.sign(df_test_tst["Daily_Return"].values)
+            act_dir = np.sign(df_test_tst["Daily_Return"].iloc[1:].values)
             prd_dir = np.sign(test_preds_ret)
             tst_da = float(np.mean(act_dir == prd_dir) * 100)
             
