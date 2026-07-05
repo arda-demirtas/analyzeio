@@ -60,41 +60,22 @@ def score_symbol_for_trading(symbol: str) -> float:
     try:
         res = get_prediction(symbol, interval="1d", force_retrain=False)
         # Check if predictions are pending, locked, or unavailable
-        if res.get("predicted_close") is None or res.get("xgb_predicted_close") is None or res.get("lstm_predicted_close") is None or res.get("lr_predicted_close") is None:
+        if res.get("prediction_status") != "success":
             return -999.0
             
-        last_date_str = res.get("last_date")
-        if not last_date_str:
-            return -999.0
-            
-        try:
-            # Yahoo Finance dates may be formatted as YYYY-MM-DD or with time; extract date part
-            last_dt = datetime.datetime.strptime(last_date_str.split()[0], "%Y-%m-%d")
-            now_utc = datetime.datetime.utcnow()
-            # Require today's candle to be open/available (i.e. last candle date matches today's date in UTC)
-            if last_dt.date() < now_utc.date():
-                return -999.0
-        except Exception:
-            return -999.0
-
         last_close = res.get("last_close")
-        if not last_close:
-            return -999.0
-            
         xgb_close = res.get("xgb_predicted_close")
         lstm_close = res.get("lstm_predicted_close")
         lr_close = res.get("lr_predicted_close")
         
-        returns = []
-        if xgb_close:
-            returns.append((xgb_close - last_close) / last_close)
-        if lstm_close:
-            returns.append((lstm_close - last_close) / last_close)
-        if lr_close:
-            returns.append((lr_close - last_close) / last_close)
-            
-        if not returns:
+        if last_close is None or xgb_close is None or lstm_close is None or lr_close is None:
             return -999.0
+            
+        returns = []
+        returns.append((xgb_close - last_close) / last_close)
+        returns.append((lstm_close - last_close) / last_close)
+        returns.append((lr_close - last_close) / last_close)
+            
         avg_expected_return = sum(returns) / len(returns)
     except Exception:
         return -999.0
