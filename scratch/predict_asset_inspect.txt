@@ -1,0 +1,50 @@
+31: def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_type: str = "xgboost", force_retrain: bool = False, current_user: Optional[User] = Depends(get_current_user_optional)):
+32:     """
+33:     Triggers historical data loading, computes technical indicators,
+34:     and runs XGBoost (default) or LSTM model inference to predict the close price for the next candle of the selected interval.
+35:     """
+36:     symbol_upper = normalize_symbol(symbol)
+37:     if interval not in ["15m", "1h", "4h", "1d"]:
+38:         raise HTTPException(
+39:             status_code=status.HTTP_400_BAD_REQUEST,
+40:             detail="Unsupported interval. Allowed: 15m, 1h, 4h, 1d"
+41:         )
+42:     if model_type not in ["xgboost", "lstm", "linear_regression", "patchtst"]:
+43:         raise HTTPException(
+44:             status_code=status.HTTP_400_BAD_REQUEST,
+45:             detail="Unsupported model_type. Allowed: xgboost, lstm, linear_regression"
+46:         )
+47:     is_btc = symbol_upper == "BTC-USD"
+48:     is_premium = current_user.is_premium if current_user else False
+49:     if not is_premium and not is_btc:
+50:         try:
+51:             history_points = fetch_interval_history(symbol_upper, interval=interval)
+52:             if not history_points:
+53:                 raise ValueError("No historical points returned")
+54:             last_point = history_points[-1]
+55:             
+56:             from backend.predictor import TICKER_NAMES
+57:             name = TICKER_NAMES.get(symbol_upper, symbol_upper)
+58:             current_price = last_point["close"]
+59:                 
+60:             return {
+61:                 "symbol": symbol_upper,
+62:                 "name": name,
+63:                 "last_date": last_point["date"],
+64:                 "last_close": last_point["close"],
+65:                 "predicted_close": None,
+66:                 "prediction_date": None,
+67:                 "expected_close_time": None,
+68:                 "price_change_percent": None,
+69:                 "current_price": current_price,
+70:                 "metrics": None,
+71:                 "history": history_points,
+72:                 "fundamental_analysis": None,
+73:                 "technical_recommendation": None
+74:             }
+75:         except Exception as e:
+76:             raise HTTPException(
+77:                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+78:                 detail=f"Error loading historical data: {str(e)}"
+79:             )
+80:     try:
