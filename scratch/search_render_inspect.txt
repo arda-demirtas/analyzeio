@@ -1,0 +1,80 @@
+Line 2491:       
+Line 2492:       {/* Sidebar Panel */}
+Line 2493:       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
+Line 2494:         <div className="logo-container" style={{ justifyContent: "space-between", width: "100%" }}>
+Line 2495:           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+Line 2496:             <Briefcase style={{ color: "var(--accent-primary)", width: "28px", height: "28px" }} />
+Line 2497:             <h1 className="logo-text" style={{ fontSize: "24px", margin: 0 }}>analyzeio</h1>
+Line 2498:           </div>
+Line 2499:           <button 
+Line 2500:             type="button"
+Line 2501:             className="mobile-close-btn"
+Line 2502:             onClick={() => setSidebarOpen(false)}
+Line 2503:             aria-label="Close Menu"
+Line 2504:           >
+Line 2505:             <X style={{ width: "20px", height: "20px" }} />
+Line 2506:           </button>
+Line 2507:         </div>
+Line 2508: 
+Line 2509:         {/* Search Input with Autocomplete */}
+Line 2510:         <form onSubmit={handleSearchSubmit} style={{ display: "flex", gap: "8px" }}>
+Line 2511:           <div style={{ position: "relative", flexGrow: 1 }}>
+Line 2512:             <Search style={{ position: "absolute", left: "12px", top: "12px", color: "var(--text-muted)", width: "16px", zIndex: 1 }} />
+Line 2513:             <input
+Line 2514:               type="text"
+Line 2515:               placeholder={t("search_placeholder")}
+Line 2516:               className="input-field"
+Line 2517:               value={searchQuery}
+Line 2518:               onChange={e => {
+Line 2519:                 setSearchQuery(e.target.value);
+Line 2520:                 setShowSuggestions(false);
+Line 2521:               }}
+Line 2522:               onFocus={() => triggerSearch(searchQuery)}
+Line 2523:               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+Line 2524:               onKeyDown={e => {
+Line 2525:                 if (!showSuggestions) return;
+Line 2526:                 if (e.key === "ArrowDown") {
+Line 2527:                   e.preventDefault();
+Line 2528:                   setSuggestionIndex(i => Math.min(i + 1, searchSuggestions.length - 1));
+Line 2529:                 } else if (e.key === "ArrowUp") {
+Line 2530:                   e.preventDefault();
+Line 2531:                   setSuggestionIndex(i => Math.max(i - 1, -1));
+Line 2532:                 } else if (e.key === "Enter" && suggestionIndex >= 0) {
+Line 2533:                   e.preventDefault();
+Line 2534:                   const chosen = searchSuggestions[suggestionIndex];
+Line 2535:                   setShowSuggestions(false);
+Line 2536:                   addSymbolToWatchlist(chosen.symbol);
+Line 2537:                 } else if (e.key === "Escape") {
+Line 2538:                   setShowSuggestions(false);
+Line 2539:                 }
+Line 2540:               }}
+Line 2541:               style={{ paddingLeft: "36px", paddingRight: "10px", height: "40px" }}
+Line 2542:             />
+Line 2543:             {/* Autocomplete Dropdown */}
+Line 2544:             {showSuggestions && (
+Line 2545:               <div style={{
+Line 2546:                 position: "absolute",
+Line 2547:                 top: "calc(100% + 4px)",
+Line 2548:                 left: 0,
+Line 2549:                 right: 0,
+Line 2550:                 background: "rgba(15, 10, 30, 0.98)",
+Line 2551:                 border: "1px solid rgba(139, 92, 246, 0.3)",
+Line 2552:                 borderRadius: "10px",
+Line 2553:                 zIndex: 9999,
+Line 2554:                 overflow: "hidden",
+Line 2555:                 boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+Line 2556:                 backdropFilter: "blur(12px)"
+Line 2557:               }}>
+Line 2558:                 {searchSuggestions.map((item, idx) => {
+Line 2559:                   const catColors = { Crypto: "#f59e0b", Stock: "#3b82f6", BIST: "#10b981", Commodity: "#f97316", Index: "#a855f7", ETF: "#06b6d4" };
+Line 2560:                   const isHighlighted = idx === suggestionIndex;
+Line 2561:                   return (
+Line 2562:                     <div
+Line 2563:                       key={item.symbol}
+Line 2564:                       onMouseDown={() => {
+Line 2565:                         addSymbolToWatchlist(item.symbol);
+Line 2566:                       }}
+Line 2567:                       style={{
+Line 2568:                         display: "flex",
+Line 2569:                         alignItems: "center",
+Line 2570:                         gap: "10px",
