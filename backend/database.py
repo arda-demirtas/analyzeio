@@ -44,20 +44,25 @@ def run_migrations():
         # Ensure all tables are created
         Base.metadata.create_all(bind=engine)
         
-        # Populate default auto-train symbols if table is empty
+        # Populate default and missing auto-train symbols
         from backend.models import AutoTrainSymbol, MarketScreener
         from backend.config import AUTO_TRAINED_SYMBOLS
-        count = db.query(AutoTrainSymbol).count()
-        if count == 0:
-            for sym in AUTO_TRAINED_SYMBOLS:
+        
+        existing_symbols = {s.symbol for s in db.query(AutoTrainSymbol).all()}
+        added_symbols = 0
+        for sym in AUTO_TRAINED_SYMBOLS:
+            if sym not in existing_symbols:
                 db.add(AutoTrainSymbol(symbol=sym))
+                added_symbols += 1
+        if added_symbols > 0:
             db.commit()
-            print(f"Populated database with {len(AUTO_TRAINED_SYMBOLS)} default auto-train symbols.")
+            print(f"Populated database with {added_symbols} new auto-train symbols.")
 
-        screener_count = db.query(MarketScreener).count()
-        if screener_count == 0:
-            from backend.predictor import TICKER_NAMES
-            for sym in AUTO_TRAINED_SYMBOLS:
+        existing_screener = {s.symbol for s in db.query(MarketScreener).all()}
+        added_screener = 0
+        for sym in AUTO_TRAINED_SYMBOLS:
+            if sym not in existing_screener:
+                from backend.predictor import TICKER_NAMES
                 name = TICKER_NAMES.get(sym, sym)
                 db.add(MarketScreener(
                     symbol=sym,
@@ -67,8 +72,10 @@ def run_migrations():
                     rsi=50.0,
                     macd_signal="NEUTRAL"
                 ))
+                added_screener += 1
+        if added_screener > 0:
             db.commit()
-            print(f"Populated database with {len(AUTO_TRAINED_SYMBOLS)} default market screener entries.")
+            print(f"Populated database with {added_screener} new market screener entries.")
     except Exception as e:
         print(f"Migration error: {e}")
     finally:
