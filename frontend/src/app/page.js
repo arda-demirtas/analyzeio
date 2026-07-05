@@ -206,6 +206,8 @@ export default function Home() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
   const [searchNoResults, setSearchNoResults] = useState(false);
+  const [patchTstData, setPatchTstData] = useState(null);
+  const [patchTstLoading, setPatchTstLoading] = useState(false);
 
   const [watchlist, setWatchlist] = useState([
     { id: "anon-btc", symbol: "BTC-USD" },
@@ -654,6 +656,10 @@ export default function Home() {
   // 2. Fetch Prediction data when activeSymbol, chartInterval, modelType, or lang changes
   useEffect(() => {
     if (activeSymbol) {
+      // Reset PatchTST data on symbol/interval change
+      setPatchTstData(null);
+      setPatchTstLoading(false);
+      
       let currentModelType = modelType;
       // Enforce Linear Regression only for BTC-USD
       if (modelType === "linear_regression" && activeSymbol !== "BTC-USD") {
@@ -1422,6 +1428,27 @@ export default function Home() {
       console.error("Error fetching accuracy logs:", err);
     } finally {
       setAccuracyLoading(false);
+    }
+  };
+
+  const handleApplyPatchTst = async () => {
+    setPatchTstLoading(true);
+    try {
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${activeSymbol}&interval=${chartInterval}&lang=${lang}&model_type=patchtst`, {
+        headers
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPatchTstData(data);
+      } else {
+        const errData = await res.json();
+        alert(errData.detail || "Error loading PatchTST");
+      }
+    } catch (err) {
+      console.error("PatchTST error:", err);
+    } finally {
+      setPatchTstLoading(false);
     }
   };
 
@@ -4021,6 +4048,53 @@ export default function Home() {
                               : "---"}
                           </span>
                         </div>
+
+                        {/* PatchTST Box (Visible only for BTC-USD) */}
+                        {activeSymbol === "BTC-USD" && (
+                          <div style={{ 
+                            padding: "10px 14px", 
+                            background: "rgba(245, 158, 11, 0.04)", 
+                            border: "1px solid rgba(245, 158, 11, 0.2)", 
+                            borderRadius: "var(--border-radius-md)",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center"
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f59e0b", boxShadow: "0 0 8px #f59e0b" }}></span>
+                              <span style={{ fontSize: "13px", fontWeight: "600", color: "#fef3c7" }}>PatchTST</span>
+                            </div>
+                            <div>
+                              {patchTstLoading ? (
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-muted)" }}>
+                                  <RefreshCw className="animate-spin" style={{ width: "12px", color: "#f59e0b" }} />
+                                  <span>{lang === "tr" ? "Hesaplanıyor..." : "Calculating..."}</span>
+                                </div>
+                              ) : patchTstData && patchTstData.patchtst_predicted_close !== null ? (
+                                <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
+                                  {`$${patchTstData.patchtst_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`}
+                                </span>
+                              ) : (
+                                <button 
+                                  onClick={handleApplyPatchTst}
+                                  className="btn-primary" 
+                                  style={{ 
+                                    fontSize: "11px", 
+                                    height: "26px", 
+                                    padding: "0 10px", 
+                                    background: "linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)", 
+                                    border: "none",
+                                    borderRadius: "6px",
+                                    fontWeight: "700",
+                                    color: "#ffffff"
+                                  }}
+                                >
+                                  {lang === "tr" ? "PatchTST Uygula" : "Apply PatchTST"}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", width: "100%" }}>
@@ -4101,6 +4175,34 @@ export default function Home() {
                               </div>
                             </div>
                           )}
+
+                          {/* PatchTST Signal */}
+                          {activeSymbol === "BTC-USD" && patchTstData && patchTstData.patchtst_predicted_close !== null && (() => {
+                            const lastPrice = predictionData ? predictionData.last_close : null;
+                            if (!lastPrice) return null;
+                            const patchTstChangeVal = ((patchTstData.patchtst_predicted_close - lastPrice) / lastPrice) * 100;
+                            return (
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                                <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#f59e0b" }}></span>
+                                  PatchTST:
+                                </span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+                                  {patchTstChangeVal >= 0 ? (
+                                    <>
+                                      <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-success)" }}>+{patchTstChangeVal.toFixed(2)}% ({t("bullish")})</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-danger)" }}>{patchTstChangeVal.toFixed(2)}% ({t("bearish")})</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                       
