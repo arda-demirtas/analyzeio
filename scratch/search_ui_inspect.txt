@@ -1,0 +1,28 @@
+Line 204:   const [searchQuery, setSearchQuery] = useState("");
+Context:  199:   const [passwordVerificationCode, setPasswordVerificationCode] = useState("");
+  200:   const [sidebarOpen, setSidebarOpen] = useState(false);
+  201: 
+  202:   // App State
+  203:   const [activeSymbol, setActiveSymbol] = useState("BTC-USD");
+  204:   const [searchQuery, setSearchQuery] = useState("");
+  205:   const [searchSuggestions, setSearchSuggestions] = useState([]);
+  206:   const [showSuggestions, setShowSuggestions] = useState(false);
+  207:   const [suggestionIndex, setSuggestionIndex] = useState(-1);
+  208: 
+  209:   const [watchlist, setWatchlist] = useState([
+  210:     { id: "anon-btc", symbol: "BTC-USD" },
+  211:     { id: "anon-eth", symbol: "ETH-USD" },
+  212:     { id: "anon-sol", symbol: "SOL-USD" },
+  213:     { id: "anon-aapl", symbol: "AAPL" },
+  214:     { id: "anon-tsla", symbol: "TSLA" }
+  215:   ]);
+  216:   const [predictionData, setPredictionData] = useState(null);
+  217:   const [predictLoading, setPredictLoading] = useState(false);
+  218:   const [predictError, setPredictError] = useState("");
+---
+Line 1819:   const handleSearchSubmit = async (e) => {
+Line 1821:     if (!searchQuery.trim()) return;
+Line 1822:     await triggerSearch(searchQuery);
+Line 2510:         <form onSubmit={handleSearchSubmit} style={{ display: "flex", gap: "8px" }}>
+Line 2517:               value={searchQuery}
+Line 2522:               onFocus={() => triggerSearch(searchQuery)}
