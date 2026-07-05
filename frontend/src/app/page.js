@@ -205,6 +205,7 @@ export default function Home() {
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
+  const [searchNoResults, setSearchNoResults] = useState(false);
 
   const [watchlist, setWatchlist] = useState([
     { id: "anon-btc", symbol: "BTC-USD" },
@@ -419,6 +420,7 @@ export default function Home() {
     if (!q) {
       setSearchSuggestions([]);
       setShowSuggestions(false);
+      setSearchNoResults(false);
       return;
     }
 
@@ -430,7 +432,12 @@ export default function Home() {
     );
 
     setSearchSuggestions(staticMatches.slice(0, 8));
-    setShowSuggestions(staticMatches.length > 0);
+    if (staticMatches.length > 0) {
+      setShowSuggestions(true);
+      setSearchNoResults(false);
+    } else {
+      setShowSuggestions(false);
+    }
     setSuggestionIndex(-1);
 
     // 2. Fetch dynamic matches from API and merge them
@@ -446,10 +453,24 @@ export default function Home() {
         });
         const finalResults = merged.slice(0, 8);
         setSearchSuggestions(finalResults);
-        setShowSuggestions(finalResults.length > 0);
+        
+        if (finalResults.length > 0) {
+          setShowSuggestions(true);
+          setSearchNoResults(false);
+        } else {
+          setShowSuggestions(false);
+          setSearchNoResults(true);
+        }
+      } else {
+        if (staticMatches.length === 0) {
+          setSearchNoResults(true);
+        }
       }
     } catch (err) {
       console.error("Dynamic search error:", err);
+      if (staticMatches.length === 0) {
+        setSearchNoResults(true);
+      }
     }
   };
 
@@ -2507,102 +2528,116 @@ export default function Home() {
         </div>
 
         {/* Search Input with Autocomplete */}
-        <form onSubmit={handleSearchSubmit} style={{ display: "flex", gap: "8px" }}>
-          <div style={{ position: "relative", flexGrow: 1 }}>
-            <Search style={{ position: "absolute", left: "12px", top: "12px", color: "var(--text-muted)", width: "16px", zIndex: 1 }} />
-            <input
-              type="text"
-              placeholder={t("search_placeholder")}
-              className="input-field"
-              value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value);
-                setShowSuggestions(false);
-              }}
-              onFocus={() => triggerSearch(searchQuery)}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-              onKeyDown={e => {
-                if (!showSuggestions) return;
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  setSuggestionIndex(i => Math.min(i + 1, searchSuggestions.length - 1));
-                } else if (e.key === "ArrowUp") {
-                  e.preventDefault();
-                  setSuggestionIndex(i => Math.max(i - 1, -1));
-                } else if (e.key === "Enter" && suggestionIndex >= 0) {
-                  e.preventDefault();
-                  const chosen = searchSuggestions[suggestionIndex];
-                  setShowSuggestions(false);
-                  addSymbolToWatchlist(chosen.symbol);
-                } else if (e.key === "Escape") {
-                  setShowSuggestions(false);
-                }
-              }}
-              style={{ paddingLeft: "36px", paddingRight: "10px", height: "40px" }}
-            />
-            {/* Autocomplete Dropdown */}
-            {showSuggestions && (
-              <div style={{
-                position: "absolute",
-                top: "calc(100% + 4px)",
-                left: 0,
-                right: 0,
-                background: "rgba(15, 10, 30, 0.98)",
-                border: "1px solid rgba(139, 92, 246, 0.3)",
-                borderRadius: "10px",
-                zIndex: 9999,
-                overflow: "hidden",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-                backdropFilter: "blur(12px)"
-              }}>
-                {searchSuggestions.map((item, idx) => {
-                  const catColors = { Crypto: "#f59e0b", Stock: "#3b82f6", BIST: "#10b981", Commodity: "#f97316", Index: "#a855f7", ETF: "#06b6d4" };
-                  const isHighlighted = idx === suggestionIndex;
-                  return (
-                    <div
-                      key={item.symbol}
-                      onMouseDown={() => {
-                        addSymbolToWatchlist(item.symbol);
-                      }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        padding: "9px 14px",
-                        cursor: "pointer",
-                        background: isHighlighted ? "rgba(139, 92, 246, 0.15)" : "transparent",
-                        borderBottom: idx < searchSuggestions.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
-                        transition: "background 0.15s"
-                      }}
-                      onMouseEnter={() => setSuggestionIndex(idx)}
-                    >
-                      <Search style={{ width: "12px", color: "var(--text-muted)", flexShrink: 0 }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-main)" }}>{item.symbol}</div>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <form onSubmit={handleSearchSubmit} style={{ display: "flex", gap: "8px" }}>
+            <div style={{ position: "relative", flexGrow: 1 }}>
+              <Search style={{ position: "absolute", left: "12px", top: "12px", color: "var(--text-muted)", width: "16px", zIndex: 1 }} />
+              <input
+                type="text"
+                placeholder={t("search_placeholder")}
+                className="input-field"
+                value={searchQuery}
+                onChange={e => {
+                  const val = e.target.value;
+                  setSearchQuery(val);
+                  triggerSearch(val);
+                }}
+                onFocus={() => triggerSearch(searchQuery)}
+                onBlur={() => setTimeout(() => { setShowSuggestions(false); setSearchNoResults(false); }, 250)}
+                onKeyDown={e => {
+                  if (!showSuggestions) return;
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setSuggestionIndex(i => Math.min(i + 1, searchSuggestions.length - 1));
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setSuggestionIndex(i => Math.max(i - 1, -1));
+                  } else if (e.key === "Enter" && suggestionIndex >= 0) {
+                    e.preventDefault();
+                    const chosen = searchSuggestions[suggestionIndex];
+                    setShowSuggestions(false);
+                    addSymbolToWatchlist(chosen.symbol);
+                  } else if (e.key === "Escape") {
+                    setShowSuggestions(false);
+                  }
+                }}
+                style={{ paddingLeft: "36px", paddingRight: "10px", height: "40px" }}
+              />
+              {/* Autocomplete Dropdown */}
+              {showSuggestions && (
+                <div style={{
+                  position: "absolute",
+                  top: "calc(100% + 4px)",
+                  left: 0,
+                  right: 0,
+                  background: "rgba(15, 10, 30, 0.98)",
+                  border: "1px solid rgba(139, 92, 246, 0.3)",
+                  borderRadius: "10px",
+                  zIndex: 9999,
+                  overflow: "hidden",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                  backdropFilter: "blur(12px)"
+                }}>
+                  {searchSuggestions.map((item, idx) => {
+                    const catColors = { Crypto: "#f59e0b", Stock: "#3b82f6", BIST: "#10b981", Commodity: "#f97316", Index: "#a855f7", ETF: "#06b6d4" };
+                    const isHighlighted = idx === suggestionIndex;
+                    return (
+                      <div
+                        key={item.symbol}
+                        onMouseDown={() => {
+                          addSymbolToWatchlist(item.symbol);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          padding: "9px 14px",
+                          cursor: "pointer",
+                          background: isHighlighted ? "rgba(139, 92, 246, 0.15)" : "transparent",
+                          borderBottom: idx < searchSuggestions.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                          transition: "background 0.15s"
+                        }}
+                        onMouseEnter={() => setSuggestionIndex(idx)}
+                      >
+                        <Search style={{ width: "12px", color: "var(--text-muted)", flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-main)" }}>{item.symbol}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</div>
+                        </div>
+                        <span style={{
+                          fontSize: "9px",
+                          fontWeight: "700",
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                          background: `${catColors[item.category] || "#6b7280"}20`,
+                          color: catColors[item.category] || "#6b7280",
+                          border: `1px solid ${catColors[item.category] || "#6b7280"}40`,
+                          flexShrink: 0
+                        }}>
+                          {item.category.toUpperCase()}
+                        </span>
                       </div>
-                      <span style={{
-                        fontSize: "9px",
-                        fontWeight: "700",
-                        padding: "2px 6px",
-                        borderRadius: "4px",
-                        background: `${catColors[item.category] || "#6b7280"}20`,
-                        color: catColors[item.category] || "#6b7280",
-                        border: `1px solid ${catColors[item.category] || "#6b7280"}40`,
-                        flexShrink: 0
-                      }}>
-                        {item.category.toUpperCase()}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          <button type="submit" className="btn-primary" style={{ width: "40px", height: "40px", padding: 0 }} aria-label="Search">
-            <Search style={{ width: "18px" }} />
-          </button>
-        </form>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <button type="submit" className="btn-primary" style={{ width: "40px", height: "40px", padding: 0 }} aria-label="Search">
+              <Search style={{ width: "18px" }} />
+            </button>
+          </form>
+          {searchNoResults && searchQuery.trim() !== "" && (
+            <div style={{ 
+              color: "var(--accent-danger)", 
+              fontSize: "12px", 
+              marginTop: "2px", 
+              paddingLeft: "4px",
+              fontWeight: "500" 
+            }}>
+              {lang === "tr" ? "Sembol bulunamadı. Tekrar girin" : "Symbol not found. Please enter again"}
+            </div>
+          )}
+        </div>
 
 
         {/* Navigation Tabs */}
