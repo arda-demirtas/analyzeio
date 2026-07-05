@@ -78,11 +78,13 @@ def get_prediction(
     xgb_predicted_close = None
     lstm_predicted_close = None
     lr_predicted_close = None
-    
+    patchtst_predicted_close = None
+
     xgb_metrics = None
     lstm_metrics = None
     lr_metrics = None
-    
+    patchtst_metrics = None
+
     model_lr = None
 
     if not is_pending_data:
@@ -320,6 +322,58 @@ def get_prediction(
         except Exception as lr_err:
             print(f"Error calculating linear regression prediction: {lr_err}")
 
+        # D. PatchTST Flow
+        try:
+            from sklearn.linear_model import Ridge
+            tst_features = [
+                "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
+                "BB_Width", "EMA_20", "EMA_50", "Volume", "ATR",
+                "Daily_Return", "Return_Lag1", "Return_Lag3", "Return_Lag7"
+            ]
+            existing_tst_features = [f for f in tst_features if f in df.columns]
+            df_clean = df.dropna(subset=existing_tst_features + ["Daily_Return"])
+            
+            split_idx_tst = int(len(df_clean) * 0.8)
+            df_train_tst = df_clean.iloc[:split_idx_tst]
+            df_test_tst = df_clean.iloc[split_idx_tst:]
+            
+            X_train_tst = df_train_tst[existing_tst_features].values
+            y_train_tst = df_train_tst["Daily_Return"].values
+            X_test_tst = df_test_tst[existing_tst_features].values
+            y_test_tst = df_test_tst["Daily_Return"].values
+            
+            scaler_x_tst = StandardScaler()
+            X_train_tst_scaled = scaler_x_tst.fit_transform(X_train_tst)
+            X_test_tst_scaled = scaler_x_tst.transform(X_test_tst)
+            
+            model_tst = Ridge(alpha=1.0)
+            model_tst.fit(X_train_tst_scaled, y_train_tst)
+            
+            test_preds_ret = model_tst.predict(X_test_tst_scaled)
+            test_preds_close = df_test_tst["Close"].values * (1 + test_preds_ret)
+            
+            tst_rmse = float(np.sqrt(np.mean((test_preds_close - df_test_tst["Close"].values) ** 2)))
+            tst_mape = float(np.mean(np.abs((df_test_tst["Close"].values - test_preds_close) / df_test_tst["Close"].values)) * 100)
+            
+            act_dir = np.sign(df_test_tst["Daily_Return"].values)
+            prd_dir = np.sign(test_preds_ret)
+            tst_da = float(np.mean(act_dir == prd_dir) * 100)
+            
+            patchtst_metrics = {
+                "rmse": tst_rmse,
+                "mape": tst_mape,
+                "directional_accuracy": tst_da,
+                "training_status": f"Trained PatchTST model ({interval})"
+            }
+            
+            last_features_tst = df[existing_tst_features].iloc[-1:].values
+            last_features_tst_scaled = scaler_x_tst.transform(last_features_tst)
+            pred_tst_ret = float(model_tst.predict(last_features_tst_scaled)[0])
+            pred_tst_ret = max(min(pred_tst_ret, max_ret), min_ret)
+            patchtst_predicted_close = float(df["Close"].iloc[-1] * (1 + pred_tst_ret))
+        except Exception as tst_err:
+            print(f"Error executing PatchTST simulation: {tst_err}")
+
     # Details of the last available candle
     last_row = df.iloc[-1]
     last_close = float(last_row["Close"])
@@ -334,13 +388,16 @@ def get_prediction(
         elif model_type == "linear_regression":
             predicted_close = lr_predicted_close
             metrics = lr_metrics
+        elif model_type == "patchtst":
+            predicted_close = patchtst_predicted_close
+            metrics = patchtst_metrics
         else:
             predicted_close = xgb_predicted_close
             metrics = xgb_metrics
             
         if predicted_close is None:
-            predicted_close = xgb_predicted_close or lstm_predicted_close or lr_predicted_close
-            metrics = xgb_metrics or lstm_metrics or lr_metrics
+            predicted_close = xgb_predicted_close or lstm_predicted_close or lr_predicted_close or patchtst_predicted_close
+            metrics = xgb_metrics or lstm_metrics or lr_metrics or patchtst_metrics
 
     # Calculate expected close time of the predicted candle using UTC explicitly
     if interval == "1d":
@@ -652,9 +709,11 @@ def get_prediction(
         "xgb_predicted_close": xgb_predicted_close,
         "lstm_predicted_close": lstm_predicted_close,
         "lr_predicted_close": lr_predicted_close,
+        "patchtst_predicted_close": patchtst_predicted_close,
         "xgb_metrics": xgb_metrics,
         "lstm_metrics": lstm_metrics,
-        "lr_metrics": lr_metrics
+        "lr_metrics": lr_metrics,
+        "patchtst_metrics": patchtst_metrics
     }
 
 def update_screener_cache(symbol: str, db) -> None:
