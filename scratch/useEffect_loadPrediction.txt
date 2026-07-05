@@ -1,0 +1,25 @@
+651:     if (showScreener) {
+652:       fetchScreenerData();
+653:     }
+654:   }, [showScreener]);
+655: 
+656:   // 2. Fetch Prediction data when activeSymbol, chartInterval, modelType, or lang changes
+657:   useEffect(() => {
+658:     if (activeSymbol) {
+659:       let currentModelType = modelType;
+660:       // Enforce Linear Regression only for BTC-USD
+661:       if (modelType === "linear_regression" && activeSymbol !== "BTC-USD") {
+662:         currentModelType = "xgboost";
+663:         setModelType("xgboost");
+664:         return;
+665:       }
+666:       loadPrediction(activeSymbol, chartInterval, currentModelType);
+667:     }
+668:   }, [activeSymbol, chartInterval, modelType, token, lang]);
+669: 
+670:   // 3. Render charts when predictionData, chartHistory, historyLimit, isChartFullscreen, or showScreener updates
+671:   useEffect(() => {
+672:     if (showScreener) return;
+673:     if (!predictionData || !chartHistory || chartHistory.length === 0) return;
+674:     
+675:     const timer = setTimeout(() => {
