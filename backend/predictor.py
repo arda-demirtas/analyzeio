@@ -325,6 +325,7 @@ def get_prediction(
         # D. PatchTST Flow
         try:
             from sklearn.linear_model import Ridge
+            from sklearn.preprocessing import StandardScaler
             tst_features = [
                 "RSI", "MACD", "MACD_Signal", "MACD_Hist", 
                 "BB_Width", "EMA_20", "EMA_50", "Volume", "ATR",
