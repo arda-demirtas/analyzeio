@@ -1,0 +1,59 @@
+Position 24440:
+, setMockTradingState] = useState(null);
+  const [modelType, setModelType] = useState("xgboost");
+
+  const lastCloseVal = predictionData ? predictionData.last_close : null;
+  const xgbChangeVal = (pre
+---
+Position 24451:
+adingState] = useState(null);
+  const [modelType, setModelType] = useState("xgboost");
+
+  const lastCloseVal = predictionData ? predictionData.last_close : null;
+  const xgbChangeVal = (predictionData
+---
+Position 29636:
+Prediction data when activeSymbol, chartInterval, modelType, or lang changes
+  useEffect(() => {
+    if (activeSymbol) {
+      let currentModelType = modelType;
+      // Enforce Linear Regression only
+---
+Position 29736:
+ if (activeSymbol) {
+      let currentModelType = modelType;
+      // Enforce Linear Regression only for BTC-USD
+      if (modelType === "linear_regression" && activeSymbol !== "BTC-USD") {
+        cu
+---
+Position 29809:
+orce Linear Regression only for BTC-USD
+      if (modelType === "linear_regression" && activeSymbol !== "BTC-USD") {
+        currentModelType = "xgboost";
+        setModelType("xgboost");
+        retu
+---
+Position 29922:
+) {
+        currentModelType = "xgboost";
+        setModelType("xgboost");
+        return;
+      }
+      loadPrediction(activeSymbol, chartInterval, currentModelType);
+    }
+  }, [activeSymbol, chartI
+---
+Position 30081:
+elType);
+    }
+  }, [activeSymbol, chartInterval, modelType, token, lang]);
+
+  // 3. Render charts when predictionData, chartHistory, historyLimit, isChartFullscreen, or showScreener updates
+  useEffe
+---
+Position 53907:
+ async (symbol, interval = chartInterval, mType = modelType, forceRetrain = false) => {
+    setPredictLoading(true);
+    setPredictError("");
+    setPredictionData(null); // Clear old prediction data 
+---
