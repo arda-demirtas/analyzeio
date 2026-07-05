@@ -1,0 +1,36 @@
+Line 2570:                         gap: "10px",
+Line 2571:                         padding: "9px 14px",
+Line 2572:                         cursor: "pointer",
+Line 2573:                         background: isHighlighted ? "rgba(139, 92, 246, 0.15)" : "transparent",
+Line 2574:                         borderBottom: idx < searchSuggestions.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+Line 2575:                         transition: "background 0.15s"
+Line 2576:                       }}
+Line 2577:                       onMouseEnter={() => setSuggestionIndex(idx)}
+Line 2578:                     >
+Line 2579:                       <Search style={{ width: "12px", color: "var(--text-muted)", flexShrink: 0 }} />
+Line 2580:                       <div style={{ flex: 1, minWidth: 0 }}>
+Line 2581:                         <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-main)" }}>{item.symbol}</div>
+Line 2582:                         <div style={{ fontSize: "11px", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</div>
+Line 2583:                       </div>
+Line 2584:                       <span style={{
+Line 2585:                         fontSize: "9px",
+Line 2586:                         fontWeight: "700",
+Line 2587:                         padding: "2px 6px",
+Line 2588:                         borderRadius: "4px",
+Line 2589:                         background: `${catColors[item.category] || "#6b7280"}20`,
+Line 2590:                         color: catColors[item.category] || "#6b7280",
+Line 2591:                         border: `1px solid ${catColors[item.category] || "#6b7280"}40`,
+Line 2592:                         flexShrink: 0
+Line 2593:                       }}>
+Line 2594:                         {item.category.toUpperCase()}
+Line 2595:                       </span>
+Line 2596:                     </div>
+Line 2597:                   );
+Line 2598:                 })}
+Line 2599:               </div>
+Line 2600:             )}
+Line 2601:           </div>
+Line 2602:           <button type="submit" className="btn-primary" style={{ width: "40px", height: "40px", padding: 0 }} aria-label="Search">
+Line 2603:             <Search style={{ width: "18px" }} />
+Line 2604:           </button>
+Line 2605:         </form>
