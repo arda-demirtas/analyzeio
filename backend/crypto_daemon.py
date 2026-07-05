@@ -12,28 +12,40 @@ from backend.config import MODEL_CACHE_DIR, AUTO_TRAINED_SYMBOLS
 from backend.database import SessionLocal
 from backend.models import AutoTrainSymbol
 
-def check_and_train_assets(symbols_to_train=None):
-    """Runs daily model training sequentially for the popular cryptos, stocks, and commodities.
-       Returns a list of symbols that were skipped due to pending data on Yahoo Finance."""
+def delete_symbol_cache_files(symbol: str):
+    """Deletes all cached model files for the specified symbol to keep cache clean."""
+    if not os.path.exists(MODEL_CACHE_DIR):
+        return
+    deleted_count = 0
+    prefix = f"{symbol}_"
+    for filename in os.listdir(MODEL_CACHE_DIR):
+        if filename.startswith(prefix):
+            file_path = os.path.join(MODEL_CACHE_DIR, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                    deleted_count += 1
+            except Exception as e:
+                print(f"Error deleting file {filename}: {e}")
+    if deleted_count > 0:
+        print(f"Deleted {deleted_count} stale cache files for pending symbol {symbol}.")
+
+def check_and_train_assets():
+    """Runs daily model training sequentially for the popular cryptos, stocks, and commodities."""
     print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Starting Auto-Training loop...")
     
-    # Query database for symbols if not provided
-    if symbols_to_train is None:
-        db = SessionLocal()
-        try:
-            db_symbols = [s.symbol for s in db.query(AutoTrainSymbol).order_by(AutoTrainSymbol.symbol).all()]
-            symbols = db_symbols if db_symbols else AUTO_TRAINED_SYMBOLS
-        except Exception as e:
-            print(f"Error loading auto-train symbols from DB: {e}")
-            symbols = AUTO_TRAINED_SYMBOLS
-        finally:
-            db.close()
-    else:
-        symbols = symbols_to_train
+    db = SessionLocal()
+    try:
+        db_symbols = [s.symbol for s in db.query(AutoTrainSymbol).order_by(AutoTrainSymbol.symbol).all()]
+        symbols = db_symbols if db_symbols else AUTO_TRAINED_SYMBOLS
+    except Exception as e:
+        print(f"Error loading auto-train symbols from DB: {e}")
+        symbols = AUTO_TRAINED_SYMBOLS
+    finally:
+        db.close()
 
     success_count = 0
     fail_count = 0
-    pending_symbols = []
     
     for idx, symbol in enumerate(symbols):
         try:
@@ -42,8 +54,8 @@ def check_and_train_assets(symbols_to_train=None):
             
             # Check if prediction is pending due to data lag
             if res.get("prediction_status") == "pending_data":
-                print(f"Skipped {symbol}: Daily candle is not yet complete. Will retry later.")
-                pending_symbols.append(symbol)
+                print(f"Skipped {symbol}: Daily candle is not yet complete. Deleting cache files.")
+                delete_symbol_cache_files(symbol)
                 fail_count += 1
                 continue
                 
@@ -70,8 +82,6 @@ def check_and_train_assets(symbols_to_train=None):
         run_mock_trading_daily_buy()
     except Exception as mock_err:
         print(f"Error executing daily mock buy: {mock_err}")
-        
-    return pending_symbols
 
 def cleanup_old_models():
     """Deletes any cached model files in model_cache that are older than 72 hours."""
@@ -133,25 +143,18 @@ def main():
     except Exception as thread_err:
         print(f"Error starting mock trading monitor thread: {thread_err}")
         
-    # 1. Warm up cache immediately on startup (returns pending list if any)
-    pending_symbols = check_and_train_assets()
+    # 1. Warm up cache immediately on startup
+    check_and_train_assets()
     
     # 2. Main sleep-and-run loop
     while True:
-        if pending_symbols:
-            print(f"There are {len(pending_symbols)} pending symbols: {pending_symbols}. Sleeping 1 hour for retry...")
-            time.sleep(3600)
-            print(f"\nRetrying pending symbols: {pending_symbols}...")
-            pending_symbols = check_and_train_assets(symbols_to_train=pending_symbols)
-            continue
-            
         sleep_sec = get_seconds_until_next_run()
         next_run_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=sleep_sec)
-        print(f"All models up-to-date. Sleeping for {sleep_sec:.0f} seconds (approx {sleep_sec/3600:.2f} hours) until next scheduled run at {next_run_time.strftime('%Y-%m-%d %H:%M:%S')} UTC...")
+        print(f"Daily training scheduled. Sleeping for {sleep_sec:.0f} seconds (approx {sleep_sec/3600:.2f} hours) until next scheduled run at {next_run_time.strftime('%Y-%m-%d %H:%M:%S')} UTC...")
         time.sleep(sleep_sec)
         
-        # Trigger daily training
-        pending_symbols = check_and_train_assets()
+        # Trigger daily training once
+        check_and_train_assets()
 
 if __name__ == "__main__":
     main()
