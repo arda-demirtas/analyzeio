@@ -30,22 +30,26 @@ def delete_symbol_cache_files(symbol: str):
     if deleted_count > 0:
         print(f"Deleted {deleted_count} stale cache files for pending symbol {symbol}.")
 
-def check_and_train_assets():
+def check_and_train_assets(symbols_to_train=None):
     """Runs daily model training sequentially for the popular cryptos, stocks, and commodities."""
     print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Starting Auto-Training loop...")
     
-    db = SessionLocal()
-    try:
-        db_symbols = [s.symbol for s in db.query(AutoTrainSymbol).order_by(AutoTrainSymbol.symbol).all()]
-        symbols = db_symbols if db_symbols else AUTO_TRAINED_SYMBOLS
-    except Exception as e:
-        print(f"Error loading auto-train symbols from DB: {e}")
-        symbols = AUTO_TRAINED_SYMBOLS
-    finally:
-        db.close()
+    if symbols_to_train is None:
+        db = SessionLocal()
+        try:
+            db_symbols = [s.symbol for s in db.query(AutoTrainSymbol).order_by(AutoTrainSymbol.symbol).all()]
+            symbols = db_symbols if db_symbols else AUTO_TRAINED_SYMBOLS
+        except Exception as e:
+            print(f"Error loading auto-train symbols from DB: {e}")
+            symbols = AUTO_TRAINED_SYMBOLS
+        finally:
+            db.close()
+    else:
+        symbols = symbols_to_train
 
     success_count = 0
     fail_count = 0
+    pending_symbols = []
     
     for idx, symbol in enumerate(symbols):
         try:
@@ -56,6 +60,7 @@ def check_and_train_assets():
             if res.get("prediction_status") == "pending_data":
                 print(f"Skipped {symbol}: Daily candle is not yet complete. Deleting cache files.")
                 delete_symbol_cache_files(symbol)
+                pending_symbols.append(symbol)
                 fail_count += 1
                 continue
                 
@@ -82,6 +87,8 @@ def check_and_train_assets():
         run_mock_trading_daily_buy()
     except Exception as mock_err:
         print(f"Error executing daily mock buy: {mock_err}")
+        
+    return pending_symbols
 
 def cleanup_old_models():
     """Deletes any cached model files in model_cache that are older than 72 hours."""
@@ -108,14 +115,13 @@ def cleanup_old_models():
                     
     print(f"Cleanup finished. Stale models deleted: {deleted_count}")
 
-def get_seconds_until_next_run():
-    """Calculates seconds remaining until the next run at 00:05 UTC."""
+def get_seconds_until_time(hour: int, minute: int) -> float:
+    """Calculates seconds remaining until the next occurrence of specified UTC time."""
     now = datetime.datetime.utcnow()
-    target = now.replace(hour=0, minute=5, second=0, microsecond=0)
+    target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
     if now >= target:
         target += datetime.timedelta(days=1)
-    diff = (target - now).total_seconds()
-    return diff
+    return (target - now).total_seconds()
 
 def main():
     print("====================================================")
@@ -144,17 +150,30 @@ def main():
         print(f"Error starting mock trading monitor thread: {thread_err}")
         
     # 1. Warm up cache immediately on startup
-    check_and_train_assets()
+    pending_symbols = check_and_train_assets()
     
     # 2. Main sleep-and-run loop
     while True:
-        sleep_sec = get_seconds_until_next_run()
+        now_utc = datetime.datetime.utcnow()
+        retry_target = now_utc.replace(hour=3, minute=5, second=0, microsecond=0)
+        
+        # If we have pending symbols and are currently before the retry target time (03:05 UTC)
+        if pending_symbols and now_utc < retry_target:
+            sleep_sec = (retry_target - now_utc).total_seconds()
+            print(f"Daily training completed with {len(pending_symbols)} pending symbols. Sleeping {sleep_sec:.0f} seconds until retry run at 03:05 UTC...")
+            time.sleep(sleep_sec)
+            
+            print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Starting final retry training for pending symbols: {pending_symbols}...")
+            pending_symbols = check_and_train_assets(symbols_to_train=pending_symbols)
+            
+        # Sleep until the next day's main 00:05 UTC run
+        sleep_sec = get_seconds_until_time(0, 5)
         next_run_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=sleep_sec)
-        print(f"Daily training scheduled. Sleeping for {sleep_sec:.0f} seconds (approx {sleep_sec/3600:.2f} hours) until next scheduled run at {next_run_time.strftime('%Y-%m-%d %H:%M:%S')} UTC...")
+        print(f"Daily cycle finished. Sleeping for {sleep_sec:.0f} seconds (approx {sleep_sec/3600:.2f} hours) until next scheduled run at {next_run_time.strftime('%Y-%m-%d %H:%M:%S')} UTC...")
         time.sleep(sleep_sec)
         
-        # Trigger daily training once
-        check_and_train_assets()
+        # Trigger daily training for all symbols
+        pending_symbols = check_and_train_assets()
 
 if __name__ == "__main__":
     main()
