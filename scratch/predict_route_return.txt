@@ -1,0 +1,96 @@
+Line 12: from backend.predictor import get_prediction, fetch_interval_history, fetch_symbol_news
+Context:  7: from backend.schemas import (
+  8:     WatchlistAdd, WatchlistResponse, PredictionResponse, IndicatorPoint, 
+  9:     PredictionLogResponse, MarketScreenerResponse, NewsSentimentResponse
+  10: )
+  11: from backend.auth import get_current_user, get_current_user_optional
+  12: from backend.predictor import get_prediction, fetch_interval_history, fetch_symbol_news
+  13: 
+  14: router = APIRouter(prefix="/api", tags=["Predictions & Watchlist"])
+  15: 
+  16: def normalize_symbol(symbol: str) -> str:
+  17:     """Normalizes symbol to match Yahoo Finance patterns, e.g., mapping USDT -> USD for crypto."""
+  18:     sym = symbol.upper().strip()
+  19:     if sym.endswith("-USDT"):
+  20:         sym = sym[:-5] + "-USD"
+  21:     elif sym.endswith("USDT"):
+  22:         sym = sym[:-4] + "-USD"
+  23:     elif sym.endswith("USD") and not sym.endswith("-USD") and not sym.endswith(".X"):
+  24:         if len(sym) > 3 and not "=" in sym:
+  25:             sym = sym[:-3] + "-USD"
+  26:     if sym == "UNI-USD":
+  27:         sym = "UNI7083-USD"
+  28:     return sym
+  29: 
+  30: @router.get("/predict", response_model=PredictionResponse)
+  31: def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_type: str = "xgboost", force_retrain: bool = False, current_user: Optional[User] = Depends(get_current_user_optional)):
+  32:     """
+  33:     Triggers historical data loading, computes technical indicators,
+  34:     and runs XGBoost (default) or LSTM model inference to predict the close price for the next candle of the selected interval.
+  35:     """
+  36:     symbol_upper = normalize_symbol(symbol)
+---
+Line 81:         prediction_result = get_prediction(symbol_upper, interval=interval, lang=lang, model_type=model_type, force_retrain=force_retrain)
+Context:  76:             raise HTTPException(
+  77:                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+  78:                 detail=f"Error loading historical data: {str(e)}"
+  79:             )
+  80:     try:
+  81:         prediction_result = get_prediction(symbol_upper, interval=interval, lang=lang, model_type=model_type, force_retrain=force_retrain)
+  82:         return prediction_result
+  83:     except ValueError as val_err:
+  84:         raise HTTPException(
+  85:             status_code=status.HTTP_400_BAD_REQUEST,
+  86:             detail=str(val_err)
+  87:         )
+  88:     except Exception as err:
+  89:         raise HTTPException(
+  90:             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+  91:             detail=f"Error executing model prediction: {str(err)}"
+  92:         )
+  93: 
+  94: @router.get("/watchlist", response_model=List[WatchlistResponse])
+  95: def get_watchlist(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+  96:     """Returns all watchlist assets for the current user."""
+  97:     return current_user.watchlist_items
+  98: 
+  99: @router.post("/watchlist", response_model=WatchlistResponse, status_code=status.HTTP_201_CREATED)
+  100: def add_to_watchlist(data: WatchlistAdd, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+  101:     """Adds a ticker symbol to the user's watchlist."""
+  102:     symbol_upper = normalize_symbol(data.symbol)
+  103:     
+  104:     # Check if already in watchlist
+  105:     existing = db.query(Watchlist).filter(
+---
+Line 143: def get_prediction_accuracy_logs(
+Context:  138:     db.delete(item)
+  139:     db.commit()
+  140:     return {"message": f"{symbol_upper} removed from watchlist"}
+  141: 
+  142: @router.get("/predictions/accuracy/{symbol}", response_model=List[PredictionLogResponse])
+  143: def get_prediction_accuracy_logs(
+  144:     symbol: str,
+  145:     interval: str = "1d",
+  146:     current_user: Optional[User] = Depends(get_current_user_optional),
+  147:     db: Session = Depends(get_db)
+  148: ):
+  149:     """
+  150:     Returns the logs of all predictions made for the symbol,
+  151:     along with actual closes if they have resolved.
+  152:     """
+  153:     symbol_upper = normalize_symbol(symbol)
+  154:     logs = (
+  155:         db.query(PredictionLog)
+  156:         .filter(PredictionLog.symbol == symbol_upper, PredictionLog.interval == interval)
+  157:         .order_by(PredictionLog.prediction_date.desc())
+  158:         .limit(30)
+  159:         .all()
+  160:     )
+  161:     return logs
+  162: 
+  163: 
+  164: @router.get("/screener", response_model=List[MarketScreenerResponse])
+  165: def get_market_screener(db: Session = Depends(get_db)):
+  166:     """Returns all pre-calculated screener assets."""
+  167:     return db.query(MarketScreener).order_by(MarketScreener.symbol).all()
+---
