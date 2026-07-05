@@ -1,0 +1,27 @@
+Line 661:         setModelType("xgboost");
+Context:  656:     if (activeSymbol) {
+  657:       let currentModelType = modelType;
+  658:       // Enforce Linear Regression only for BTC-USD
+  659:       if (modelType === "linear_regression" && activeSymbol !== "BTC-USD") {
+  660:         currentModelType = "xgboost";
+  661:         setModelType("xgboost");
+  662:         return;
+  663:       }
+  664:       loadPrediction(activeSymbol, chartInterval, currentModelType);
+  665:     }
+  666:   }, [activeSymbol, chartInterval, modelType, token, lang]);
+  667: 
+  668:   // 3. Render charts when predictionData, chartHistory, historyLimit, isChartFullscreen, or showScreener updates
+  669:   useEffect(() => {
+  670:     if (showScreener) return;
+  671:     if (!predictionData || !chartHistory || chartHistory.length === 0) return;
+  672:     
+  673:     const timer = setTimeout(() => {
+  674:       renderCharts();
+  675:     }, 50);
+  676:     
+  677:     // Cleanup on unmount or update
+  678:     return () => {
+  679:       clearTimeout(timer);
+  680:       destroyCharts();
+---
