@@ -1,0 +1,260 @@
+Line 29:     model_type: str = "xgboost", 
+Context:  26:     seq_length: int = DEFAULT_SEQUENCE_LENGTH, 
+  27:     lang: str = "en", 
+  28:     force_retrain: bool = False, 
+  29:     model_type: str = "xgboost", 
+  30:     is_daemon: bool = False
+  31: ) -> Dict[str, Any]:
+  32:     """
+  33:     Main function to coordinate market data retrieval, model loading/training,
+  34:     and predicting the next close price for a specific interval (15m, 1h, 4h, 1d).
+  35:     Supports 'xgboost' (default) and 'lstm' architectures.
+  36:     """
+---
+Line 75:     predicted_close = None
+Context:  72:             }
+  73:             pending_error_msg = lang_msg.get(lang, lang_msg["en"])
+  74: 
+  75:     predicted_close = None
+  76:     change_percent = None
+  77:     metrics = None
+  78:     xgb_predicted_close = None
+  79:     lstm_predicted_close = None
+  80:     lr_predicted_close = None
+  81:     
+  82:     xgb_metrics = None
+---
+Line 78:     xgb_predicted_close = None
+Context:  75:     predicted_close = None
+  76:     change_percent = None
+  77:     metrics = None
+  78:     xgb_predicted_close = None
+  79:     lstm_predicted_close = None
+  80:     lr_predicted_close = None
+  81:     
+  82:     xgb_metrics = None
+  83:     lstm_metrics = None
+  84:     lr_metrics = None
+  85:     
+---
+Line 79:     lstm_predicted_close = None
+Context:  76:     change_percent = None
+  77:     metrics = None
+  78:     xgb_predicted_close = None
+  79:     lstm_predicted_close = None
+  80:     lr_predicted_close = None
+  81:     
+  82:     xgb_metrics = None
+  83:     lstm_metrics = None
+  84:     lr_metrics = None
+  85:     
+  86:     model_lr = None
+---
+Line 80:     lr_predicted_close = None
+Context:  77:     metrics = None
+  78:     xgb_predicted_close = None
+  79:     lstm_predicted_close = None
+  80:     lr_predicted_close = None
+  81:     
+  82:     xgb_metrics = None
+  83:     lstm_metrics = None
+  84:     lr_metrics = None
+  85:     
+  86:     model_lr = None
+  87: 
+---
+Line 181:             xgb_predicted_close = float(df["Close"].iloc[-1] * (1 + pred_ret_xgb))
+Context:  178:             last_features_xgb = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
+  179:             pred_ret_xgb = float(model_xgb.predict(last_features_xgb)[0])
+  180:             pred_ret_xgb = max(min(pred_ret_xgb, max_ret), min_ret)
+  181:             xgb_predicted_close = float(df["Close"].iloc[-1] * (1 + pred_ret_xgb))
+  182:         except Exception as e:
+  183:             print(f"Error in XGBoost flow: {e}")
+  184: 
+  185:         # B. LSTM Flow
+  186:         try:
+  187:             val_split = int(len(df_train) * 0.85)
+  188:             df_train_sub = df_train.iloc[:val_split]
+---
+Line 254:             lstm_predicted_close = float(df["Close"].iloc[-1] * (1 + pred_ret_lstm))
+Context:  251:             scaled_pred = model_lstm.predict(input_seq, verbose=0)
+  252:             pred_ret_lstm = float(scaler_y_train.inverse_transform(scaled_pred)[0][0])
+  253:             pred_ret_lstm = max(min(pred_ret_lstm, max_ret), min_ret)
+  254:             lstm_predicted_close = float(df["Close"].iloc[-1] * (1 + pred_ret_lstm))
+  255:         except Exception as e:
+  256:             print(f"Error in LSTM flow: {e}")
+  257: 
+  258:         # C. Linear Regression Flow
+  259:         try:
+  260:             split_idx_lr = int(len(df) * 0.8)
+  261:             df_train_lr = df.iloc[:split_idx_lr]
+---
+Line 319:             lr_predicted_close = float(df["Close"].iloc[-1] * (1 + predicted_lr_return))
+Context:  316:             last_features_lr = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
+  317:             predicted_lr_return = float(model_lr.predict(last_features_lr)[0])
+  318:             predicted_lr_return = max(min(predicted_lr_return, max_ret), min_ret)
+  319:             lr_predicted_close = float(df["Close"].iloc[-1] * (1 + predicted_lr_return))
+  320:         except Exception as lr_err:
+  321:             print(f"Error calculating linear regression prediction: {lr_err}")
+  322: 
+  323:     # Details of the last available candle
+  324:     last_row = df.iloc[-1]
+  325:     last_close = float(last_row["Close"])
+  326: 
+---
+Line 328:     predicted_close = None
+Context:  325:     last_close = float(last_row["Close"])
+  326: 
+  327:     # Determine fallback and requested predicted close
+  328:     predicted_close = None
+  329:     metrics = None
+  330:     if not is_pending_data:
+  331:         if model_type == "lstm":
+  332:             predicted_close = lstm_predicted_close
+  333:             metrics = lstm_metrics
+  334:         elif model_type == "linear_regression":
+  335:             predicted_close = lr_predicted_close
+---
+Line 331:         if model_type == "lstm":
+Context:  328:     predicted_close = None
+  329:     metrics = None
+  330:     if not is_pending_data:
+  331:         if model_type == "lstm":
+  332:             predicted_close = lstm_predicted_close
+  333:             metrics = lstm_metrics
+  334:         elif model_type == "linear_regression":
+  335:             predicted_close = lr_predicted_close
+  336:             metrics = lr_metrics
+  337:         else:
+  338:             predicted_close = xgb_predicted_close
+---
+Line 332:             predicted_close = lstm_predicted_close
+Context:  329:     metrics = None
+  330:     if not is_pending_data:
+  331:         if model_type == "lstm":
+  332:             predicted_close = lstm_predicted_close
+  333:             metrics = lstm_metrics
+  334:         elif model_type == "linear_regression":
+  335:             predicted_close = lr_predicted_close
+  336:             metrics = lr_metrics
+  337:         else:
+  338:             predicted_close = xgb_predicted_close
+  339:             metrics = xgb_metrics
+---
+Line 334:         elif model_type == "linear_regression":
+Context:  331:         if model_type == "lstm":
+  332:             predicted_close = lstm_predicted_close
+  333:             metrics = lstm_metrics
+  334:         elif model_type == "linear_regression":
+  335:             predicted_close = lr_predicted_close
+  336:             metrics = lr_metrics
+  337:         else:
+  338:             predicted_close = xgb_predicted_close
+  339:             metrics = xgb_metrics
+  340:             
+  341:         if predicted_close is None:
+---
+Line 335:             predicted_close = lr_predicted_close
+Context:  332:             predicted_close = lstm_predicted_close
+  333:             metrics = lstm_metrics
+  334:         elif model_type == "linear_regression":
+  335:             predicted_close = lr_predicted_close
+  336:             metrics = lr_metrics
+  337:         else:
+  338:             predicted_close = xgb_predicted_close
+  339:             metrics = xgb_metrics
+  340:             
+  341:         if predicted_close is None:
+  342:             predicted_close = xgb_predicted_close or lstm_predicted_close or lr_predicted_close
+---
+Line 338:             predicted_close = xgb_predicted_close
+Context:  335:             predicted_close = lr_predicted_close
+  336:             metrics = lr_metrics
+  337:         else:
+  338:             predicted_close = xgb_predicted_close
+  339:             metrics = xgb_metrics
+  340:             
+  341:         if predicted_close is None:
+  342:             predicted_close = xgb_predicted_close or lstm_predicted_close or lr_predicted_close
+  343:             metrics = xgb_metrics or lstm_metrics or lr_metrics
+  344: 
+  345:     # Calculate expected close time of the predicted candle using UTC explicitly
+---
+Line 342:             predicted_close = xgb_predicted_close or lstm_predicted_close or lr_predicted_close
+Context:  339:             metrics = xgb_metrics
+  340:             
+  341:         if predicted_close is None:
+  342:             predicted_close = xgb_predicted_close or lstm_predicted_close or lr_predicted_close
+  343:             metrics = xgb_metrics or lstm_metrics or lr_metrics
+  344: 
+  345:     # Calculate expected close time of the predicted candle using UTC explicitly
+  346:     if interval == "1d":
+  347:         last_date_str = last_row.name.strftime("%Y-%m-%d")
+  348:         now_utc = datetime.datetime.utcnow()
+  349:         if is_crypto:
+---
+Line 393:             avg_predicted_close = sum(valid_predictions) / len(valid_predictions)
+Context:  390:             if v is not None
+  391:         ]
+  392:         if valid_predictions:
+  393:             avg_predicted_close = sum(valid_predictions) / len(valid_predictions)
+  394:             change_percent = ((avg_predicted_close - last_close) / last_close) * 100
+  395:         else:
+  396:             change_percent = 0.0
+  397:     else:
+  398:         change_percent = None
+  399:     
+  400:     # Calculate threshold-filtered technical recommendation (0.2% threshold)
+---
+Line 465:     lr_predicted_close = None
+Context:  462:     
+  463:     # Load Linear Regression model once to populate historical predictions
+  464:     model_lr = None
+  465:     lr_predicted_close = None
+  466:     if not is_pending_data:
+  467:         try:
+  468:             split_idx_lr = int(len(df) * 0.8)
+  469:             df_train_lr = df.iloc[:split_idx_lr]
+  470:             
+  471:             def make_raw_lr_sequences_bg(x_data, y_data):
+  472:                 xs, ys = [], []
+---
+Line 522:             lr_predicted_close = float(last_close * (1 + predicted_lr_return))
+Context:  519:                     
+  520:             last_features_lr = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
+  521:             predicted_lr_return = float(model_lr.predict(last_features_lr)[0])
+  522:             lr_predicted_close = float(last_close * (1 + predicted_lr_return))
+  523:         except Exception as lr_err:
+  524:             print(f"Error calculating linear regression prediction: {lr_err}")
+  525: 
+  526:     chart_limit = 730
+  527:     history_df = df.tail(chart_limit)
+  528:     df_indices = {dt: idx for idx, dt in enumerate(df.index)}
+  529:     
+---
+Line 616:                 existing_log.predicted_close = predicted_close
+Context:  613:                 .first()
+  614:             )
+  615:             if existing_log:
+  616:                 existing_log.predicted_close = predicted_close
+  617:                 existing_log.last_close = last_close
+  618:                 existing_log.created_at = datetime.datetime.utcnow()
+  619:             else:
+  620:                 new_log = PredictionLog(
+  621:                     symbol=symbol,
+  622:                     interval=interval,
+  623:                     prediction_date=pred_date_str,
+---
+Line 651:         "model_type": model_type,
+Context:  648:         "technical_recommendation": technical_recommendation,
+  649:         "prediction_status": "pending_data" if is_pending_data else "success",
+  650:         "prediction_error": pending_error_msg,
+  651:         "model_type": model_type,
+  652:         "xgb_predicted_close": xgb_predicted_close,
+  653:         "lstm_predicted_close": lstm_predicted_close,
+  654:         "lr_predicted_close": lr_predicted_close,
+  655:         "xgb_metrics": xgb_metrics,
+  656:         "lstm_metrics": lstm_metrics,
+  657:         "lr_metrics": lr_metrics
+  658:     }
+---
