@@ -1,0 +1,405 @@
+Line 2217:                   placeholder={lang === "tr" ? "Doğrulama Kodu" : "Verification Code"}
+Context:  2212:               </div>
+  2213:               <div style={{ position: "relative" }}>
+  2214:                 <Lock style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
+  2215:                 <input
+  2216:                   type="text"
+  2217:                   placeholder={lang === "tr" ? "Doğrulama Kodu" : "Verification Code"}
+  2218:                   className="input-field"
+  2219:                   value={verificationCode}
+  2220:                   onChange={e => setVerificationCode(e.target.value)}
+  2221:                   style={{ paddingLeft: "42px", letterSpacing: "4px", textAlign: "center", fontWeight: "bold" }}
+  2222:                   maxLength={6}
+  2223:                   required
+  2224:                 />
+  2225:               </div>
+  2226: 
+  2227:               {authError && (
+  2228:                 <div style={{ color: "var(--accent-danger)", fontSize: "13px", textAlign: "center", fontWeight: "500" }}>
+  2229:                   {authError}
+  2230:                 </div>
+  2231:               )}
+  2232: 
+  2233:               <button type="submit" className="btn-primary" disabled={authLoading}>
+  2234:                 {authLoading ? <RefreshCw className="animate-spin" style={{ width: "18px" }} /> : null}
+  2235:                 {lang === "tr" ? "Doğrula ve Kaydol" : "Verify & Sign Up"}
+  2236:               </button>
+---
+Line 2256:                   placeholder={t("username")}
+Context:  2251:             <form onSubmit={authMode === "login" ? handleLogin : handleRegister} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+  2252:               <div style={{ position: "relative" }}>
+  2253:                 <User style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
+  2254:                 <input
+  2255:                   type="text"
+  2256:                   placeholder={t("username")}
+  2257:                   className="input-field"
+  2258:                   value={username}
+  2259:                   onChange={e => setUsername(e.target.value)}
+  2260:                   style={{ paddingLeft: "42px" }}
+  2261:                   required
+  2262:                 />
+  2263:               </div>
+  2264: 
+  2265:               {authMode === "register" && (
+  2266:                 <div style={{ position: "relative" }}>
+  2267:                   <Mail style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
+  2268:                   <input
+  2269:                     type="email"
+  2270:                     placeholder={t("email")}
+  2271:                     className="input-field"
+  2272:                     value={email}
+  2273:                     onChange={e => setEmail(e.target.value)}
+  2274:                     style={{ paddingLeft: "42px" }}
+  2275:                     required
+---
+Line 2270:                     placeholder={t("email")}
+Context:  2265:               {authMode === "register" && (
+  2266:                 <div style={{ position: "relative" }}>
+  2267:                   <Mail style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
+  2268:                   <input
+  2269:                     type="email"
+  2270:                     placeholder={t("email")}
+  2271:                     className="input-field"
+  2272:                     value={email}
+  2273:                     onChange={e => setEmail(e.target.value)}
+  2274:                     style={{ paddingLeft: "42px" }}
+  2275:                     required
+  2276:                   />
+  2277:                 </div>
+  2278:               )}
+  2279: 
+  2280:               <div style={{ position: "relative" }}>
+  2281:                 <Lock style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
+  2282:                 <input
+  2283:                   type="password"
+  2284:                   placeholder={t("password")}
+  2285:                   className="input-field"
+  2286:                   value={password}
+  2287:                   onChange={e => setPassword(e.target.value)}
+  2288:                   style={{ paddingLeft: "42px" }}
+  2289:                   required
+---
+Line 2284:                   placeholder={t("password")}
+Context:  2279: 
+  2280:               <div style={{ position: "relative" }}>
+  2281:                 <Lock style={{ position: "absolute", left: "14px", top: "13px", color: "var(--text-muted)", width: "18px" }} />
+  2282:                 <input
+  2283:                   type="password"
+  2284:                   placeholder={t("password")}
+  2285:                   className="input-field"
+  2286:                   value={password}
+  2287:                   onChange={e => setPassword(e.target.value)}
+  2288:                   style={{ paddingLeft: "42px" }}
+  2289:                   required
+  2290:                 />
+  2291:               </div>
+  2292: 
+  2293:               {authError && (
+  2294:                 <div style={{ color: "var(--accent-danger)", fontSize: "13px", textAlign: "center", fontWeight: "500" }}>
+  2295:                   {authError}
+  2296:                 </div>
+  2297:               )}
+  2298: 
+  2299:               <button type="submit" className="btn-primary" disabled={authLoading}>
+  2300:                 {authLoading ? <RefreshCw className="animate-spin" style={{ width: "18px" }} /> : null}
+  2301:                 {authMode === "login" ? t("sign_in") : t("create_account")}
+  2302:               </button>
+  2303:             </form>
+---
+Line 2424:                 placeholder={lang === "tr" ? `${comment.user.username} kullanıcısına yanıt ver...` : (lang === "de" ? `Antworten an ${comment.user.username}...` : (lang === "ru" ? `Ответить ${comment.user.username}...` : (lang === "zh" ? `回复 ${comment.user.username}...` : (lang === "es" ? `Responder a ${comment.user.username}...` : `Reply to ${comment.user.username}...`))))}
+Context:  2419:           {/* Reply Input Box */}
+  2420:           {replyingToId === comment.id && (
+  2421:             <form onSubmit={(e) => handlePostComment(e, comment.id)} style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "8px" }}>
+  2422:               <input
+  2423:                 type="text"
+  2424:                 placeholder={lang === "tr" ? `${comment.user.username} kullanıcısına yanıt ver...` : (lang === "de" ? `Antworten an ${comment.user.username}...` : (lang === "ru" ? `Ответить ${comment.user.username}...` : (lang === "zh" ? `回复 ${comment.user.username}...` : (lang === "es" ? `Responder a ${comment.user.username}...` : `Reply to ${comment.user.username}...`))))}
+  2425:                 className="input-field"
+  2426:                 value={replyContent}
+  2427:                 onChange={(e) => setReplyContent(e.target.value)}
+  2428:                 style={{ fontSize: "11px", height: "30px", padding: "0 8px" }}
+  2429:                 autoFocus
+  2430:               />
+  2431:               <div style={{ display: "flex", gap: "6px", alignSelf: "flex-end" }}>
+  2432:                 <button 
+  2433:                   type="button" 
+  2434:                   onClick={() => setReplyingToId(null)}
+  2435:                   className="btn-secondary" 
+  2436:                   style={{ height: "24px", padding: "0 8px", fontSize: "11px" }}
+  2437:                 >
+  2438:                   {t("cancel_btn")}
+  2439:                 </button>
+  2440:                 <button 
+  2441:                   type="submit" 
+  2442:                   className="btn-primary" 
+  2443:                   style={{ height: "24px", padding: "0 8px", fontSize: "11px" }}
+---
+Line 2515:               placeholder={t("search_placeholder")}
+Context:  2510:         <form onSubmit={handleSearchSubmit} style={{ display: "flex", gap: "8px" }}>
+  2511:           <div style={{ position: "relative", flexGrow: 1 }}>
+  2512:             <Search style={{ position: "absolute", left: "12px", top: "12px", color: "var(--text-muted)", width: "16px", zIndex: 1 }} />
+  2513:             <input
+  2514:               type="text"
+  2515:               placeholder={t("search_placeholder")}
+  2516:               className="input-field"
+  2517:               value={searchQuery}
+  2518:               onChange={e => {
+  2519:                 setSearchQuery(e.target.value);
+  2520:                 setShowSuggestions(false);
+  2521:               }}
+  2522:               onFocus={() => triggerSearch(searchQuery)}
+  2523:               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+  2524:               onKeyDown={e => {
+  2525:                 if (!showSuggestions) return;
+  2526:                 if (e.key === "ArrowDown") {
+  2527:                   e.preventDefault();
+  2528:                   setSuggestionIndex(i => Math.min(i + 1, searchSuggestions.length - 1));
+  2529:                 } else if (e.key === "ArrowUp") {
+  2530:                   e.preventDefault();
+  2531:                   setSuggestionIndex(i => Math.max(i - 1, -1));
+  2532:                 } else if (e.key === "Enter" && suggestionIndex >= 0) {
+  2533:                   e.preventDefault();
+  2534:                   const chosen = searchSuggestions[suggestionIndex];
+---
+Line 2911:                     placeholder={lang === "tr" ? "Varlık ara..." : "Search assets..."}
+Context:  2906:                 </h2>
+  2907:                 <div style={{ position: "relative", width: "100%", maxWidth: "250px" }}>
+  2908:                   <Search style={{ position: "absolute", left: "10px", top: "10px", color: "var(--text-muted)", width: "14px" }} />
+  2909:                   <input 
+  2910:                     type="text"
+  2911:                     placeholder={lang === "tr" ? "Varlık ara..." : "Search assets..."}
+  2912:                     className="input-field"
+  2913:                     value={screenerSearch}
+  2914:                     onChange={e => setScreenerSearch(e.target.value)}
+  2915:                     style={{ paddingLeft: "32px", height: "34px", fontSize: "13px" }}
+  2916:                   />
+  2917:                 </div>
+  2918:               </div>
+  2919: 
+  2920:               {/* Filtering Controls */}
+  2921:               <div style={{ 
+  2922:                 display: "flex", 
+  2923:                 background: "rgba(0, 0, 0, 0.25)", 
+  2924:                 padding: "4px", 
+  2925:                 borderRadius: "30px", 
+  2926:                 border: "1px solid rgba(255, 255, 255, 0.05)",
+  2927:                 width: "fit-content",
+  2928:                 alignItems: "center",
+  2929:                 flexWrap: "wrap",
+  2930:                 gap: "4px"
+---
+Line 3855:                       placeholder={t("discussion_placeholder")}
+Context:  3850:                   </h3>
+  3851:                   
+  3852:                   {/* Post New Comment Form */}
+  3853:                   <form onSubmit={(e) => handlePostComment(e)} style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+  3854:                     <textarea
+  3855:                       placeholder={t("discussion_placeholder")}
+  3856:                       className="input-field"
+  3857:                       rows="3"
+  3858:                       value={newCommentContent}
+  3859:                       onChange={(e) => setNewCommentContent(e.target.value)}
+  3860:                       style={{ resize: "none", fontSize: "13px", padding: "10px" }}
+  3861:                       required
+  3862:                     />
+  3863:                     <button type="submit" className="btn-primary" style={{ alignSelf: "flex-end", height: "36px", padding: "0 16px", fontSize: "13px" }}>
+  3864:                       {t("comment_btn")}
+  3865:                     </button>
+  3866:                   </form>
+  3867:                   
+  3868:                   {/* Comments Tree */}
+  3869:                   <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "450px", overflowY: "auto", paddingRight: "5px" }}>
+  3870:                     {comments.filter(c => c.parent_id === null).length === 0 ? (
+  3871:                       <div style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center", padding: "20px 0", fontStyle: "italic" }}>
+  3872:                         {t("no_comments")}
+  3873:                       </div>
+  3874:                     ) : (
+---
+Line 4436:                   placeholder={lang === "tr" ? "Doğrulama Kodu" : "Verification Code"}
+Context:  4431:                     ? "Lütfen e-posta adresinize gönderilen 6 haneli şifre değiştirme doğrulama kodunu girin." 
+  4432:                     : "Please enter the 6-digit password change verification code sent to your email."}
+  4433:                 </div>
+  4434:                 <input
+  4435:                   type="text"
+  4436:                   placeholder={lang === "tr" ? "Doğrulama Kodu" : "Verification Code"}
+  4437:                   className="input-field"
+  4438:                   value={passwordVerificationCode}
+  4439:                   onChange={e => setPasswordVerificationCode(e.target.value)}
+  4440:                   style={{ textAlign: "center", letterSpacing: "4px", fontWeight: "bold" }}
+  4441:                   maxLength={6}
+  4442:                   required
+  4443:                 />
+  4444:                 
+  4445:                 {passwordError && <div style={{ color: "var(--accent-danger)", fontSize: "13px" }}>{passwordError}</div>}
+  4446:                 {passwordSuccess && <div style={{ color: "var(--accent-success)", fontSize: "13px" }}>{passwordSuccess}</div>}
+  4447:                 
+  4448:                 <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+  4449:                   <button type="submit" className="btn-primary">{lang === "tr" ? "Doğrula ve Güncelle" : "Verify & Update"}</button>
+  4450:                   <button 
+  4451:                     type="button" 
+  4452:                     onClick={() => { 
+  4453:                       setIsVerifyingPasswordChange(false); 
+  4454:                       setPasswordError(""); 
+  4455:                       setPasswordSuccess(""); 
+---
+Line 4468:                   placeholder={t("old_password")}
+Context:  4463:               </form>
+  4464:             ) : (
+  4465:               <form onSubmit={handleChangePasswordRequest} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+  4466:                 <input
+  4467:                   type="password"
+  4468:                   placeholder={t("old_password")}
+  4469:                   className="input-field"
+  4470:                   value={oldPassword}
+  4471:                   onChange={e => setOldPassword(e.target.value)}
+  4472:                   required
+  4473:                 />
+  4474:                 <input
+  4475:                   type="password"
+  4476:                   placeholder={t("new_password")}
+  4477:                   className="input-field"
+  4478:                   value={newPassword}
+  4479:                   onChange={e => setNewPassword(e.target.value)}
+  4480:                   required
+  4481:                 />
+  4482:                 
+  4483:                 {passwordError && <div style={{ color: "var(--accent-danger)", fontSize: "13px" }}>{passwordError}</div>}
+  4484:                 {passwordSuccess && <div style={{ color: "var(--accent-success)", fontSize: "13px" }}>{passwordSuccess}</div>}
+  4485:                 
+  4486:                 <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+  4487:                   <button type="submit" className="btn-primary">{t("confirm")}</button>
+---
+Line 4476:                   placeholder={t("new_password")}
+Context:  4471:                   onChange={e => setOldPassword(e.target.value)}
+  4472:                   required
+  4473:                 />
+  4474:                 <input
+  4475:                   type="password"
+  4476:                   placeholder={t("new_password")}
+  4477:                   className="input-field"
+  4478:                   value={newPassword}
+  4479:                   onChange={e => setNewPassword(e.target.value)}
+  4480:                   required
+  4481:                 />
+  4482:                 
+  4483:                 {passwordError && <div style={{ color: "var(--accent-danger)", fontSize: "13px" }}>{passwordError}</div>}
+  4484:                 {passwordSuccess && <div style={{ color: "var(--accent-success)", fontSize: "13px" }}>{passwordSuccess}</div>}
+  4485:                 
+  4486:                 <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+  4487:                   <button type="submit" className="btn-primary">{t("confirm")}</button>
+  4488:                   <button 
+  4489:                     type="button" 
+  4490:                     onClick={() => { 
+  4491:                       setShowPasswordModal(false); 
+  4492:                       setPasswordError(""); 
+  4493:                       setPasswordSuccess(""); 
+  4494:                       setOldPassword("");
+  4495:                       setNewPassword("");
+---
+Line 4645:                   placeholder={lang === "tr" ? "E-posta Adresiniz" : "Your Email Address"}
+Context:  4640:                     : "Write to us for questions, partnership proposals, or feedback."}
+  4641:                 </div>
+  4642:                 
+  4643:                 <input 
+  4644:                   type="email" 
+  4645:                   placeholder={lang === "tr" ? "E-posta Adresiniz" : "Your Email Address"}
+  4646:                   className="input-field"
+  4647:                   value={contactEmail}
+  4648:                   onChange={(e) => setContactEmail(e.target.value)}
+  4649:                   required
+  4650:                 />
+  4651:                 
+  4652:                 <input 
+  4653:                   type="text" 
+  4654:                   placeholder={lang === "tr" ? "Konu" : "Subject"}
+  4655:                   className="input-field"
+  4656:                   value={contactSubject}
+  4657:                   onChange={(e) => setContactSubject(e.target.value)}
+  4658:                   required
+  4659:                 />
+  4660:                 
+  4661:                 <textarea 
+  4662:                   placeholder={lang === "tr" ? "Mesajınız..." : "Your Message..."}
+  4663:                   className="input-field"
+  4664:                   rows="4"
+---
+Line 4654:                   placeholder={lang === "tr" ? "Konu" : "Subject"}
+Context:  4649:                   required
+  4650:                 />
+  4651:                 
+  4652:                 <input 
+  4653:                   type="text" 
+  4654:                   placeholder={lang === "tr" ? "Konu" : "Subject"}
+  4655:                   className="input-field"
+  4656:                   value={contactSubject}
+  4657:                   onChange={(e) => setContactSubject(e.target.value)}
+  4658:                   required
+  4659:                 />
+  4660:                 
+  4661:                 <textarea 
+  4662:                   placeholder={lang === "tr" ? "Mesajınız..." : "Your Message..."}
+  4663:                   className="input-field"
+  4664:                   rows="4"
+  4665:                   value={contactMessage}
+  4666:                   onChange={(e) => setContactMessage(e.target.value)}
+  4667:                   style={{ resize: "none" }}
+  4668:                   required
+  4669:                 />
+  4670:                 
+  4671:                 <button type="submit" className="btn-primary" style={{ marginTop: "5px" }}>
+  4672:                   {lang === "tr" ? "Gönder" : "Send Message"}
+  4673:                 </button>
+---
+Line 4662:                   placeholder={lang === "tr" ? "Mesajınız..." : "Your Message..."}
+Context:  4657:                   onChange={(e) => setContactSubject(e.target.value)}
+  4658:                   required
+  4659:                 />
+  4660:                 
+  4661:                 <textarea 
+  4662:                   placeholder={lang === "tr" ? "Mesajınız..." : "Your Message..."}
+  4663:                   className="input-field"
+  4664:                   rows="4"
+  4665:                   value={contactMessage}
+  4666:                   onChange={(e) => setContactMessage(e.target.value)}
+  4667:                   style={{ resize: "none" }}
+  4668:                   required
+  4669:                 />
+  4670:                 
+  4671:                 <button type="submit" className="btn-primary" style={{ marginTop: "5px" }}>
+  4672:                   {lang === "tr" ? "Gönder" : "Send Message"}
+  4673:                 </button>
+  4674:                 
+  4675:                 <div style={{ fontSize: "11px", color: "var(--text-dark)", textAlign: "center", marginTop: "5px" }}>
+  4676:                   {lang === "tr" ? "Doğrudan Destek: " : "Direct Support: "} 
+  4677:                   <a href="mailto:support@analyzeio.com" style={{ color: "var(--accent-primary)", textDecoration: "none" }}>support@analyzeio.com</a>
+  4678:                 </div>
+  4679:               </form>
+  4680:             )}
+  4681:           </div>
+---
+Line 4819:                       placeholder="e.g. SOL-USD, AAPL, Gold" 
+Context:  4814:                 <div>
+  4815:                   {/* Add symbol form */}
+  4816:                   <form onSubmit={handleAddAutoTrainSymbol} style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+  4817:                     <input 
+  4818:                       type="text" 
+  4819:                       placeholder="e.g. SOL-USD, AAPL, Gold" 
+  4820:                       value={newAutoTrainSymbol}
+  4821:                       onChange={(e) => setNewAutoTrainSymbol(e.target.value)}
+  4822:                       style={{ 
+  4823:                         flex: 1, 
+  4824:                         background: "rgba(255, 255, 255, 0.03)", 
+  4825:                         border: "1px solid rgba(255, 255, 255, 0.08)", 
+  4826:                         borderRadius: "6px", 
+  4827:                         padding: "8px 12px", 
+  4828:                         color: "var(--text-main)",
+  4829:                         fontSize: "13px"
+  4830:                       }} 
+  4831:                     />
+  4832:                     <button 
+  4833:                       type="submit" 
+  4834:                       className="btn-primary"
+  4835:                       style={{ 
+  4836:                         background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", 
+  4837:                         border: "none", 
+  4838:                         padding: "8px 16px",
+---
