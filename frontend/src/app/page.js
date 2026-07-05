@@ -4049,8 +4049,8 @@ export default function Home() {
                           </span>
                         </div>
 
-                        {/* PatchTST Box (Visible only for BTC-USD) */}
-                        {activeSymbol === "BTC-USD" && (
+                        {/* PatchTST Box (Visible for all symbols) */}
+                        {true && (
                           <div style={{ 
                             padding: "10px 14px", 
                             background: "rgba(245, 158, 11, 0.04)", 
@@ -4177,7 +4177,7 @@ export default function Home() {
                           )}
 
                           {/* PatchTST Signal */}
-                          {activeSymbol === "BTC-USD" && patchTstData && patchTstData.patchtst_predicted_close !== null && (() => {
+                          {patchTstData && patchTstData.patchtst_predicted_close !== null && (() => {
                             const lastPrice = predictionData ? predictionData.last_close : null;
                             if (!lastPrice) return null;
                             const patchTstChangeVal = ((patchTstData.patchtst_predicted_close - lastPrice) / lastPrice) * 100;
