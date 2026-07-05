@@ -1,0 +1,114 @@
+4317:                 {/* Model Information & Metrics (Comparison Table) */}
+4318:                 <div className="glass-panel">
+4319:                   <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
+4320:                     <LineChart style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} />
+4321:                     {lang === "tr" ? "Model Analitiği & Karşılaştırma" : "Model Analytics & Comparison"}
+4322:                   </h3>
+4323:                   
+4324:                   <div style={{ overflowX: "auto", marginTop: "15px" }}>
+4325:                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", textAlign: "left" }}>
+4326:                       <thead>
+4327:                         <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", color: "var(--text-muted)" }}>
+4328:                           <th style={{ padding: "8px 4px", fontWeight: "600" }}>{lang === "tr" ? "Model" : "Model"}</th>
+4329:                           <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>{lang === "tr" ? "Tahmin" : "Prediction"}</th>
+4330:                           <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>RMSE</th>
+4331:                           <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>MAPE</th>
+4332:                           <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>{lang === "tr" ? "Yönsel İsabet" : "Dir. Accuracy"}</th>
+4333:                         </tr>
+4334:                       </thead>
+4335:                       <tbody>
+4336:                         {/* XGBoost row */}
+4337:                         <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+4338:                           <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+4339:                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#a855f7" }}></span>
+4340:                             <span style={{ fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
+4341:                           </td>
+4342:                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+4343:                             {predictionData && predictionData.xgb_predicted_close !== null
+4344:                               ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+4345:                               : "---"}
+4346:                           </td>
+4347:                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+4348:                             {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.rmse !== null ? `$${predictionData.xgb_metrics.rmse.toFixed(1)}` : "---"}
+4349:                           </td>
+4350:                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+4351:                             {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.mape !== null ? `${predictionData.xgb_metrics.mape.toFixed(2)}%` : "---"}
+4352:                           </td>
+4353:                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
+4354:                             {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.directional_accuracy !== null ? `${predictionData.xgb_metrics.directional_accuracy.toFixed(1)}%` : "---"}
+4355:                           </td>
+4356:                         </tr>
+4357: 
+4358:                         {/* LSTM row */}
+4359:                         <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+4360:                           <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+4361:                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#0ea5e9" }}></span>
+4362:                             <span style={{ fontWeight: "600", color: "#e0f2fe" }}>LSTM</span>
+4363:                           </td>
+4364:                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+4365:                             {predictionData && predictionData.lstm_predicted_close !== null
+4366:                               ? `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+4367:                               : "---"}
+4368:                           </td>
+4369:                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+4370:                             {predictionData && predictionData.lstm_metrics && predictionData.lstm_metrics.rmse !== null ? `$${predictionData.lstm_metrics.rmse.toFixed(1)}` : "---"}
+4371:                           </td>
+4372:                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+4373:                             {predictionData && predictionData.lstm_metrics && predictionData.lstm_metrics.mape !== null ? `${predictionData.lstm_metrics.mape.toFixed(2)}%` : "---"}
+4374:                           </td>
+4375:                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
+4376:                             {predictionData && predictionData.lstm_metrics && predictionData.lstm_metrics.directional_accuracy !== null ? `${predictionData.lstm_metrics.directional_accuracy.toFixed(1)}%` : "---"}
+4377:                           </td>
+4378:                         </tr>
+4379: 
+4380:                         {/* Linear Regression row */}
+4381:                         <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+4382:                           <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+4383:                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3b82f6" }}></span>
+4384:                             <span style={{ fontWeight: "600", color: "#dbeafe" }}>{lang === "tr" ? "Lineer Reg." : "Linear Reg."}</span>
+4385:                           </td>
+4386:                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+4387:                             {predictionData && predictionData.lr_predicted_close !== null
+4388:                               ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+4389:                               : "---"}
+4390:                           </td>
+4391:                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+4392:                             {predictionData && predictionData.lr_metrics && predictionData.lr_metrics.rmse !== null ? `$${predictionData.lr_metrics.rmse.toFixed(1)}` : "---"}
+4393:                           </td>
+4394:                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+4395:                             {predictionData && predictionData.lr_metrics && predictionData.lr_metrics.mape !== null ? `${predictionData.lr_metrics.mape.toFixed(2)}%` : "---"}
+4396:                           </td>
+4397:                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
+4398:                             {predictionData && predictionData.lr_metrics && predictionData.lr_metrics.directional_accuracy !== null ? `${predictionData.lr_metrics.directional_accuracy.toFixed(1)}%` : "---"}
+4399:                           </td>
+4400:                         </tr>
+4401:                       </tbody>
+4402:                     </table>
+4403:                   </div>
+4404:                   
+4405:                   <div style={{ marginTop: "18px", fontSize: "11px", color: "var(--text-muted)", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "12px" }}>
+4406:                     {lang === "tr" 
+4407:                       ? `* Analitik verileri, her modelin geçmiş %20 out-of-sample test seti üzerindeki performansını (hata payı ve yön tahmini isabetini) gösterir.`
+4408:                       : `* Analytics show backtest performance (error metrics and directional accuracy) calculated over the last 20% out-of-sample test set for each model.`}
+4409:                   </div>
+4410:                 </div>
+4411: 
+4412:                 {/* Prediction Accuracy Logs */}
+4413:                 {AUTO_TRAINED_SYMBOLS.includes(activeSymbol) && chartInterval === "1d" && (
+4414:                   <div className="glass-panel" style={{ marginTop: "20px" }}>
+4415:                     <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
+4416:                       <LineChart style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} /> {t("accuracy_title")}
+4417:                     </h3>
+4418:                     
+4419:                     {accuracyLoading ? (
+4420:                       <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
+4421:                         <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)" }} />
+4422:                       </div>
+4423:                                         ) : (() => {
+4424:                       const filteredAccuracyLogs = accuracyLogs.filter((log, idx) => {
+4425:                         if (idx === 0 && log.actual_close === null && accuracyLogs.length > 1) {
+4426:                           if (log.predicted_close === accuracyLogs[1].predicted_close) {
+4427:                             return false;
+4428:                           }
+4429:                         }
+4430:                         return true;
