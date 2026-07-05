@@ -204,9 +204,9 @@ def check_mock_trading_rule():
 
     state = get_mock_trading_state()
     
-    # 6:00 AM TRT (03:00 UTC) daily reset and buy
+    # 6:10 AM TRT (03:10 UTC) daily reset and buy (gives 03:05 UTC retry training time to finish)
     today_str = now_utc.date().isoformat()
-    if now_utc.hour == 3 and state.get("last_buy_date") != today_str:
+    if now_utc.hour == 3 and now_utc.minute >= 10 and state.get("last_buy_date") != today_str:
         print(f"[Mock Trading] Resetting cycle at {now_utc.strftime('%H:%M:%S UTC')}...")
         pos = state.get("position")
         if pos:
