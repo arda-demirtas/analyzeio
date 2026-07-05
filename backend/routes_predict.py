@@ -39,7 +39,7 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_typ
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported interval. Allowed: 15m, 1h, 4h, 1d"
         )
-    if model_type not in ["xgboost", "lstm", "linear_regression"]:
+    if model_type not in ["xgboost", "lstm", "linear_regression", "patchtst"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported model_type. Allowed: xgboost, lstm, linear_regression"
