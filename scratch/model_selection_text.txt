@@ -1,0 +1,243 @@
+Line 909:         ? (lang === "tr" ? "XGBoost Tahmini" : "XGBoost Prediction") 
+Context:  904:     );
+  905: 
+  906:     // Add Prediction Point
+  907:     if (predictionData && predictionData.prediction_date && predictionData.predicted_close !== null && !isPendingData) {
+  908:       const predLabel = predictionData.model_type === "xgboost" 
+  909:         ? (lang === "tr" ? "XGBoost Tahmini" : "XGBoost Prediction") 
+  910:         : (lang === "tr" ? "LSTM Tahmini" : "LSTM Prediction");
+  911:         
+  912:       const lastClosePrice = closePrices[closePrices.length - 1];
+  913:       const isUp = predictionData.predicted_close >= lastClosePrice;
+  914:       const predColor = isUp ? "rgba(16, 185, 129, 0.95)" : "rgba(239, 68, 68, 0.95)";
+  915:       
+  916:       const predDataPoints = Array(labels.length - 1).fill(null);
+  917:       predDataPoints.push(lastClosePrice);
+  918:       predDataPoints.push(predictionData.predicted_close);
+  919:       
+  920:       datasets.push({
+  921:         label: predLabel,
+  922:         type: "line",
+  923:         data: predDataPoints,
+  924:         borderColor: predColor,
+  925:         borderWidth: 2.5,
+  926:         borderDash: [5, 5],
+  927:         pointRadius: 6,
+  928:         pointHoverRadius: 8,
+---
+Line 3962:                         {/* XGBoost Box */}
+Context:  3957:                       <span className="prediction-label" style={{ marginBottom: "12px", display: "block" }}>
+  3958:                         {lang === "tr" ? "Model Tahmin Fiyatları" : "Model Prediction Prices"}
+  3959:                       </span>
+  3960:                       
+  3961:                       <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", marginBottom: "15px" }}>
+  3962:                         {/* XGBoost Box */}
+  3963:                         <div style={{ 
+  3964:                           padding: "10px 14px", 
+  3965:                           background: "rgba(168, 85, 247, 0.04)", 
+  3966:                           border: "1px solid rgba(168, 85, 247, 0.15)", 
+  3967:                           borderRadius: "var(--border-radius-md)",
+  3968:                           display: "flex",
+  3969:                           justifyContent: "space-between",
+  3970:                           alignItems: "center"
+  3971:                         }}>
+  3972:                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+  3973:                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a855f7", boxShadow: "0 0 8px #a855f7" }}></span>
+  3974:                             <span style={{ fontSize: "13px", fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
+  3975:                           </div>
+  3976:                           <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
+  3977:                             {predictionData && predictionData.xgb_predicted_close !== null
+  3978:                               ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+  3979:                               : "---"}
+  3980:                           </span>
+  3981:                         </div>
+---
+Line 3974:                             <span style={{ fontSize: "13px", fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
+Context:  3969:                           justifyContent: "space-between",
+  3970:                           alignItems: "center"
+  3971:                         }}>
+  3972:                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+  3973:                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a855f7", boxShadow: "0 0 8px #a855f7" }}></span>
+  3974:                             <span style={{ fontSize: "13px", fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
+  3975:                           </div>
+  3976:                           <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
+  3977:                             {predictionData && predictionData.xgb_predicted_close !== null
+  3978:                               ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+  3979:                               : "---"}
+  3980:                           </span>
+  3981:                         </div>
+  3982: 
+  3983:                         {/* LSTM Box */}
+  3984:                         <div style={{ 
+  3985:                           padding: "10px 14px", 
+  3986:                           background: "rgba(14, 165, 233, 0.04)", 
+  3987:                           border: "1px solid rgba(14, 165, 233, 0.15)", 
+  3988:                           borderRadius: "var(--border-radius-md)",
+  3989:                           display: "flex",
+  3990:                           justifyContent: "space-between",
+  3991:                           alignItems: "center"
+  3992:                         }}>
+  3993:                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+---
+Line 4036:                           {/* XGBoost Signal */}
+Context:  4031:                         <div style={{ marginTop: "18px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
+  4032:                           <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase", marginBottom: "4px", display: "block" }}>
+  4033:                             {lang === "tr" ? "Model Sinyalleri & Getiri Oranları" : "Model Signals & Expected Changes"}:
+  4034:                           </span>
+  4035: 
+  4036:                           {/* XGBoost Signal */}
+  4037:                           {xgbChangeVal !== null && (
+  4038:                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+  4039:                               <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+  4040:                                 <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#a855f7" }}></span>
+  4041:                                 XGBoost:
+  4042:                               </span>
+  4043:                               <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+  4044:                                 {xgbChangeVal >= 0 ? (
+  4045:                                   <>
+  4046:                                     <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+  4047:                                     <span style={{ color: "var(--accent-success)" }}>+{xgbChangeVal.toFixed(2)}% ({t("bullish")})</span>
+  4048:                                   </>
+  4049:                                 ) : (
+  4050:                                   <>
+  4051:                                     <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+  4052:                                     <span style={{ color: "var(--accent-danger)" }}>{xgbChangeVal.toFixed(2)}% ({t("bearish")})</span>
+  4053:                                   </>
+  4054:                                 )}
+  4055:                               </div>
+---
+Line 4041:                                 XGBoost:
+Context:  4036:                           {/* XGBoost Signal */}
+  4037:                           {xgbChangeVal !== null && (
+  4038:                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+  4039:                               <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+  4040:                                 <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#a855f7" }}></span>
+  4041:                                 XGBoost:
+  4042:                               </span>
+  4043:                               <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+  4044:                                 {xgbChangeVal >= 0 ? (
+  4045:                                   <>
+  4046:                                     <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+  4047:                                     <span style={{ color: "var(--accent-success)" }}>+{xgbChangeVal.toFixed(2)}% ({t("bullish")})</span>
+  4048:                                   </>
+  4049:                                 ) : (
+  4050:                                   <>
+  4051:                                     <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+  4052:                                     <span style={{ color: "var(--accent-danger)" }}>{xgbChangeVal.toFixed(2)}% ({t("bearish")})</span>
+  4053:                                   </>
+  4054:                                 )}
+  4055:                               </div>
+  4056:                             </div>
+  4057:                           )}
+  4058: 
+  4059:                           {/* LSTM Signal */}
+  4060:                           {lstmChangeVal !== null && (
+---
+Line 4280:                         {/* XGBoost row */}
+Context:  4275:                           <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>MAPE</th>
+  4276:                           <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>{lang === "tr" ? "Yönsel İsabet" : "Dir. Accuracy"}</th>
+  4277:                         </tr>
+  4278:                       </thead>
+  4279:                       <tbody>
+  4280:                         {/* XGBoost row */}
+  4281:                         <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+  4282:                           <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+  4283:                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#a855f7" }}></span>
+  4284:                             <span style={{ fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
+  4285:                           </td>
+  4286:                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+  4287:                             {predictionData && predictionData.xgb_predicted_close !== null
+  4288:                               ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+  4289:                               : "---"}
+  4290:                           </td>
+  4291:                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+  4292:                             {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.rmse !== null ? `$${predictionData.xgb_metrics.rmse.toFixed(1)}` : "---"}
+  4293:                           </td>
+  4294:                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+  4295:                             {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.mape !== null ? `${predictionData.xgb_metrics.mape.toFixed(2)}%` : "---"}
+  4296:                           </td>
+  4297:                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
+  4298:                             {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.directional_accuracy !== null ? `${predictionData.xgb_metrics.directional_accuracy.toFixed(1)}%` : "---"}
+  4299:                           </td>
+---
+Line 4284:                             <span style={{ fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
+Context:  4279:                       <tbody>
+  4280:                         {/* XGBoost row */}
+  4281:                         <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+  4282:                           <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+  4283:                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#a855f7" }}></span>
+  4284:                             <span style={{ fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
+  4285:                           </td>
+  4286:                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+  4287:                             {predictionData && predictionData.xgb_predicted_close !== null
+  4288:                               ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+  4289:                               : "---"}
+  4290:                           </td>
+  4291:                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+  4292:                             {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.rmse !== null ? `$${predictionData.xgb_metrics.rmse.toFixed(1)}` : "---"}
+  4293:                           </td>
+  4294:                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+  4295:                             {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.mape !== null ? `${predictionData.xgb_metrics.mape.toFixed(2)}%` : "---"}
+  4296:                           </td>
+  4297:                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
+  4298:                             {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.directional_accuracy !== null ? `${predictionData.xgb_metrics.directional_accuracy.toFixed(1)}%` : "---"}
+  4299:                           </td>
+  4300:                         </tr>
+  4301: 
+  4302:                         {/* LSTM row */}
+  4303:                         <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+---
+Line 4560:                   ? "analyzeio, hisse senetleri ve kripto para birimleri için gelişmiş XGBoost ve LSTM tabanlı makine öğrenimi tahmin modelleri sunan gelişmiş bir piyasa tahmin ve teknik analiz platformudur."
+Context:  4555:               {lang === "tr" ? "Hakkımızda" : "About Us"}
+  4556:             </h3>
+  4557:             <div style={{ fontSize: "14px", lineHeight: "1.6", color: "var(--text-main)", display: "flex", flexDirection: "column", gap: "12px" }}>
+  4558:               <p>
+  4559:                 {lang === "tr" 
+  4560:                   ? "analyzeio, hisse senetleri ve kripto para birimleri için gelişmiş XGBoost ve LSTM tabanlı makine öğrenimi tahmin modelleri sunan gelişmiş bir piyasa tahmin ve teknik analiz platformudur."
+  4561:                   : "analyzeio is an advanced market prediction and technical analysis platform offering optimized XGBoost and LSTM machine learning models for stocks and cryptocurrencies."}
+  4562:               </p>
+  4563:               <p>
+  4564:                 {lang === "tr"
+  4565:                   ? "Sistemimiz, her bir varlık için son verileri indirir, RSI, MACD, Bollinger Bantları ve EMA gibi 19 temel teknik göstergeyi gerçek zamanlı hesaplar, tahmin modellerini optimize ederek bir sonraki işlem periyodunun kapanış fiyatını tahmin eder."
+  4566:                   : "Our system downloads the latest price action for each asset, computes 19 key technical indicators (including RSI, MACD, Bollinger Bands, and EMAs) in real-time, and optimizes prediction models to estimate the next period's close price."}
+  4567:               </p>
+  4568:               <p>
+  4569:                 {lang === "tr"
+  4570:                   ? "Tahmin doğruluğunu şeffaf bir şekilde ölçmek için geriye dönük test (backtest) hata oranlarını (RMSE, MAPE) ve yönsel isabet oranlarını sürekli olarak güncelliyor ve kullanıcılarımıza sunuyoruz."
+  4571:                   : "We continuously calculate and show backtest error metrics (RMSE, MAPE) and directional accuracy logs, offering complete transparency into our predictive accuracy."}
+  4572:               </p>
+  4573:             </div>
+  4574:             <button 
+  4575:               onClick={() => setShowAboutModal(false)} 
+  4576:               className="btn-primary" 
+  4577:               style={{ marginTop: "20px", width: "100%" }}
+  4578:             >
+  4579:               {lang === "tr" ? "Kapat" : "Close"}
+---
+Line 4561:                   : "analyzeio is an advanced market prediction and technical analysis platform offering optimized XGBoost and LSTM machine learning models for stocks and cryptocurrencies."}
+Context:  4556:             </h3>
+  4557:             <div style={{ fontSize: "14px", lineHeight: "1.6", color: "var(--text-main)", display: "flex", flexDirection: "column", gap: "12px" }}>
+  4558:               <p>
+  4559:                 {lang === "tr" 
+  4560:                   ? "analyzeio, hisse senetleri ve kripto para birimleri için gelişmiş XGBoost ve LSTM tabanlı makine öğrenimi tahmin modelleri sunan gelişmiş bir piyasa tahmin ve teknik analiz platformudur."
+  4561:                   : "analyzeio is an advanced market prediction and technical analysis platform offering optimized XGBoost and LSTM machine learning models for stocks and cryptocurrencies."}
+  4562:               </p>
+  4563:               <p>
+  4564:                 {lang === "tr"
+  4565:                   ? "Sistemimiz, her bir varlık için son verileri indirir, RSI, MACD, Bollinger Bantları ve EMA gibi 19 temel teknik göstergeyi gerçek zamanlı hesaplar, tahmin modellerini optimize ederek bir sonraki işlem periyodunun kapanış fiyatını tahmin eder."
+  4566:                   : "Our system downloads the latest price action for each asset, computes 19 key technical indicators (including RSI, MACD, Bollinger Bands, and EMAs) in real-time, and optimizes prediction models to estimate the next period's close price."}
+  4567:               </p>
+  4568:               <p>
+  4569:                 {lang === "tr"
+  4570:                   ? "Tahmin doğruluğunu şeffaf bir şekilde ölçmek için geriye dönük test (backtest) hata oranlarını (RMSE, MAPE) ve yönsel isabet oranlarını sürekli olarak güncelliyor ve kullanıcılarımıza sunuyoruz."
+  4571:                   : "We continuously calculate and show backtest error metrics (RMSE, MAPE) and directional accuracy logs, offering complete transparency into our predictive accuracy."}
+  4572:               </p>
+  4573:             </div>
+  4574:             <button 
+  4575:               onClick={() => setShowAboutModal(false)} 
+  4576:               className="btn-primary" 
+  4577:               style={{ marginTop: "20px", width: "100%" }}
+  4578:             >
+  4579:               {lang === "tr" ? "Kapat" : "Close"}
+  4580:             </button>
+---
