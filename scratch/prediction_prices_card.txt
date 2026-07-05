@@ -1,0 +1,80 @@
+3951:                       <button onClick={handlePremiumToggle} className="btn-primary" style={{ fontSize: "11px", height: "30px", padding: "0 15px", background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", border: "none" }}>
+3952:                         ★ {t("premium_upgrade")}
+3953:                       </button>
+3954:                     </div>
+3955:                   ) : (
+3956:                     <>
+3957:                       <span className="prediction-label" style={{ marginBottom: "12px", display: "block" }}>
+3958:                         {lang === "tr" ? "Model Tahmin Fiyatları" : "Model Prediction Prices"}
+3959:                       </span>
+3960:                       
+3961:                       <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", marginBottom: "15px" }}>
+3962:                         {/* XGBoost Box */}
+3963:                         <div style={{ 
+3964:                           padding: "10px 14px", 
+3965:                           background: "rgba(168, 85, 247, 0.04)", 
+3966:                           border: "1px solid rgba(168, 85, 247, 0.15)", 
+3967:                           borderRadius: "var(--border-radius-md)",
+3968:                           display: "flex",
+3969:                           justifyContent: "space-between",
+3970:                           alignItems: "center"
+3971:                         }}>
+3972:                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+3973:                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a855f7", boxShadow: "0 0 8px #a855f7" }}></span>
+3974:                             <span style={{ fontSize: "13px", fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
+3975:                           </div>
+3976:                           <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
+3977:                             {predictionData && predictionData.xgb_predicted_close !== null
+3978:                               ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+3979:                               : "---"}
+3980:                           </span>
+3981:                         </div>
+3982: 
+3983:                         {/* LSTM Box */}
+3984:                         <div style={{ 
+3985:                           padding: "10px 14px", 
+3986:                           background: "rgba(14, 165, 233, 0.04)", 
+3987:                           border: "1px solid rgba(14, 165, 233, 0.15)", 
+3988:                           borderRadius: "var(--border-radius-md)",
+3989:                           display: "flex",
+3990:                           justifyContent: "space-between",
+3991:                           alignItems: "center"
+3992:                         }}>
+3993:                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+3994:                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#0ea5e9", boxShadow: "0 0 8px #0ea5e9" }}></span>
+3995:                             <span style={{ fontSize: "13px", fontWeight: "600", color: "#e0f2fe" }}>LSTM</span>
+3996:                           </div>
+3997:                           <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
+3998:                             {predictionData && predictionData.lstm_predicted_close !== null
+3999:                               ? `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+4000:                               : "---"}
+4001:                           </span>
+4002:                         </div>
+4003: 
+4004:                         {/* Linear Regression Box */}
+4005:                         <div style={{ 
+4006:                           padding: "10px 14px", 
+4007:                           background: "rgba(59, 130, 246, 0.04)", 
+4008:                           border: "1px solid rgba(59, 130, 246, 0.15)", 
+4009:                           borderRadius: "var(--border-radius-md)",
+4010:                           display: "flex",
+4011:                           justifyContent: "space-between",
+4012:                           alignItems: "center"
+4013:                         }}>
+4014:                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+4015:                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6", boxShadow: "0 0 8px #3b82f6" }}></span>
+4016:                             <span style={{ fontSize: "13px", fontWeight: "600", color: "#dbeafe" }}>{lang === "tr" ? "Lineer Regresyon" : "Linear Regression"}</span>
+4017:                           </div>
+4018:                           <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
+4019:                             {predictionData && predictionData.lr_predicted_close !== null
+4020:                               ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+4021:                               : "---"}
+4022:                           </span>
+4023:                         </div>
+4024:                       </div>
+4025: 
+4026:                       <div style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", width: "100%" }}>
+4027:                         {t("expected_close")}: {predictionData ? predictionData.expected_close_time : "---"}
+4028:                       </div>
+4029:                       
+4030:                       {predictionData && (
