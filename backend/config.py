@@ -38,7 +38,13 @@ POPULAR_STOCKS = [
     "SAP", "GE", "CAT", "AMGN", "TXN", "INTC", "IBM", "AXP", "MS", "PFE",
     "GS", "HON", "NKE", "SBUX", "UBER", "INTU", "ISRG", "LRCX", "SYK", "BA",
     "THYAO.IS", "EREGL.IS", "GARAN.IS", "KCHOL.IS", "AKBNK.IS", "ASELS.IS", 
-    "TUPRS.IS", "SISE.IS", "TCELL.IS", "BIMAS.IS"
+    "TUPRS.IS", "SISE.IS", "TCELL.IS", "BIMAS.IS",
+    # Asian Stocks (Tokyo)
+    "7203.T", "6758.T", "9984.T", "8306.T", "8035.T", "7974.T", "9432.T", "6861.T", 
+    "6098.T", "4063.T", "8316.T", "8411.T", "9983.T", "8058.T", "8001.T",
+    # Asian Stocks (Hong Kong)
+    "0700.HK", "0941.HK", "0005.HK", "0939.HK", "1299.HK", "1398.HK", "0883.HK", "2318.HK", 
+    "9988.HK", "3988.HK", "2388.HK", "0001.HK", "0016.HK", "0011.HK", "3690.HK"
 ]
 
 AUTO_TRAINED_SYMBOLS = POPULAR_CRYPTOS + POPULAR_COMMODITIES + POPULAR_STOCKS
@@ -68,5 +74,37 @@ TICKER_NAMES = {
     "TUPRS.IS": "Tüpraş",
     "SISE.IS": "Şişecam",
     "TCELL.IS": "Turkcell",
-    "BIMAS.IS": "BİM Birleşik Mağazalar"
+    "BIMAS.IS": "BİM Birleşik Mağazalar",
+    # Tokyo Stocks
+    "7203.T": "Toyota Motor",
+    "6758.T": "Sony Group",
+    "9984.T": "SoftBank Group",
+    "8306.T": "Mitsubishi UFJ",
+    "8035.T": "Tokyo Electron",
+    "7974.T": "Nintendo",
+    "9432.T": "NTT",
+    "6861.T": "Keyence",
+    "6098.T": "Recruit Holdings",
+    "4063.T": "Shin-Etsu Chemical",
+    "8316.T": "Sumitomo Mitsui",
+    "8411.T": "Mizuho Financial",
+    "9983.T": "Fast Retailing",
+    "8058.T": "Mitsubishi Corp",
+    "8001.T": "Itochu Corp",
+    # Hong Kong Stocks
+    "0700.HK": "Tencent Holdings",
+    "0941.HK": "China Mobile",
+    "0005.HK": "HSBC Holdings",
+    "0939.HK": "China Construction Bank",
+    "1299.HK": "AIA Group",
+    "1398.HK": "ICBC",
+    "0883.HK": "CNOOC",
+    "2318.HK": "Ping An Insurance",
+    "9988.HK": "Alibaba Group",
+    "3988.HK": "Bank of China",
+    "2388.HK": "BOC Hong Kong",
+    "0001.HK": "CK Hutchison",
+    "0016.HK": "Sun Hung Kai",
+    "0011.HK": "Hang Seng Bank",
+    "3690.HK": "Meituan"
 }
