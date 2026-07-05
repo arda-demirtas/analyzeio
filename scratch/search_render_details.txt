@@ -1,0 +1,115 @@
+Line 2516:           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+Line 2517:             <Briefcase style={{ color: "var(--accent-primary)", width: "28px", height: "28px" }} />
+Line 2518:             <h1 className="logo-text" style={{ fontSize: "24px", margin: 0 }}>analyzeio</h1>
+Line 2519:           </div>
+Line 2520:           <button 
+Line 2521:             type="button"
+Line 2522:             className="mobile-close-btn"
+Line 2523:             onClick={() => setSidebarOpen(false)}
+Line 2524:             aria-label="Close Menu"
+Line 2525:           >
+Line 2526:             <X style={{ width: "20px", height: "20px" }} />
+Line 2527:           </button>
+Line 2528:         </div>
+Line 2529: 
+Line 2530:         {/* Search Input with Autocomplete */}
+Line 2531:         <form onSubmit={handleSearchSubmit} style={{ display: "flex", gap: "8px" }}>
+Line 2532:           <div style={{ position: "relative", flexGrow: 1 }}>
+Line 2533:             <Search style={{ position: "absolute", left: "12px", top: "12px", color: "var(--text-muted)", width: "16px", zIndex: 1 }} />
+Line 2534:             <input
+Line 2535:               type="text"
+Line 2536:               placeholder={t("search_placeholder")}
+Line 2537:               className="input-field"
+Line 2538:               value={searchQuery}
+Line 2539:               onChange={e => {
+Line 2540:                 setSearchQuery(e.target.value);
+Line 2541:                 setShowSuggestions(false);
+Line 2542:               }}
+Line 2543:               onFocus={() => triggerSearch(searchQuery)}
+Line 2544:               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+Line 2545:               onKeyDown={e => {
+Line 2546:                 if (!showSuggestions) return;
+Line 2547:                 if (e.key === "ArrowDown") {
+Line 2548:                   e.preventDefault();
+Line 2549:                   setSuggestionIndex(i => Math.min(i + 1, searchSuggestions.length - 1));
+Line 2550:                 } else if (e.key === "ArrowUp") {
+Line 2551:                   e.preventDefault();
+Line 2552:                   setSuggestionIndex(i => Math.max(i - 1, -1));
+Line 2553:                 } else if (e.key === "Enter" && suggestionIndex >= 0) {
+Line 2554:                   e.preventDefault();
+Line 2555:                   const chosen = searchSuggestions[suggestionIndex];
+Line 2556:                   setShowSuggestions(false);
+Line 2557:                   addSymbolToWatchlist(chosen.symbol);
+Line 2558:                 } else if (e.key === "Escape") {
+Line 2559:                   setShowSuggestions(false);
+Line 2560:                 }
+Line 2561:               }}
+Line 2562:               style={{ paddingLeft: "36px", paddingRight: "10px", height: "40px" }}
+Line 2563:             />
+Line 2564:             {/* Autocomplete Dropdown */}
+Line 2565:             {showSuggestions && (
+Line 2566:               <div style={{
+Line 2567:                 position: "absolute",
+Line 2568:                 top: "calc(100% + 4px)",
+Line 2569:                 left: 0,
+Line 2570:                 right: 0,
+Line 2571:                 background: "rgba(15, 10, 30, 0.98)",
+Line 2572:                 border: "1px solid rgba(139, 92, 246, 0.3)",
+Line 2573:                 borderRadius: "10px",
+Line 2574:                 zIndex: 9999,
+Line 2575:                 overflow: "hidden",
+Line 2576:                 boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+Line 2577:                 backdropFilter: "blur(12px)"
+Line 2578:               }}>
+Line 2579:                 {searchSuggestions.map((item, idx) => {
+Line 2580:                   const catColors = { Crypto: "#f59e0b", Stock: "#3b82f6", BIST: "#10b981", Commodity: "#f97316", Index: "#a855f7", ETF: "#06b6d4" };
+Line 2581:                   const isHighlighted = idx === suggestionIndex;
+Line 2582:                   return (
+Line 2583:                     <div
+Line 2584:                       key={item.symbol}
+Line 2585:                       onMouseDown={() => {
+Line 2586:                         addSymbolToWatchlist(item.symbol);
+Line 2587:                       }}
+Line 2588:                       style={{
+Line 2589:                         display: "flex",
+Line 2590:                         alignItems: "center",
+Line 2591:                         gap: "10px",
+Line 2592:                         padding: "9px 14px",
+Line 2593:                         cursor: "pointer",
+Line 2594:                         background: isHighlighted ? "rgba(139, 92, 246, 0.15)" : "transparent",
+Line 2595:                         borderBottom: idx < searchSuggestions.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+Line 2596:                         transition: "background 0.15s"
+Line 2597:                       }}
+Line 2598:                       onMouseEnter={() => setSuggestionIndex(idx)}
+Line 2599:                     >
+Line 2600:                       <Search style={{ width: "12px", color: "var(--text-muted)", flexShrink: 0 }} />
+Line 2601:                       <div style={{ flex: 1, minWidth: 0 }}>
+Line 2602:                         <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-main)" }}>{item.symbol}</div>
+Line 2603:                         <div style={{ fontSize: "11px", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</div>
+Line 2604:                       </div>
+Line 2605:                       <span style={{
+Line 2606:                         fontSize: "9px",
+Line 2607:                         fontWeight: "700",
+Line 2608:                         padding: "2px 6px",
+Line 2609:                         borderRadius: "4px",
+Line 2610:                         background: `${catColors[item.category] || "#6b7280"}20`,
+Line 2611:                         color: catColors[item.category] || "#6b7280",
+Line 2612:                         border: `1px solid ${catColors[item.category] || "#6b7280"}40`,
+Line 2613:                         flexShrink: 0
+Line 2614:                       }}>
+Line 2615:                         {item.category.toUpperCase()}
+Line 2616:                       </span>
+Line 2617:                     </div>
+Line 2618:                   );
+Line 2619:                 })}
+Line 2620:               </div>
+Line 2621:             )}
+Line 2622:           </div>
+Line 2623:           <button type="submit" className="btn-primary" style={{ width: "40px", height: "40px", padding: 0 }} aria-label="Search">
+Line 2624:             <Search style={{ width: "18px" }} />
+Line 2625:           </button>
+Line 2626:         </form>
+Line 2627: 
+Line 2628: 
+Line 2629:         {/* Navigation Tabs */}
+Line 2630:         <div style={{ display: "flex", gap: "8px", marginTop: "5px", marginBottom: "15px" }}>
