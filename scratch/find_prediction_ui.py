@@ -1,15 +1,18 @@
 with open("c:/Users/h1z1a/Desktop/Analyzeio/frontend/src/app/page.js", "r", encoding="utf-8") as f:
-    content = f.read()
+    lines = f.readlines()
 
-import re
-matches = [m.start() for m in re.finditer("prediction_status", content)]
 output = []
-for m in matches:
-    start = max(0, m - 200)
-    end = min(len(content), m + 300)
-    output.append(f"--- MATCH ---\n{content[start:end]}\n")
+for idx, line in enumerate(lines):
+    if '"linear_regression"' in line or "'linear_regression'" in line:
+        output.append(f"Line {idx+1}: {line}")
+        start = max(0, idx - 5)
+        end = min(len(lines), idx + 20)
+        output.append("Context:")
+        for c_idx in range(start, end):
+            output.append(f"  {c_idx+1}: {lines[c_idx]}")
+        output.append("---\n")
 
-with open("c:/Users/h1z1a/Desktop/Analyzeio/scratch/prediction_ui_output.txt", "w", encoding="utf-8") as f_out:
+with open("c:/Users/h1z1a/Desktop/Analyzeio/scratch/prediction_ui_inspect.txt", "w", encoding="utf-8") as f_out:
     f_out.writelines(output)
 
-print("Output written to scratch/prediction_ui_output.txt")
+print("Prediction UI references written to scratch/prediction_ui_inspect.txt")
