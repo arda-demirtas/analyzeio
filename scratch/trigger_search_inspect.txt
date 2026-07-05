@@ -1,0 +1,41 @@
+Line 417:   const triggerSearch = async (queryVal) => {
+Context:  415: 
+  416:   // Helper: Triggers autocomplete search (merges static catalog & dynamic API search results)
+  417:   const triggerSearch = async (queryVal) => {
+  418:     const q = queryVal.trim().toLowerCase();
+  419:     if (!q) {
+  420:       setSearchSuggestions([]);
+  421:       setShowSuggestions(false);
+  422:       return;
+  423:     }
+  424: 
+  425:     // 1. Get static matches instantly
+  426:     const staticMatches = SYMBOL_CATALOG.filter(item =>
+  427:       item.symbol.toLowerCase().includes(q) ||
+  428:       item.name.toLowerCase().includes(q) ||
+  429:       item.category.toLowerCase().includes(q)
+  430:     );
+  431: 
+  432:     setSearchSuggestions(staticMatches.slice(0, 8));
+  433:     setShowSuggestions(staticMatches.length > 0);
+  434:     setSuggestionIndex(-1);
+  435: 
+  436:     // 2. Fetch dynamic matches from API and merge them
+  437:     try {
+  438:       const res = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(q)}`);
+  439:       if (res.ok) {
+  440:         const dynamicMatches = await res.json();
+  441:         const merged = [...staticMatches];
+  442:         dynamicMatches.forEach(item => {
+  443:           if (!merged.some(m => m.symbol.toUpperCase() === item.symbol.toUpperCase())) {
+  444:             merged.push(item);
+  445:           }
+  446:         });
+  447:         const finalResults = merged.slice(0, 8);
+  448:         setSearchSuggestions(finalResults);
+  449:         setShowSuggestions(finalResults.length > 0);
+  450:       }
+  451:     } catch (err) {
+---
+Line 1822:     await triggerSearch(searchQuery);
+Line 2522:               onFocus={() => triggerSearch(searchQuery)}
