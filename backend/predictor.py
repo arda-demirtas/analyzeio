@@ -37,36 +37,17 @@ def get_prediction(
     if current_price is None and not df.empty:
         current_price = float(df["Close"].iloc[-1])
 
-    # For daily intervals, ensure the last row matches the expected last completed day's date
+    # For daily intervals, ensure today's candle was present in the raw data feed
     is_pending_data = False
     pending_error_msg = None
     if interval == "1d" and not df.empty:
-        now_utc = datetime.datetime.utcnow()
-        if is_crypto:
-            # Expected last completed daily candle date is yesterday (UTC)
-            expected_last_date = now_utc.date() - datetime.timedelta(days=1)
-        else:
-            # Expected last completed daily candle date is today (if past market close) or yesterday (if before market close)
-            # On weekends, traditional markets are closed, so we expect today's date to trigger a pending state
-            if symbol.endswith(".IS"):
-                close_hour_utc = 15  # BIST closes at 18:00 TRT (15:00 UTC)
-            else:
-                close_hour_utc = 20  # US markets close at 16:00 EST (20:00 UTC)
-
-            if now_utc.date().weekday() in [5, 6]:
-                expected_last_date = now_utc.date()
-            elif now_utc.hour >= close_hour_utc:
-                expected_last_date = now_utc.date()
-            else:
-                expected_last_date = now_utc.date() - datetime.timedelta(days=1)
-
-        # Check the date of the last valid row in cleaned data
-        last_row_date = df.index[-1].date()
-        if last_row_date < expected_last_date:
+        has_today_candle = df.attrs.get("has_today_candle", False)
+        if not has_today_candle:
             is_pending_data = True
+            today_utc = datetime.datetime.utcnow().date()
             lang_msg = {
-                "tr": f"{symbol} için en son kapanış verisi ({expected_last_date.strftime('%Y-%m-%d')}) henüz Yahoo Finance sunucularında mevcut değil. Tahmin beklemede.",
-                "en": f"Latest completed daily data for {symbol} ({expected_last_date.strftime('%Y-%m-%d')}) is not yet available on Yahoo Finance. Prediction is pending."
+                "tr": f"{symbol} için bugünün ({today_utc.strftime('%Y-%m-%d')}) günlük verisi henüz mevcut değil. Tahmin beklemede.",
+                "en": f"Today's ({today_utc.strftime('%Y-%m-%d')}) daily candle for {symbol} is not yet available. Prediction is pending."
             }
             pending_error_msg = lang_msg.get(lang, lang_msg["en"])
 
