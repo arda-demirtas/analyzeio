@@ -1,0 +1,6 @@
+Line 520:   const [modelType, setModelType] = useState("xgboost");
+Line 654:   // 2. Fetch Prediction data when activeSymbol, chartInterval, modelType, or lang changes
+Line 657:       let currentModelType = modelType;
+Line 659:       if (modelType === "linear_regression" && activeSymbol !== "BTC-USD") {
+Line 666:   }, [activeSymbol, chartInterval, modelType, token, lang]);
+Line 1429:   const loadPrediction = async (symbol, interval = chartInterval, mType = modelType, forceRetrain = false) => {
