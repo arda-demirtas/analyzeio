@@ -145,6 +145,7 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
     is_crypto = symbol.endswith("-USD") or meta_dict.get("instrumentType") == "CRYPTOCURRENCY"
     
     # For daily data, exclude today's incomplete candle if market is active
+    has_today_candle = False
     if interval == "1d":
         last_row_date_str = df.index[-1].strftime("%Y-%m-%d")
         now_utc = datetime.datetime.utcnow()
@@ -168,8 +169,11 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
             close_hour_utc = 20
             
         if last_row_date_str == today_str:
+            has_today_candle = True
             if current_hour_utc < close_hour_utc:
                 df = df.iloc[:-1]
+                
+    df.attrs["has_today_candle"] = has_today_candle
         
     # Calculate indicators
     df["RSI"] = calculate_rsi(df["Close"])
