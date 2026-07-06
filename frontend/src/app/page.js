@@ -2427,11 +2427,16 @@ export default function Home() {
   const getBestModel = () => {
     if (!predictionData) return null;
     const models = [
-      { key: "xgboost", name: "XGBoost", da: predictionData.xgb_metrics?.directional_accuracy },
-      { key: "lstm", name: "LSTM", da: predictionData.lstm_metrics?.directional_accuracy },
-      { key: "linear_regression", name: lang === "tr" ? "Lineer Regresyon" : "Linear Regression", da: predictionData.lr_metrics?.directional_accuracy },
-      { key: "patchtst", name: "PatchTST", da: predictionData.patchtst_metrics?.directional_accuracy }
+      { key: "xgboost", name: "XGBoost", da: predictionData.xgb_metrics?.directional_accuracy, pred: predictionData.xgb_predicted_close },
+      { key: "lstm", name: "LSTM", da: predictionData.lstm_metrics?.directional_accuracy, pred: predictionData.lstm_predicted_close },
+      { key: "linear_regression", name: lang === "tr" ? "Lineer Regresyon" : "Linear Regression", da: predictionData.lr_metrics?.directional_accuracy, pred: predictionData.lr_predicted_close },
+      { key: "patchtst", name: "PatchTST", da: predictionData.patchtst_metrics?.directional_accuracy, pred: predictionData.patchtst_predicted_close }
     ];
+    
+    // Do not select a best model if any model is still training/pending (shows ---)
+    const hasAnyNull = models.some(m => m.pred === null || m.pred === undefined);
+    if (hasAnyNull) return null;
+
     const validModels = models.filter(m => m.da !== null && m.da !== undefined && !isNaN(m.da));
     if (validModels.length === 0) return null;
     validModels.sort((a, b) => b.da - a.da);
