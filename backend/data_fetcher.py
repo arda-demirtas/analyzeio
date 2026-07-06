@@ -144,6 +144,13 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
     meta_dict = meta if meta is not None else {}
     is_crypto = symbol.endswith("-USD") or meta_dict.get("instrumentType") == "CRYPTOCURRENCY"
     
+    # Store the predicted candle start date/time (the latest available timestamp in raw data)
+    if interval == "1d":
+        predicted_candle_start = df.index[-1].strftime("%Y-%m-%d")
+    else:
+        predicted_candle_start = df.index[-1].strftime("%Y-%m-%d %H:%M")
+    df.attrs["predicted_candle_start"] = predicted_candle_start
+
     # For daily data, exclude today's incomplete candle if market is active
     has_today_candle = False
     if interval == "1d":
