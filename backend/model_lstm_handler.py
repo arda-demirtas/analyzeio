@@ -91,10 +91,9 @@ def get_lstm_prediction(
         last_features_lstm = df[FEATURES].iloc[-seq_length:].values
         scaled_last_features = scaler_x_train.transform(last_features_lstm)
         input_seq = np.array([scaled_last_features])
-        scaled_pred = model_lstm.predict(input_seq, verbose=0)
-        pred_ret_lstm = float(scaler_y_train.inverse_transform(scaled_pred)[0][0])
-        pred_ret_lstm = max(min(pred_ret_lstm, max_ret), min_ret)
-        lstm_predicted_close = float(df["Close"].iloc[-1] * (1 + pred_ret_lstm))
+        prob_pred = model_lstm.predict(input_seq, verbose=0)
+        lstm_predicted_close = float(prob_pred[0][0])
+
         
     except Exception as e:
         print(f"Error in LSTM flow: {e}")
