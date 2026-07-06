@@ -158,8 +158,13 @@ def main():
     except Exception as thread_err:
         print(f"Error starting mock trading monitor thread: {thread_err}")
         
-    # 1. Warm up cache immediately on startup
-    pending_symbols = check_and_train_assets()
+    # 1. Warm up cache immediately on startup (skip if within 1 hour of scheduled daily run)
+    sec_to_main = get_seconds_until_time(0, 5)
+    if sec_to_main < 3600:
+        print(f"[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Startup warmup skipped: very close to the scheduled daily run ({sec_to_main:.0f} seconds remaining). Waiting for main scheduler.")
+        pending_symbols = []
+    else:
+        pending_symbols = check_and_train_assets()
     
     # 2. Main sleep-and-run loop
     while True:
