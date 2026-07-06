@@ -90,7 +90,32 @@ def get_prediction(
     # Determine fallback and requested predicted close
     predicted_close = None
     metrics = None
+    analyzeio_predicted_close = None
+    analyzeio_metrics = None
+
     if not is_pending_data:
+        # "analyzeio" is the average of all 4 models!
+        valid_predictions = [p for p in [xgb_predicted_close, lstm_predicted_close, lr_predicted_close, patchtst_predicted_close] if p is not None]
+        if valid_predictions:
+            analyzeio_predicted_close = sum(valid_predictions) / len(valid_predictions)
+        else:
+            analyzeio_predicted_close = xgb_predicted_close
+            
+        # Average performance metrics
+        valid_metrics_list = [m for m in [xgb_metrics, lstm_metrics, lr_metrics, patchtst_metrics] if m is not None]
+        if valid_metrics_list:
+            avg_rmse = sum(m.get("rmse", 0.0) for m in valid_metrics_list) / len(valid_metrics_list)
+            avg_mape = sum(m.get("mape", 0.0) for m in valid_metrics_list) / len(valid_metrics_list)
+            avg_da = sum(m.get("directional_accuracy", 50.0) for m in valid_metrics_list) / len(valid_metrics_list)
+            analyzeio_metrics = {
+                "rmse": avg_rmse,
+                "mape": avg_mape,
+                "directional_accuracy": avg_da,
+                "training_status": "Average of 4 models (Analyzeio)"
+            }
+        else:
+            analyzeio_metrics = xgb_metrics
+
         if model_type == "lstm":
             predicted_close = lstm_predicted_close
             metrics = lstm_metrics
@@ -104,31 +129,13 @@ def get_prediction(
             predicted_close = xgb_predicted_close
             metrics = xgb_metrics
         else:
-            # "analyzeio" is the average of all 4 models!
-            valid_predictions = [p for p in [xgb_predicted_close, lstm_predicted_close, lr_predicted_close, patchtst_predicted_close] if p is not None]
-            if valid_predictions:
-                predicted_close = sum(valid_predictions) / len(valid_predictions)
-            else:
-                predicted_close = xgb_predicted_close
-                
-            # Average performance metrics
-            valid_metrics_list = [m for m in [xgb_metrics, lstm_metrics, lr_metrics, patchtst_metrics] if m is not None]
-            if valid_metrics_list:
-                avg_rmse = sum(m.get("rmse", 0.0) for m in valid_metrics_list) / len(valid_metrics_list)
-                avg_mape = sum(m.get("mape", 0.0) for m in valid_metrics_list) / len(valid_metrics_list)
-                avg_da = sum(m.get("directional_accuracy", 50.0) for m in valid_metrics_list) / len(valid_metrics_list)
-                metrics = {
-                    "rmse": avg_rmse,
-                    "mape": avg_mape,
-                    "directional_accuracy": avg_da,
-                    "training_status": "Average of 4 models (Analyzeio)"
-                }
-            else:
-                metrics = xgb_metrics
+            predicted_close = analyzeio_predicted_close
+            metrics = analyzeio_metrics
             
         if predicted_close is None:
             predicted_close = xgb_predicted_close or lstm_predicted_close or lr_predicted_close or patchtst_predicted_close
             metrics = xgb_metrics or lstm_metrics or lr_metrics or patchtst_metrics
+
 
     # Calculate expected close time of the predicted candle using UTC explicitly
     if interval == "1d":
@@ -442,11 +449,14 @@ def get_prediction(
         "lstm_predicted_close": lstm_predicted_close,
         "lr_predicted_close": lr_predicted_close,
         "patchtst_predicted_close": patchtst_predicted_close,
+        "analyzeio_predicted_close": analyzeio_predicted_close,
         "xgb_metrics": xgb_metrics,
         "lstm_metrics": lstm_metrics,
         "lr_metrics": lr_metrics,
-        "patchtst_metrics": patchtst_metrics
+        "patchtst_metrics": patchtst_metrics,
+        "analyzeio_metrics": analyzeio_metrics
     }
+
 
 def update_screener_cache(symbol: str, db) -> None:
     """Computes and updates the MarketScreener entry for a given symbol."""
