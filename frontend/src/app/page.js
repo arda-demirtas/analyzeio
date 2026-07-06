@@ -2424,6 +2424,46 @@ export default function Home() {
   // Render Dashboard if logged in
   const activeHistory = (predictionData && chartHistory && chartHistory.length > 0) ? chartHistory : (predictionData ? predictionData.history : []);
   
+  const getBestModel = () => {
+    if (!predictionData) return null;
+    const models = [
+      { key: "xgboost", name: "XGBoost", da: predictionData.xgb_metrics?.directional_accuracy },
+      { key: "lstm", name: "LSTM", da: predictionData.lstm_metrics?.directional_accuracy },
+      { key: "linear_regression", name: lang === "tr" ? "Lineer Regresyon" : "Linear Regression", da: predictionData.lr_metrics?.directional_accuracy },
+      { key: "patchtst", name: "PatchTST", da: predictionData.patchtst_metrics?.directional_accuracy }
+    ];
+    const validModels = models.filter(m => m.da !== null && m.da !== undefined && !isNaN(m.da));
+    if (validModels.length === 0) return null;
+    validModels.sort((a, b) => b.da - a.da);
+    return validModels[0];
+  };
+
+  const getBoxStyle = (modelKey, defaultBg, defaultBorder) => {
+    const bestModel = getBestModel();
+    const isBest = bestModel && bestModel.key === modelKey;
+    if (isBest) {
+      return {
+        padding: "10px 14px",
+        background: "linear-gradient(90deg, rgba(245, 158, 11, 0.12) 0%, rgba(251, 191, 36, 0.03) 100%)",
+        border: "1.5px solid rgba(245, 158, 11, 0.75)",
+        borderRadius: "var(--border-radius-md)",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        boxShadow: "0 0 15px rgba(245, 158, 11, 0.2)"
+      };
+    }
+    return {
+      padding: "10px 14px",
+      background: defaultBg,
+      border: defaultBorder,
+      borderRadius: "var(--border-radius-md)",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center"
+    };
+  };
+
   return (
     <div className="app-container">
       {sidebarOpen && (
@@ -3323,9 +3363,38 @@ export default function Home() {
                   } : {}}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
-                    <h3 style={{ fontSize: "18px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
-                      <LineChart style={{ color: "var(--accent-primary)" }} /> {t("chart_title")}
-                    </h3>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                      <h3 style={{ fontSize: "18px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+                        <LineChart style={{ color: "var(--accent-primary)" }} /> {t("chart_title")}
+                      </h3>
+                      {(() => {
+                        const bestModel = getBestModel();
+                        if (!bestModel) return null;
+                        return (
+                          <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "4px 10px",
+                            background: "rgba(245, 158, 11, 0.08)",
+                            border: "1px solid rgba(245, 158, 11, 0.3)",
+                            borderRadius: "20px",
+                            fontSize: "12px",
+                            fontWeight: "700",
+                            color: "#f59e0b",
+                            boxShadow: "0 0 10px rgba(245, 158, 11, 0.15)"
+                          }}>
+                            <span>👑</span>
+                            <span>
+                              {lang === "tr" 
+                                ? `En Başarılı Model: ${bestModel.name} (Doğruluk: ${bestModel.da.toFixed(1)}%)`
+                                : `Best Model: ${bestModel.name} (Accuracy: ${bestModel.da.toFixed(1)}%)`
+                              }
+                            </span>
+                          </div>
+                        );
+                      })()}
+                    </div>
                     
                     {/* Price Chart Header Actions */}
                     <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
@@ -3927,18 +3996,26 @@ export default function Home() {
                         </div>
 
                         {/* XGBoost Box */}
-                        <div style={{ 
-                          padding: "10px 14px", 
-                          background: "rgba(168, 85, 247, 0.04)", 
-                          border: "1px solid rgba(168, 85, 247, 0.15)", 
-                          borderRadius: "var(--border-radius-md)",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center"
-                        }}>
+                        <div style={getBoxStyle("xgboost", "rgba(168, 85, 247, 0.04)", "1px solid rgba(168, 85, 247, 0.15)")}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a855f7", boxShadow: "0 0 8px #a855f7" }}></span>
-                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
+                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#f3e8ff" }}>
+                              XGBoost
+                              {getBestModel()?.key === "xgboost" && (
+                                <span style={{
+                                  marginLeft: "6px",
+                                  padding: "2px 6px",
+                                  background: "#f59e0b",
+                                  color: "#000",
+                                  borderRadius: "10px",
+                                  fontSize: "9px",
+                                  fontWeight: "900",
+                                  textTransform: "uppercase"
+                                }}>
+                                  {lang === "tr" ? "👑 EN BAŞARILI" : "👑 BEST MODEL"}
+                                </span>
+                              )}
+                            </span>
                           </div>
                           {predictionData && predictionData.xgb_predicted_close !== null ? (() => {
                             const prob = predictionData.xgb_predicted_close;
@@ -3954,18 +4031,26 @@ export default function Home() {
                         </div>
 
                         {/* LSTM Box */}
-                        <div style={{ 
-                          padding: "10px 14px", 
-                          background: "rgba(14, 165, 233, 0.04)", 
-                          border: "1px solid rgba(14, 165, 233, 0.15)", 
-                          borderRadius: "var(--border-radius-md)",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center"
-                        }}>
+                        <div style={getBoxStyle("lstm", "rgba(14, 165, 233, 0.04)", "1px solid rgba(14, 165, 233, 0.15)")}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#0ea5e9", boxShadow: "0 0 8px #0ea5e9" }}></span>
-                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#e0f2fe" }}>LSTM</span>
+                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#e0f2fe" }}>
+                              LSTM
+                              {getBestModel()?.key === "lstm" && (
+                                <span style={{
+                                  marginLeft: "6px",
+                                  padding: "2px 6px",
+                                  background: "#f59e0b",
+                                  color: "#000",
+                                  borderRadius: "10px",
+                                  fontSize: "9px",
+                                  fontWeight: "900",
+                                  textTransform: "uppercase"
+                                }}>
+                                  {lang === "tr" ? "👑 EN BAŞARILI" : "👑 BEST MODEL"}
+                                </span>
+                              )}
+                            </span>
                           </div>
                           {predictionData && predictionData.lstm_predicted_close !== null ? (() => {
                             const prob = predictionData.lstm_predicted_close;
@@ -3981,18 +4066,26 @@ export default function Home() {
                         </div>
 
                         {/* Linear Regression Box */}
-                        <div style={{ 
-                          padding: "10px 14px", 
-                          background: "rgba(59, 130, 246, 0.04)", 
-                          border: "1px solid rgba(59, 130, 246, 0.15)", 
-                          borderRadius: "var(--border-radius-md)",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center"
-                        }}>
+                        <div style={getBoxStyle("linear_regression", "rgba(59, 130, 246, 0.04)", "1px solid rgba(59, 130, 246, 0.15)")}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6", boxShadow: "0 0 8px #3b82f6" }}></span>
-                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#dbeafe" }}>{lang === "tr" ? "Lineer Regresyon" : "Linear Regression"}</span>
+                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#dbeafe" }}>
+                              {lang === "tr" ? "Lineer Regresyon" : "Linear Regression"}
+                              {getBestModel()?.key === "linear_regression" && (
+                                <span style={{
+                                  marginLeft: "6px",
+                                  padding: "2px 6px",
+                                  background: "#f59e0b",
+                                  color: "#000",
+                                  borderRadius: "10px",
+                                  fontSize: "9px",
+                                  fontWeight: "900",
+                                  textTransform: "uppercase"
+                                }}>
+                                  {lang === "tr" ? "👑 EN BAŞARILI" : "👑 BEST MODEL"}
+                                </span>
+                              )}
+                            </span>
                           </div>
                           {predictionData && predictionData.lr_predicted_close !== null ? (() => {
                             const prob = predictionData.lr_predicted_close;
@@ -4009,18 +4102,26 @@ export default function Home() {
 
                         {/* PatchTST Box (Visible for all symbols) */}
                         {true && (
-                          <div style={{ 
-                            padding: "10px 14px", 
-                            background: "rgba(245, 158, 11, 0.04)", 
-                            border: "1px solid rgba(245, 158, 11, 0.2)", 
-                            borderRadius: "var(--border-radius-md)",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center"
-                          }}>
+                          <div style={getBoxStyle("patchtst", "rgba(245, 158, 11, 0.04)", "1px solid rgba(245, 158, 11, 0.2)")}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                               <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f59e0b", boxShadow: "0 0 8px #f59e0b" }}></span>
-                              <span style={{ fontSize: "13px", fontWeight: "600", color: "#fef3c7" }}>PatchTST</span>
+                              <span style={{ fontSize: "13px", fontWeight: "600", color: "#fef3c7" }}>
+                                PatchTST
+                                {getBestModel()?.key === "patchtst" && (
+                                  <span style={{
+                                    marginLeft: "6px",
+                                    padding: "2px 6px",
+                                    background: "#f59e0b",
+                                    color: "#000",
+                                    borderRadius: "10px",
+                                    fontSize: "9px",
+                                    fontWeight: "900",
+                                    textTransform: "uppercase"
+                                  }}>
+                                    {lang === "tr" ? "👑 EN BAŞARILI" : "👑 BEST MODEL"}
+                                  </span>
+                                )}
+                              </span>
                             </div>
                             {predictionData && predictionData.patchtst_predicted_close !== null ? (() => {
                               const prob = predictionData.patchtst_predicted_close;
