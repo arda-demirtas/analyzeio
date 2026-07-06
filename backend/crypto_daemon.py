@@ -56,10 +56,11 @@ def check_and_train_assets(symbols_to_train=None):
             print(f"[{idx+1}/{len(symbols)}] Training/Updating cache for {symbol} (1d)...")
             res = get_prediction(symbol, interval="1d", force_retrain=False, is_daemon=True)
             
-            # Check if prediction is pending due to data lag
-            if res.get("prediction_status") == "pending_data":
-                print(f"Skipped {symbol}: Daily candle is not yet complete. Deleting cache files.")
-                delete_symbol_cache_files(symbol)
+            # Check if today's daily candle is present in the raw data feed.
+            # If not, the asset is kept in the pending list to retry on subsequent hourly runs.
+            # We do NOT delete the existing cache, keeping it active and available for users.
+            if not res.get("has_today_candle", False):
+                print(f"Skipped {symbol} from finalization: today's daily candle is not yet open in data feed. Kept in pending retry queue.")
                 pending_symbols.append(symbol)
                 fail_count += 1
                 continue
