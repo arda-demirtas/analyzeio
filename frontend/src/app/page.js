@@ -519,15 +519,16 @@ export default function Home() {
   const [modelType, setModelType] = useState("xgboost");
 
   const lastCloseVal = predictionData ? predictionData.last_close : null;
-  const xgbChangeVal = (predictionData && predictionData.xgb_predicted_close !== null && lastCloseVal)
-    ? ((predictionData.xgb_predicted_close - lastCloseVal) / lastCloseVal) * 100
+  const xgbChangeVal = (predictionData && predictionData.xgb_predicted_close !== null)
+    ? (predictionData.xgb_predicted_close - 0.5) * 100
     : null;
-  const lstmChangeVal = (predictionData && predictionData.lstm_predicted_close !== null && lastCloseVal)
-    ? ((predictionData.lstm_predicted_close - lastCloseVal) / lastCloseVal) * 100
+  const lstmChangeVal = (predictionData && predictionData.lstm_predicted_close !== null)
+    ? (predictionData.lstm_predicted_close - 0.5) * 100
     : null;
-  const lrChangeVal = (predictionData && predictionData.lr_predicted_close !== null && lastCloseVal)
-    ? ((predictionData.lr_predicted_close - lastCloseVal) / lastCloseVal) * 100
+  const lrChangeVal = (predictionData && predictionData.lr_predicted_close !== null)
+    ? (predictionData.lr_predicted_close - 0.5) * 100
     : null;
+
 
   const getPredictionHeader = () => {
     if (chartInterval === "1d") {
@@ -943,7 +944,7 @@ export default function Home() {
         if (m.close !== null && m.close !== undefined) {
           const predDataPoints = Array(labels.length - 1).fill(null);
           predDataPoints.push(lastClosePrice);
-          predDataPoints.push(m.close);
+          predDataPoints.push(lastClosePrice * (1 + (m.close - 0.5) * 0.04));
 
           datasets.push({
             label: m.label,
@@ -973,10 +974,11 @@ export default function Home() {
       
       const lrDataPoints = history.map(h => h.lr_predicted_close);
       if (predictionData.lr_predicted_close !== null && !isPendingData) {
-        lrDataPoints.push(predictionData.lr_predicted_close);
+        lrDataPoints.push(lastClosePrice * (1 + (predictionData.lr_predicted_close - 0.5) * 0.04));
       } else {
         lrDataPoints.push(null);
       }
+
       
       datasets.push({
         label: lrLabel,
@@ -4004,11 +4006,16 @@ export default function Home() {
                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981" }}></span>
                             <span style={{ fontSize: "13px", fontWeight: "700", color: "#a7f3d0" }}>Analyzeio (Ensemble)</span>
                           </div>
-                          <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
-                            {predictionData && predictionData.analyzeio_predicted_close !== null
-                              ? `$${predictionData.analyzeio_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
-                              : "---"}
-                          </span>
+                          {predictionData && predictionData.analyzeio_predicted_close !== null ? (() => {
+                            const prob = predictionData.analyzeio_predicted_close;
+                            const isBullish = prob >= 0.5;
+                            const conf = isBullish ? prob * 100 : (1 - prob) * 100;
+                            return (
+                              <span style={{ fontSize: "14px", fontWeight: "800", color: isBullish ? "#10b981" : "#ef4444" }}>
+                                {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({conf.toFixed(1)}%)
+                              </span>
+                            );
+                          })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
                         </div>
 
                         {/* XGBoost Box */}
@@ -4025,11 +4032,16 @@ export default function Home() {
                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a855f7", boxShadow: "0 0 8px #a855f7" }}></span>
                             <span style={{ fontSize: "13px", fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
                           </div>
-                          <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
-                            {predictionData && predictionData.xgb_predicted_close !== null
-                              ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
-                              : "---"}
-                          </span>
+                          {predictionData && predictionData.xgb_predicted_close !== null ? (() => {
+                            const prob = predictionData.xgb_predicted_close;
+                            const isBullish = prob >= 0.5;
+                            const conf = isBullish ? prob * 100 : (1 - prob) * 100;
+                            return (
+                              <span style={{ fontSize: "14px", fontWeight: "800", color: isBullish ? "#10b981" : "#ef4444" }}>
+                                {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({conf.toFixed(1)}%)
+                              </span>
+                            );
+                          })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
                         </div>
 
                         {/* LSTM Box */}
@@ -4046,11 +4058,16 @@ export default function Home() {
                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#0ea5e9", boxShadow: "0 0 8px #0ea5e9" }}></span>
                             <span style={{ fontSize: "13px", fontWeight: "600", color: "#e0f2fe" }}>LSTM</span>
                           </div>
-                          <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
-                            {predictionData && predictionData.lstm_predicted_close !== null
-                              ? `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
-                              : "---"}
-                          </span>
+                          {predictionData && predictionData.lstm_predicted_close !== null ? (() => {
+                            const prob = predictionData.lstm_predicted_close;
+                            const isBullish = prob >= 0.5;
+                            const conf = isBullish ? prob * 100 : (1 - prob) * 100;
+                            return (
+                              <span style={{ fontSize: "14px", fontWeight: "800", color: isBullish ? "#10b981" : "#ef4444" }}>
+                                {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({conf.toFixed(1)}%)
+                              </span>
+                            );
+                          })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
                         </div>
 
                         {/* Linear Regression Box */}
@@ -4067,11 +4084,16 @@ export default function Home() {
                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6", boxShadow: "0 0 8px #3b82f6" }}></span>
                             <span style={{ fontSize: "13px", fontWeight: "600", color: "#dbeafe" }}>{lang === "tr" ? "Lineer Regresyon" : "Linear Regression"}</span>
                           </div>
-                          <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
-                            {predictionData && predictionData.lr_predicted_close !== null
-                              ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
-                              : "---"}
-                          </span>
+                          {predictionData && predictionData.lr_predicted_close !== null ? (() => {
+                            const prob = predictionData.lr_predicted_close;
+                            const isBullish = prob >= 0.5;
+                            const conf = isBullish ? prob * 100 : (1 - prob) * 100;
+                            return (
+                              <span style={{ fontSize: "14px", fontWeight: "800", color: isBullish ? "#10b981" : "#ef4444" }}>
+                                {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({conf.toFixed(1)}%)
+                              </span>
+                            );
+                          })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
                         </div>
 
                         {/* PatchTST Box (Visible for all symbols) */}
@@ -4089,19 +4111,19 @@ export default function Home() {
                               <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f59e0b", boxShadow: "0 0 8px #f59e0b" }}></span>
                               <span style={{ fontSize: "13px", fontWeight: "600", color: "#fef3c7" }}>PatchTST</span>
                             </div>
-                            <div>
-                              {predictionData && predictionData.patchtst_predicted_close !== null ? (
-                                <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
-                                  {`$${predictionData.patchtst_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`}
+                            {predictionData && predictionData.patchtst_predicted_close !== null ? (() => {
+                              const prob = predictionData.patchtst_predicted_close;
+                              const isBullish = prob >= 0.5;
+                              const conf = isBullish ? prob * 100 : (1 - prob) * 100;
+                              return (
+                                <span style={{ fontSize: "14px", fontWeight: "800", color: isBullish ? "#10b981" : "#ef4444" }}>
+                                  {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({conf.toFixed(1)}%)
                                 </span>
-                              ) : (
-                                <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>
-                                  ---
-                                </span>
-                              )}
-                            </div>
+                              );
+                            })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
                           </div>
                         )}
+
                       </div>
 
                       <div style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", width: "100%" }}>
@@ -4116,9 +4138,9 @@ export default function Home() {
 
                           {/* Analyzeio Signal */}
                           {predictionData && predictionData.analyzeio_predicted_close !== null && (() => {
-                            const lastPrice = predictionData ? predictionData.last_close : null;
-                            if (!lastPrice) return null;
-                            const analyzeioChangeVal = ((predictionData.analyzeio_predicted_close - lastPrice) / lastPrice) * 100;
+                            const changeVal = (predictionData.analyzeio_predicted_close - 0.5) * 100;
+                            const isBullish = changeVal >= 0;
+                            const confidence = isBullish ? (changeVal + 50) : (50 - changeVal);
                             return (
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
                                 <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
@@ -4126,15 +4148,15 @@ export default function Home() {
                                   Analyzeio:
                                 </span>
                                 <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
-                                  {analyzeioChangeVal >= 0 ? (
+                                  {isBullish ? (
                                     <>
                                       <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
-                                      <span style={{ color: "var(--accent-success)" }}>+{analyzeioChangeVal.toFixed(2)}% ({t("bullish")})</span>
+                                      <span style={{ color: "var(--accent-success)" }}>{confidence.toFixed(1)}% ({t("bullish")})</span>
                                     </>
                                   ) : (
                                     <>
                                       <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
-                                      <span style={{ color: "var(--accent-danger)" }}>{analyzeioChangeVal.toFixed(2)}% ({t("bearish")})</span>
+                                      <span style={{ color: "var(--accent-danger)" }}>{confidence.toFixed(1)}% ({t("bearish")})</span>
                                     </>
                                   )}
                                 </div>
@@ -4143,79 +4165,91 @@ export default function Home() {
                           })()}
 
                           {/* XGBoost Signal */}
-                          {xgbChangeVal !== null && (
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
-                              <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
-                                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#a855f7" }}></span>
-                                XGBoost:
-                              </span>
-                              <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
-                                {xgbChangeVal >= 0 ? (
-                                  <>
-                                    <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
-                                    <span style={{ color: "var(--accent-success)" }}>+{xgbChangeVal.toFixed(2)}% ({t("bullish")})</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
-                                    <span style={{ color: "var(--accent-danger)" }}>{xgbChangeVal.toFixed(2)}% ({t("bearish")})</span>
-                                  </>
-                                )}
+                          {xgbChangeVal !== null && (() => {
+                            const isBullish = xgbChangeVal >= 0;
+                            const confidence = isBullish ? (xgbChangeVal + 50) : (50 - xgbChangeVal);
+                            return (
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                                <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#a855f7" }}></span>
+                                  XGBoost:
+                                </span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+                                  {isBullish ? (
+                                    <>
+                                      <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-success)" }}>{confidence.toFixed(1)}% ({t("bullish")})</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-danger)" }}>{confidence.toFixed(1)}% ({t("bearish")})</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            );
+                          })()}
 
                           {/* LSTM Signal */}
-                          {lstmChangeVal !== null && (
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
-                              <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
-                                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#0ea5e9" }}></span>
-                                LSTM:
-                              </span>
-                              <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
-                                {lstmChangeVal >= 0 ? (
-                                  <>
-                                    <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
-                                    <span style={{ color: "var(--accent-success)" }}>+{lstmChangeVal.toFixed(2)}% ({t("bullish")})</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
-                                    <span style={{ color: "var(--accent-danger)" }}>{lstmChangeVal.toFixed(2)}% ({t("bearish")})</span>
-                                  </>
-                                )}
+                          {lstmChangeVal !== null && (() => {
+                            const isBullish = lstmChangeVal >= 0;
+                            const confidence = isBullish ? (lstmChangeVal + 50) : (50 - lstmChangeVal);
+                            return (
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                                <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#0ea5e9" }}></span>
+                                  LSTM:
+                                </span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+                                  {isBullish ? (
+                                    <>
+                                      <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-success)" }}>{confidence.toFixed(1)}% ({t("bullish")})</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-danger)" }}>{confidence.toFixed(1)}% ({t("bearish")})</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            );
+                          })()}
 
                           {/* Linear Regression Signal */}
-                          {lrChangeVal !== null && (
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
-                              <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
-                                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#3b82f6" }}></span>
-                                {lang === "tr" ? "Lineer Reg." : "Linear Reg."}:
-                              </span>
-                              <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
-                                {lrChangeVal >= 0 ? (
-                                  <>
-                                    <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
-                                    <span style={{ color: "var(--accent-success)" }}>+{lrChangeVal.toFixed(2)}% ({t("bullish")})</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
-                                    <span style={{ color: "var(--accent-danger)" }}>{lrChangeVal.toFixed(2)}% ({t("bearish")})</span>
-                                  </>
-                                )}
+                          {lrChangeVal !== null && (() => {
+                            const isBullish = lrChangeVal >= 0;
+                            const confidence = isBullish ? (lrChangeVal + 50) : (50 - lrChangeVal);
+                            return (
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                                <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#3b82f6" }}></span>
+                                  {lang === "tr" ? "Lineer Reg." : "Linear Reg."}:
+                                </span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+                                  {isBullish ? (
+                                    <>
+                                      <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-success)" }}>{confidence.toFixed(1)}% ({t("bullish")})</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-danger)" }}>{confidence.toFixed(1)}% ({t("bearish")})</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            );
+                          })()}
 
                           {/* PatchTST Signal */}
                           {predictionData && predictionData.patchtst_predicted_close !== null && (() => {
-                            const lastPrice = predictionData ? predictionData.last_close : null;
-                            if (!lastPrice) return null;
-                            const patchTstChangeVal = ((predictionData.patchtst_predicted_close - lastPrice) / lastPrice) * 100;
+                            const changeVal = (predictionData.patchtst_predicted_close - 0.5) * 100;
+                            const isBullish = changeVal >= 0;
+                            const confidence = isBullish ? (changeVal + 50) : (50 - changeVal);
                             return (
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
                                 <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
@@ -4223,15 +4257,15 @@ export default function Home() {
                                   PatchTST:
                                 </span>
                                 <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
-                                  {patchTstChangeVal >= 0 ? (
+                                  {isBullish ? (
                                     <>
                                       <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
-                                      <span style={{ color: "var(--accent-success)" }}>+{patchTstChangeVal.toFixed(2)}% ({t("bullish")})</span>
+                                      <span style={{ color: "var(--accent-success)" }}>{confidence.toFixed(1)}% ({t("bullish")})</span>
                                     </>
                                   ) : (
                                     <>
                                       <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
-                                      <span style={{ color: "var(--accent-danger)" }}>{patchTstChangeVal.toFixed(2)}% ({t("bearish")})</span>
+                                      <span style={{ color: "var(--accent-danger)" }}>{confidence.toFixed(1)}% ({t("bearish")})</span>
                                     </>
                                   )}
                                 </div>
@@ -4407,9 +4441,9 @@ export default function Home() {
                       <thead>
                         <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", color: "var(--text-muted)" }}>
                           <th style={{ padding: "8px 4px", fontWeight: "600" }}>{lang === "tr" ? "Model" : "Model"}</th>
-                          <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>{lang === "tr" ? "Tahmin" : "Prediction"}</th>
-                          <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>RMSE</th>
-                          <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>MAPE</th>
+                          <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>{lang === "tr" ? "Yön" : "Direction"}</th>
+                          <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>{lang === "tr" ? "Olasılık" : "Probability"}</th>
+                          <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>Log-Loss</th>
                           <th style={{ padding: "8px 4px", fontWeight: "600", textAlign: "right" }}>{lang === "tr" ? "Yönsel İsabet" : "Dir. Accuracy"}</th>
                         </tr>
                       </thead>
@@ -4420,16 +4454,18 @@ export default function Home() {
                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", boxShadow: "0 0 6px #10b981" }}></span>
                             <span style={{ fontWeight: "700", color: "#a7f3d0" }}>Analyzeio</span>
                           </td>
-                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700", color: "#a7f3d0" }}>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700", color: predictionData && predictionData.analyzeio_predicted_close >= 0.5 ? "var(--accent-success)" : "var(--accent-danger)" }}>
                             {predictionData && predictionData.analyzeio_predicted_close !== null
-                              ? `$${predictionData.analyzeio_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+                              ? (predictionData.analyzeio_predicted_close >= 0.5 ? "▲ BULLISH" : "▼ BEARISH")
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
+                            {predictionData && predictionData.analyzeio_predicted_close !== null
+                              ? `${(predictionData.analyzeio_predicted_close * 100).toFixed(1)}%`
                               : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
-                            {predictionData && predictionData.analyzeio_metrics && predictionData.analyzeio_metrics.rmse !== null ? `$${predictionData.analyzeio_metrics.rmse.toFixed(1)}` : "---"}
-                          </td>
-                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
-                            {predictionData && predictionData.analyzeio_metrics && predictionData.analyzeio_metrics.mape !== null ? `${predictionData.analyzeio_metrics.mape.toFixed(2)}%` : "---"}
+                            {predictionData && predictionData.analyzeio_metrics && predictionData.analyzeio_metrics.logloss !== undefined && predictionData.analyzeio_metrics.logloss !== null ? predictionData.analyzeio_metrics.logloss.toFixed(3) : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
                             {predictionData && predictionData.analyzeio_metrics && predictionData.analyzeio_metrics.directional_accuracy !== null ? `${predictionData.analyzeio_metrics.directional_accuracy.toFixed(1)}%` : "---"}
@@ -4442,16 +4478,18 @@ export default function Home() {
                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#a855f7" }}></span>
                             <span style={{ fontWeight: "600", color: "#f3e8ff" }}>XGBoost</span>
                           </td>
-                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700", color: predictionData && predictionData.xgb_predicted_close >= 0.5 ? "var(--accent-success)" : "var(--accent-danger)" }}>
                             {predictionData && predictionData.xgb_predicted_close !== null
-                              ? `$${predictionData.xgb_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+                              ? (predictionData.xgb_predicted_close >= 0.5 ? "▲ BULLISH" : "▼ BEARISH")
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
+                            {predictionData && predictionData.xgb_predicted_close !== null
+                              ? `${(predictionData.xgb_predicted_close * 100).toFixed(1)}%`
                               : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
-                            {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.rmse !== null ? `$${predictionData.xgb_metrics.rmse.toFixed(1)}` : "---"}
-                          </td>
-                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
-                            {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.mape !== null ? `${predictionData.xgb_metrics.mape.toFixed(2)}%` : "---"}
+                            {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.logloss !== undefined && predictionData.xgb_metrics.logloss !== null ? predictionData.xgb_metrics.logloss.toFixed(3) : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
                             {predictionData && predictionData.xgb_metrics && predictionData.xgb_metrics.directional_accuracy !== null ? `${predictionData.xgb_metrics.directional_accuracy.toFixed(1)}%` : "---"}
@@ -4464,16 +4502,18 @@ export default function Home() {
                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#0ea5e9" }}></span>
                             <span style={{ fontWeight: "600", color: "#e0f2fe" }}>LSTM</span>
                           </td>
-                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700", color: predictionData && predictionData.lstm_predicted_close >= 0.5 ? "var(--accent-success)" : "var(--accent-danger)" }}>
                             {predictionData && predictionData.lstm_predicted_close !== null
-                              ? `$${predictionData.lstm_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+                              ? (predictionData.lstm_predicted_close >= 0.5 ? "▲ BULLISH" : "▼ BEARISH")
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
+                            {predictionData && predictionData.lstm_predicted_close !== null
+                              ? `${(predictionData.lstm_predicted_close * 100).toFixed(1)}%`
                               : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
-                            {predictionData && predictionData.lstm_metrics && predictionData.lstm_metrics.rmse !== null ? `$${predictionData.lstm_metrics.rmse.toFixed(1)}` : "---"}
-                          </td>
-                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
-                            {predictionData && predictionData.lstm_metrics && predictionData.lstm_metrics.mape !== null ? `${predictionData.lstm_metrics.mape.toFixed(2)}%` : "---"}
+                            {predictionData && predictionData.lstm_metrics && predictionData.lstm_metrics.logloss !== undefined && predictionData.lstm_metrics.logloss !== null ? predictionData.lstm_metrics.logloss.toFixed(3) : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
                             {predictionData && predictionData.lstm_metrics && predictionData.lstm_metrics.directional_accuracy !== null ? `${predictionData.lstm_metrics.directional_accuracy.toFixed(1)}%` : "---"}
@@ -4486,16 +4526,18 @@ export default function Home() {
                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3b82f6" }}></span>
                             <span style={{ fontWeight: "600", color: "#dbeafe" }}>{lang === "tr" ? "Lineer Reg." : "Linear Reg."}</span>
                           </td>
-                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700", color: predictionData && predictionData.lr_predicted_close >= 0.5 ? "var(--accent-success)" : "var(--accent-danger)" }}>
                             {predictionData && predictionData.lr_predicted_close !== null
-                              ? `$${predictionData.lr_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+                              ? (predictionData.lr_predicted_close >= 0.5 ? "▲ BULLISH" : "▼ BEARISH")
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
+                            {predictionData && predictionData.lr_predicted_close !== null
+                              ? `${(predictionData.lr_predicted_close * 100).toFixed(1)}%`
                               : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
-                            {predictionData && predictionData.lr_metrics && predictionData.lr_metrics.rmse !== null ? `$${predictionData.lr_metrics.rmse.toFixed(1)}` : "---"}
-                          </td>
-                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
-                            {predictionData && predictionData.lr_metrics && predictionData.lr_metrics.mape !== null ? `${predictionData.lr_metrics.mape.toFixed(2)}%` : "---"}
+                            {predictionData && predictionData.lr_metrics && predictionData.lr_metrics.logloss !== undefined && predictionData.lr_metrics.logloss !== null ? predictionData.lr_metrics.logloss.toFixed(3) : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
                             {predictionData && predictionData.lr_metrics && predictionData.lr_metrics.directional_accuracy !== null ? `${predictionData.lr_metrics.directional_accuracy.toFixed(1)}%` : "---"}
@@ -4508,16 +4550,18 @@ export default function Home() {
                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#f59e0b" }}></span>
                             <span style={{ fontWeight: "600", color: "#fef3c7" }}>PatchTST</span>
                           </td>
-                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700" }}>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700", color: predictionData && predictionData.patchtst_predicted_close >= 0.5 ? "var(--accent-success)" : "var(--accent-danger)" }}>
                             {predictionData && predictionData.patchtst_predicted_close !== null
-                              ? `$${predictionData.patchtst_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+                              ? (predictionData.patchtst_predicted_close >= 0.5 ? "▲ BULLISH" : "▼ BEARISH")
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
+                            {predictionData && predictionData.patchtst_predicted_close !== null
+                              ? `${(predictionData.patchtst_predicted_close * 100).toFixed(1)}%`
                               : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
-                            {predictionData && predictionData.patchtst_metrics && predictionData.patchtst_metrics.rmse !== null ? `$${predictionData.patchtst_metrics.rmse.toFixed(1)}` : "---"}
-                          </td>
-                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
-                            {predictionData && predictionData.patchtst_metrics && predictionData.patchtst_metrics.mape !== null ? `${predictionData.patchtst_metrics.mape.toFixed(2)}%` : "---"}
+                            {predictionData && predictionData.patchtst_metrics && predictionData.patchtst_metrics.logloss !== undefined && predictionData.patchtst_metrics.logloss !== null ? predictionData.patchtst_metrics.logloss.toFixed(3) : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
                             {predictionData && predictionData.patchtst_metrics && predictionData.patchtst_metrics.directional_accuracy !== null ? `${predictionData.patchtst_metrics.directional_accuracy.toFixed(1)}%` : "---"}
@@ -4526,6 +4570,7 @@ export default function Home() {
                       </tbody>
                     </table>
                   </div>
+
                   
                   <div style={{ marginTop: "18px", fontSize: "11px", color: "var(--text-muted)", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "12px" }}>
                     {lang === "tr" 
