@@ -4626,8 +4626,8 @@ export default function Home() {
                                 <th style={{ padding: "8px 4px" }}>{t("table_target_date")}</th>
                                 <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_predicted")}</th>
                                 <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_actual")}</th>
-                                <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_error")}</th>
-                                <th style={{ padding: "8px 4px", textAlign: "center" }}>{t("table_direction")}</th>
+                                <th style={{ padding: "8px 4px", textAlign: "right" }}>{lang === "tr" ? "Olasılık" : "Probability"}</th>
+                                <th style={{ padding: "8px 4px", textAlign: "center" }}>{lang === "tr" ? "Sonuç" : "Result"}</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -4636,20 +4636,45 @@ export default function Home() {
                                 const predVal = log.predicted_close;
                                 const lastVal = log.last_close;
 
-                                let errorPct = "---";
+                                let predictedText = "---";
+                                let predictedColor = "var(--text-muted)";
+                                let actualText = "---";
+                                let actualColor = "var(--text-muted)";
+                                let probText = "---";
                                 let dirCorr = "---";
                                 let dirBadgeClass = "badge-secondary";
 
+                                if (predVal !== null && predVal !== undefined) {
+                                  const isBullish = predVal >= 0.5;
+                                  const conf = isBullish ? predVal * 100 : (1 - predVal) * 100;
+                                  probText = `${conf.toFixed(1)}%`;
+                                  
+                                  if (isBullish) {
+                                    predictedText = lang === "tr" ? "▲ BULLISH" : "▲ BULLISH";
+                                    predictedColor = "#10b981";
+                                  } else {
+                                    predictedText = lang === "tr" ? "▼ BEARISH" : "▼ BEARISH";
+                                    predictedColor = "#ef4444";
+                                  }
+                                }
+
                                 if (actualVal !== null && actualVal !== undefined) {
-                                  const err = actualVal !== 0 ? Math.abs(predVal - actualVal) / actualVal : 0;
-                                  errorPct = `${(err * 100).toFixed(2)}%`;
-
-                                  const predUp = predVal > lastVal;
                                   const actualUp = actualVal > lastVal;
-                                  const matched = predUp === actualUp;
+                                  const formattedPrice = `$${actualVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                                  if (actualUp) {
+                                    actualText = `${formattedPrice} (▲)`;
+                                    actualColor = "#10b981";
+                                  } else {
+                                    actualText = `${formattedPrice} (▼)`;
+                                    actualColor = "#ef4444";
+                                  }
 
-                                  dirCorr = matched ? "✓" : "✗";
+                                  const predUp = predVal >= 0.5;
+                                  const matched = predUp === actualUp;
+                                  dirCorr = matched ? (lang === "tr" ? "✓ Doğru" : "✓ Correct") : (lang === "tr" ? "✗ Yanlış" : "✗ Wrong");
                                   dirBadgeClass = matched ? "badge-success" : "badge-danger";
+                                } else {
+                                  actualText = lang === "tr" ? "Bekliyor..." : "Pending...";
                                 }
 
                                 return (
@@ -4657,22 +4682,18 @@ export default function Home() {
                                     <td style={{ padding: "8px 4px", whiteSpace: "nowrap" }}>
                                       {log.prediction_date}
                                     </td>
+                                    <td style={{ padding: "8px 4px", textAlign: "right", fontWeight: "700", color: predictedColor }}>
+                                      {predictedText}
+                                    </td>
+                                    <td style={{ padding: "8px 4px", textAlign: "right", fontWeight: "600", color: actualColor }}>
+                                      {actualText}
+                                    </td>
                                     <td style={{ padding: "8px 4px", textAlign: "right", fontWeight: "600" }}>
-                                      {predVal !== null && predVal !== undefined ? `$${predVal.toFixed(3)}` : "---"}
-                                    </td>
-                                    <td style={{ padding: "8px 4px", textAlign: "right" }}>
-                                      {actualVal !== null && actualVal !== undefined ? `$${actualVal.toFixed(3)}` : (
-                                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic" }}>
-                                          {t("table_pending")}
-                                        </span>
-                                      )}
-                                    </td>
-                                    <td style={{ padding: "8px 4px", textAlign: "right" }}>
-                                      {errorPct}
+                                      {probText}
                                     </td>
                                     <td style={{ padding: "8px 4px", textAlign: "center" }}>
-                                      {actualVal !== null ? (
-                                        <span className={`badge ${dirBadgeClass}`} style={{ fontSize: "10px", padding: "1px 6px" }}>
+                                      {actualVal !== null && actualVal !== undefined ? (
+                                        <span className={`badge ${dirBadgeClass}`} style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "12px", fontWeight: "700" }}>
                                           {dirCorr}
                                         </span>
                                       ) : "---"}
