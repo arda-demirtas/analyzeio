@@ -35,9 +35,13 @@ def get_xgb_prediction(
                 ys.append(y_data[i])
             return np.array(xs).reshape(len(xs), -1), np.array(ys)
             
-        x_xgb_train, y_xgb_train = make_raw_xgb_sequences(df_train_sub[FEATURES].values, df_train_sub["Daily_Return"].values)
-        x_xgb_val, y_xgb_val = make_raw_xgb_sequences(df_val[FEATURES].values, df_val["Daily_Return"].values)
-        x_xgb_test, y_xgb_test = make_raw_xgb_sequences(df_test[FEATURES].values, df_test["Daily_Return"].values)
+        y_train_dir = (df_train_sub["Daily_Return"].values > 0).astype(int)
+        y_val_dir = (df_val["Daily_Return"].values > 0).astype(int)
+        y_test_dir = (df_test["Daily_Return"].values > 0).astype(int)
+
+        x_xgb_train, y_xgb_train = make_raw_xgb_sequences(df_train_sub[FEATURES].values, y_train_dir)
+        x_xgb_val, y_xgb_val = make_raw_xgb_sequences(df_val[FEATURES].values, y_val_dir)
+        x_xgb_test, y_xgb_test = make_raw_xgb_sequences(df_test[FEATURES].values, y_test_dir)
         
         cache_path_xgb = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.json")
         xgb_loaded = False
@@ -58,7 +62,7 @@ def get_xgb_prediction(
                     pass
             if is_cache_valid:
                 try:
-                    model_xgb = xgb.XGBRegressor()
+                    model_xgb = xgb.XGBClassifier()
                     model_xgb.load_model(cache_path_xgb)
                     xgb_loaded = True
                     xgb_status = f"Loaded cached XGBoost model ({interval})"
@@ -70,7 +74,7 @@ def get_xgb_prediction(
             if is_auto_trained_asset and not force_retrain and not is_daemon:
                 if os.path.exists(cache_path_xgb):
                     try:
-                        model_xgb = xgb.XGBRegressor()
+                        model_xgb = xgb.XGBClassifier()
                         model_xgb.load_model(cache_path_xgb)
                         xgb_loaded = True
                         xgb_status = f"Loaded cached XGBoost model ({interval} - Fallback)"
@@ -79,10 +83,10 @@ def get_xgb_prediction(
                 if not xgb_loaded:
                     raise ValueError(f"XGBoost Model for {symbol} is currently training.")
             else:
-                model_xgb = xgb.XGBRegressor(
-                    n_estimators=500, max_depth=6, learning_rate=0.03,
+                model_xgb = xgb.XGBClassifier(
+                    n_estimators=30, max_depth=3, learning_rate=0.05,
                     subsample=0.8, colsample_bytree=0.8, reg_alpha=0.1, reg_lambda=1,
-                    early_stopping_rounds=15, random_state=42, n_jobs=-1
+                    early_stopping_rounds=15, random_state=42, n_jobs=-1, eval_metric="logloss"
                 )
                 model_xgb.fit(
                     x_xgb_train, y_xgb_train,
@@ -107,11 +111,11 @@ def get_xgb_prediction(
         xgb_metrics["training_status"] = xgb_status
         
         last_features_xgb = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
-        pred_ret_xgb = float(model_xgb.predict(last_features_xgb)[0])
-        pred_ret_xgb = max(min(pred_ret_xgb, max_ret), min_ret)
-        xgb_predicted_close = float(df["Close"].iloc[-1] * (1 + pred_ret_xgb))
+        probs_xgb = model_xgb.predict_proba(last_features_xgb)[0]
+        xgb_predicted_close = float(probs_xgb[1])
         
     except Exception as e:
         print(f"Error in XGBoost flow: {e}")
         
     return xgb_predicted_close, xgb_metrics
+
