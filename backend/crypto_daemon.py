@@ -123,6 +123,14 @@ def get_seconds_until_time(hour: int, minute: int) -> float:
         target += datetime.timedelta(days=1)
     return (target - now).total_seconds()
 
+def get_seconds_until_next_hourly_retry() -> float:
+    """Calculates seconds remaining until the next hour's 05-minute mark (e.g., 01:05, 02:05, etc.)."""
+    now = datetime.datetime.utcnow()
+    target = now.replace(minute=5, second=0, microsecond=0)
+    if now >= target:
+        target += datetime.timedelta(hours=1)
+    return (target - now).total_seconds()
+
 def main():
     print("====================================================")
     print("Daily Asset Auto-Training Daemon Started!")
@@ -154,23 +162,25 @@ def main():
     
     # 2. Main sleep-and-run loop
     while True:
+        # Determine if we should sleep until the hourly retry run or the next daily main run
         now_utc = datetime.datetime.utcnow()
-        retry_target = now_utc.replace(hour=3, minute=5, second=0, microsecond=0)
+        sec_to_main = get_seconds_until_time(0, 5)
         
-        # If we have pending symbols and are currently before the retry target time (03:05 UTC)
-        if pending_symbols and now_utc < retry_target:
-            sleep_sec = (retry_target - now_utc).total_seconds()
-            print(f"Daily training completed with {len(pending_symbols)} pending symbols. Sleeping {sleep_sec:.0f} seconds until retry run at 03:05 UTC...")
-            time.sleep(sleep_sec)
+        # If we have pending symbols, we try hourly
+        if pending_symbols:
+            sec_to_retry = get_seconds_until_next_hourly_retry()
+            # Only run retry if it starts before the main run
+            if sec_to_retry < sec_to_main - 60:
+                print(f"Daily training completed with {len(pending_symbols)} pending symbols. Sleeping {sec_to_retry:.0f} seconds until next hourly retry at {(now_utc + datetime.timedelta(seconds=sec_to_retry)).strftime('%Y-%m-%d %H:%M:%S')} UTC...")
+                time.sleep(sec_to_retry)
+                
+                print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Starting hourly retry training for pending symbols: {pending_symbols}...")
+                pending_symbols = check_and_train_assets(symbols_to_train=pending_symbols)
+                continue
             
-            print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Starting final retry training for pending symbols: {pending_symbols}...")
-            pending_symbols = check_and_train_assets(symbols_to_train=pending_symbols)
-            
-        # Sleep until the next day's main 00:05 UTC run
-        sleep_sec = get_seconds_until_time(0, 5)
-        next_run_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=sleep_sec)
-        print(f"Daily cycle finished. Sleeping for {sleep_sec:.0f} seconds (approx {sleep_sec/3600:.2f} hours) until next scheduled run at {next_run_time.strftime('%Y-%m-%d %H:%M:%S')} UTC...")
-        time.sleep(sleep_sec)
+        # Otherwise, sleep until the next day's main 00:05 UTC run
+        print(f"Daily cycle finished. Sleeping for {sec_to_main:.0f} seconds (approx {sec_to_main/3600:.2f} hours) until next scheduled run at {(datetime.datetime.utcnow() + datetime.timedelta(seconds=sec_to_main)).strftime('%Y-%m-%d %H:%M:%S')} UTC...")
+        time.sleep(sec_to_main)
         
         # Trigger daily training for all symbols
         pending_symbols = check_and_train_assets()
