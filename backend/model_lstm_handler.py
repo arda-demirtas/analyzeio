@@ -43,12 +43,10 @@ def get_lstm_prediction(
                 try:
                     with open(meta_path_lstm, "r", encoding="utf-8") as f:
                         meta_data = json.load(f)
-                    last_trained_str = meta_data.get("last_candle_start")
-                    if last_trained_str:
-                        last_trained_candle_start = datetime.datetime.strptime(last_trained_str, "%Y-%m-%d %H:%M:%S")
-                        last_candle_start = df.index[-1]
-                        if last_candle_start <= last_trained_candle_start:
-                            is_cache_valid = True
+                    last_trained_str = meta_data.get("predicted_candle_start")
+                    current_predicted_candle = df.attrs.get("predicted_candle_start")
+                    if last_trained_str and current_predicted_candle and current_predicted_candle <= last_trained_str:
+                        is_cache_valid = True
                 except Exception:
                     pass
             if is_cache_valid:
@@ -78,8 +76,12 @@ def get_lstm_prediction(
                 try:
                     meta_path_lstm = cache_path_lstm.replace(".keras", "_meta.json")
                     last_candle_start = df.index[-1]
+                    current_predicted_candle = df.attrs.get("predicted_candle_start")
                     with open(meta_path_lstm, "w", encoding="utf-8") as f:
-                        json.dump({"last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S")}, f)
+                        json.dump({
+                            "last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S"),
+                            "predicted_candle_start": current_predicted_candle
+                        }, f)
                 except Exception:
                     pass
         
