@@ -902,34 +902,66 @@ export default function Home() {
       }
     );
 
-    // Add Prediction Point
-    if (predictionData && predictionData.prediction_date && predictionData.predicted_close !== null && !isPendingData) {
-      const predLabel = predictionData.model_type === "xgboost" 
-        ? (lang === "tr" ? "XGBoost Tahmini" : "XGBoost Prediction") 
-        : (lang === "tr" ? "LSTM Tahmini" : "LSTM Prediction");
-        
+    // Add Prediction Points for all models
+    if (predictionData && predictionData.prediction_date && !isPendingData) {
       const lastClosePrice = closePrices[closePrices.length - 1];
-      const isUp = predictionData.predicted_close >= lastClosePrice;
-      const predColor = isUp ? "rgba(16, 185, 129, 0.95)" : "rgba(239, 68, 68, 0.95)";
       
-      const predDataPoints = Array(labels.length - 1).fill(null);
-      predDataPoints.push(lastClosePrice);
-      predDataPoints.push(predictionData.predicted_close);
-      
-      datasets.push({
-        label: predLabel,
-        type: "line",
-        data: predDataPoints,
-        borderColor: predColor,
-        borderWidth: 2.5,
-        borderDash: [5, 5],
-        pointRadius: 6,
-        pointHoverRadius: 8,
-        pointBackgroundColor: predColor,
-        pointBorderColor: "#ffffff",
-        pointBorderWidth: 1.5,
-        fill: false,
-        tension: 0,
+      const modelsConfig = [
+        {
+          key: "analyzeio",
+          label: lang === "tr" ? "Analyzeio Ensemble Tahmini" : "Analyzeio Ensemble Prediction",
+          close: predictionData.analyzeio_predicted_close,
+          color: "rgba(16, 185, 129, 0.95)"
+        },
+        {
+          key: "xgboost",
+          label: lang === "tr" ? "XGBoost Tahmini" : "XGBoost Prediction",
+          close: predictionData.xgb_predicted_close,
+          color: "rgba(168, 85, 247, 0.95)"
+        },
+        {
+          key: "lstm",
+          label: lang === "tr" ? "LSTM Tahmini" : "LSTM Prediction",
+          close: predictionData.lstm_predicted_close,
+          color: "rgba(14, 165, 233, 0.95)"
+        },
+        {
+          key: "linear_regression",
+          label: lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction",
+          close: predictionData.lr_predicted_close,
+          color: "rgba(59, 130, 246, 0.95)"
+        },
+        {
+          key: "patchtst",
+          label: lang === "tr" ? "PatchTST Tahmini" : "PatchTST Prediction",
+          close: predictionData.patchtst_predicted_close,
+          color: "rgba(245, 158, 11, 0.95)"
+        }
+      ];
+
+      modelsConfig.forEach(m => {
+        if (m.close !== null && m.close !== undefined) {
+          const predDataPoints = Array(labels.length - 1).fill(null);
+          predDataPoints.push(lastClosePrice);
+          predDataPoints.push(m.close);
+
+          datasets.push({
+            label: m.label,
+            type: "line",
+            data: predDataPoints,
+            borderColor: m.color,
+            borderWidth: 2.5,
+            borderDash: [5, 5],
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            pointBackgroundColor: m.color,
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 1.5,
+            fill: false,
+            tension: 0,
+            hidden: modelType !== m.key,
+          });
+        }
       });
     }
 
@@ -3958,6 +3990,27 @@ export default function Home() {
                       </span>
                       
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", marginBottom: "15px" }}>
+                        {/* Analyzeio (Ensemble) Box */}
+                        <div style={{ 
+                          padding: "10px 14px", 
+                          background: "rgba(16, 185, 129, 0.06)", 
+                          border: "1px solid rgba(16, 185, 129, 0.25)", 
+                          borderRadius: "var(--border-radius-md)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981" }}></span>
+                            <span style={{ fontSize: "13px", fontWeight: "700", color: "#a7f3d0" }}>Analyzeio (Ensemble)</span>
+                          </div>
+                          <span style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff" }}>
+                            {predictionData && predictionData.analyzeio_predicted_close !== null
+                              ? `$${predictionData.analyzeio_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+                              : "---"}
+                          </span>
+                        </div>
+
                         {/* XGBoost Box */}
                         <div style={{ 
                           padding: "10px 14px", 
@@ -4060,6 +4113,34 @@ export default function Home() {
                           <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500", textTransform: "uppercase", marginBottom: "4px", display: "block" }}>
                             {lang === "tr" ? "Model Sinyalleri & Getiri Oranları" : "Model Signals & Expected Changes"}:
                           </span>
+
+                          {/* Analyzeio Signal */}
+                          {predictionData && predictionData.analyzeio_predicted_close !== null && (() => {
+                            const lastPrice = predictionData ? predictionData.last_close : null;
+                            if (!lastPrice) return null;
+                            const analyzeioChangeVal = ((predictionData.analyzeio_predicted_close - lastPrice) / lastPrice) * 100;
+                            return (
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                                <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#10b981" }}></span>
+                                  Analyzeio:
+                                </span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+                                  {analyzeioChangeVal >= 0 ? (
+                                    <>
+                                      <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-success)" }}>+{analyzeioChangeVal.toFixed(2)}% ({t("bullish")})</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-danger)" }}>{analyzeioChangeVal.toFixed(2)}% ({t("bearish")})</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
 
                           {/* XGBoost Signal */}
                           {xgbChangeVal !== null && (
@@ -4333,6 +4414,28 @@ export default function Home() {
                         </tr>
                       </thead>
                       <tbody>
+                        {/* Analyzeio row */}
+                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(16, 185, 129, 0.03)" }}>
+                          <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", boxShadow: "0 0 6px #10b981" }}></span>
+                            <span style={{ fontWeight: "700", color: "#a7f3d0" }}>Analyzeio</span>
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700", color: "#a7f3d0" }}>
+                            {predictionData && predictionData.analyzeio_predicted_close !== null
+                              ? `$${predictionData.analyzeio_predicted_close.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.analyzeio_metrics && predictionData.analyzeio_metrics.rmse !== null ? `$${predictionData.analyzeio_metrics.rmse.toFixed(1)}` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.analyzeio_metrics && predictionData.analyzeio_metrics.mape !== null ? `${predictionData.analyzeio_metrics.mape.toFixed(2)}%` : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
+                            {predictionData && predictionData.analyzeio_metrics && predictionData.analyzeio_metrics.directional_accuracy !== null ? `${predictionData.analyzeio_metrics.directional_accuracy.toFixed(1)}%` : "---"}
+                          </td>
+                        </tr>
+
                         {/* XGBoost row */}
                         <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                           <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
