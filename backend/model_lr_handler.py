@@ -84,9 +84,8 @@ def get_lr_prediction(
         lr_metrics["training_status"] = lr_status
         
         last_features_lr = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
-        pred_ret_lr = float(model_lr.predict(last_features_lr)[0])
-        pred_ret_lr = max(min(pred_ret_lr, max_ret), min_ret)
-        lr_predicted_close = float(df["Close"].iloc[-1] * (1 + pred_ret_lr))
+        probs_lr = model_lr.predict_proba(last_features_lr)[0]
+        lr_predicted_close = float(probs_lr[1])
         
     except Exception as e:
         print(f"Error in Linear Regression flow: {e}")
