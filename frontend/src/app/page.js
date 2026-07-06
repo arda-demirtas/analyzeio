@@ -4605,11 +4605,10 @@ export default function Home() {
                         <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)" }} />
                       </div>
                                         ) : (() => {
-                      const filteredAccuracyLogs = accuracyLogs.filter((log, idx) => {
-                        if (idx === 0 && log.actual_close === null && accuracyLogs.length > 1) {
-                          if (log.predicted_close === accuracyLogs[1].predicted_close) {
-                            return false;
-                          }
+                      const filteredAccuracyLogs = accuracyLogs.filter((log) => {
+                        // Hide pending predictions; only show completed history with actual outcomes
+                        if (log.actual_close === null || log.actual_close === undefined) {
+                          return false;
                         }
                         return true;
                       });
