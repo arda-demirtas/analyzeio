@@ -24,7 +24,7 @@ def get_prediction(
     seq_length: int = DEFAULT_SEQUENCE_LENGTH, 
     lang: str = "en", 
     force_retrain: bool = False, 
-    model_type: str = "xgboost", 
+    model_type: str = "analyzeio",
     is_daemon: bool = False
 ) -> Dict[str, Any]:
     """
@@ -110,9 +110,31 @@ def get_prediction(
         elif model_type == "patchtst":
             predicted_close = patchtst_predicted_close
             metrics = patchtst_metrics
-        else:
+        elif model_type == "xgboost":
             predicted_close = xgb_predicted_close
             metrics = xgb_metrics
+        else:
+            # "analyzeio" is the average of all 4 models!
+            valid_predictions = [p for p in [xgb_predicted_close, lstm_predicted_close, lr_predicted_close, patchtst_predicted_close] if p is not None]
+            if valid_predictions:
+                predicted_close = sum(valid_predictions) / len(valid_predictions)
+            else:
+                predicted_close = xgb_predicted_close
+                
+            # Average performance metrics
+            valid_metrics_list = [m for m in [xgb_metrics, lstm_metrics, lr_metrics, patchtst_metrics] if m is not None]
+            if valid_metrics_list:
+                avg_rmse = sum(m.get("rmse", 0.0) for m in valid_metrics_list) / len(valid_metrics_list)
+                avg_mape = sum(m.get("mape", 0.0) for m in valid_metrics_list) / len(valid_metrics_list)
+                avg_da = sum(m.get("directional_accuracy", 50.0) for m in valid_metrics_list) / len(valid_metrics_list)
+                metrics = {
+                    "rmse": avg_rmse,
+                    "mape": avg_mape,
+                    "directional_accuracy": avg_da,
+                    "training_status": "Average of 4 models (Analyzeio)"
+                }
+            else:
+                metrics = xgb_metrics
             
         if predicted_close is None:
             predicted_close = xgb_predicted_close or lstm_predicted_close or lr_predicted_close or patchtst_predicted_close
