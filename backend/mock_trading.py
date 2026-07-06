@@ -3,7 +3,7 @@ import json
 import datetime
 from typing import Dict, Any, Tuple, Optional
 
-from backend.config import MODEL_CACHE_DIR, AUTO_TRAINED_SYMBOLS
+from backend.config import MODEL_CACHE_DIR, AUTO_TRAINED_SYMBOLS, POPULAR_CRYPTOS
 from backend.predictor import get_prediction
 from backend.data_fetcher import fetch_market_data
 from backend.sentiment import fetch_symbol_news
@@ -123,12 +123,12 @@ def score_symbol_for_trading(symbol: str) -> float:
     return score
 
 def select_best_symbol_to_buy() -> Tuple[str, float]:
-    """Finds the symbol with the highest score from AUTO_TRAINED_SYMBOLS."""
+    """Finds the symbol with the highest score from the top 10 popular cryptos."""
     best_symbol = ""
     best_score = -999.0
     
-    # Scan all trained symbols
-    for symbol in AUTO_TRAINED_SYMBOLS:
+    # Scan the top 10 popular cryptos
+    for symbol in POPULAR_CRYPTOS[:10]:
         score = score_symbol_for_trading(symbol)
         if score > best_score:
             best_score = score
