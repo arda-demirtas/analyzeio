@@ -17,6 +17,8 @@ from backend.model_xgb_handler import get_xgb_prediction
 from backend.model_lstm_handler import get_lstm_prediction
 from backend.model_lr_handler import get_lr_prediction
 from backend.model_patchtst_handler import get_patchtst_prediction
+from backend.prediction_engine import train_lr_model
+
 
 def get_prediction(
     symbol: str, 
