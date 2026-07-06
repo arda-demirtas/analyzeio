@@ -4010,10 +4010,10 @@ export default function Home() {
                             const prob = predictionData.analyzeio_predicted_close;
                             const isBullish = prob >= 0.5;
                             const conf = isBullish ? prob * 100 : (1 - prob) * 100;
-                            const label = isBullish ? (lang === "tr" ? "Yükseliş" : "Rise") : (lang === "tr" ? "Düşüş" : "Fall");
+                            const label = lang === "tr" ? "Olasılık" : "Probability";
                             return (
                               <span style={{ fontSize: "14px", fontWeight: "800", color: isBullish ? "#10b981" : "#ef4444" }}>
-                                {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({conf.toFixed(1)}% {label})
+                                {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({label}: {conf.toFixed(1)}%)
                               </span>
                             );
                           })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
@@ -4037,10 +4037,10 @@ export default function Home() {
                             const prob = predictionData.xgb_predicted_close;
                             const isBullish = prob >= 0.5;
                             const conf = isBullish ? prob * 100 : (1 - prob) * 100;
-                            const label = isBullish ? (lang === "tr" ? "Yükseliş" : "Rise") : (lang === "tr" ? "Düşüş" : "Fall");
+                            const label = lang === "tr" ? "Olasılık" : "Probability";
                             return (
                               <span style={{ fontSize: "14px", fontWeight: "800", color: isBullish ? "#10b981" : "#ef4444" }}>
-                                {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({conf.toFixed(1)}% {label})
+                                {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({label}: {conf.toFixed(1)}%)
                               </span>
                             );
                           })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
@@ -4064,10 +4064,10 @@ export default function Home() {
                             const prob = predictionData.lstm_predicted_close;
                             const isBullish = prob >= 0.5;
                             const conf = isBullish ? prob * 100 : (1 - prob) * 100;
-                            const label = isBullish ? (lang === "tr" ? "Yükseliş" : "Rise") : (lang === "tr" ? "Düşüş" : "Fall");
+                            const label = lang === "tr" ? "Olasılık" : "Probability";
                             return (
                               <span style={{ fontSize: "14px", fontWeight: "800", color: isBullish ? "#10b981" : "#ef4444" }}>
-                                {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({conf.toFixed(1)}% {label})
+                                {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({label}: {conf.toFixed(1)}%)
                               </span>
                             );
                           })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
@@ -4091,10 +4091,10 @@ export default function Home() {
                             const prob = predictionData.lr_predicted_close;
                             const isBullish = prob >= 0.5;
                             const conf = isBullish ? prob * 100 : (1 - prob) * 100;
-                            const label = isBullish ? (lang === "tr" ? "Yükseliş" : "Rise") : (lang === "tr" ? "Düşüş" : "Fall");
+                            const label = lang === "tr" ? "Olasılık" : "Probability";
                             return (
                               <span style={{ fontSize: "14px", fontWeight: "800", color: isBullish ? "#10b981" : "#ef4444" }}>
-                                {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({conf.toFixed(1)}% {label})
+                                {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({label}: {conf.toFixed(1)}%)
                               </span>
                             );
                           })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
@@ -4119,10 +4119,10 @@ export default function Home() {
                               const prob = predictionData.patchtst_predicted_close;
                               const isBullish = prob >= 0.5;
                               const conf = isBullish ? prob * 100 : (1 - prob) * 100;
-                              const label = isBullish ? (lang === "tr" ? "Yükseliş" : "Rise") : (lang === "tr" ? "Düşüş" : "Fall");
+                              const label = lang === "tr" ? "Olasılık" : "Probability";
                               return (
                                 <span style={{ fontSize: "14px", fontWeight: "800", color: isBullish ? "#10b981" : "#ef4444" }}>
-                                  {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({conf.toFixed(1)}% {label})
+                                  {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({label}: {conf.toFixed(1)}%)
                                 </span>
                               );
                             })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
@@ -4465,7 +4465,7 @@ export default function Home() {
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
                             {predictionData && predictionData.analyzeio_predicted_close !== null
-                              ? `${(predictionData.analyzeio_predicted_close * 100).toFixed(1)}% ${lang === "tr" ? "(Yükseliş)" : "(Rise)"}`
+                              ? `${(predictionData.analyzeio_predicted_close * 100).toFixed(1)}%`
                               : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
@@ -4489,7 +4489,7 @@ export default function Home() {
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
                             {predictionData && predictionData.xgb_predicted_close !== null
-                              ? `${(predictionData.xgb_predicted_close * 100).toFixed(1)}% ${lang === "tr" ? "(Yükseliş)" : "(Rise)"}`
+                              ? `${(predictionData.xgb_predicted_close * 100).toFixed(1)}%`
                               : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
@@ -4513,7 +4513,7 @@ export default function Home() {
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
                             {predictionData && predictionData.lstm_predicted_close !== null
-                              ? `${(predictionData.lstm_predicted_close * 100).toFixed(1)}% ${lang === "tr" ? "(Yükseliş)" : "(Rise)"}`
+                              ? `${(predictionData.lstm_predicted_close * 100).toFixed(1)}%`
                               : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
@@ -4537,7 +4537,7 @@ export default function Home() {
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
                             {predictionData && predictionData.lr_predicted_close !== null
-                              ? `${(predictionData.lr_predicted_close * 100).toFixed(1)}% ${lang === "tr" ? "(Yükseliş)" : "(Rise)"}`
+                              ? `${(predictionData.lr_predicted_close * 100).toFixed(1)}%`
                               : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
@@ -4561,9 +4561,10 @@ export default function Home() {
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
                             {predictionData && predictionData.patchtst_predicted_close !== null
-                              ? `${(predictionData.patchtst_predicted_close * 100).toFixed(1)}% ${lang === "tr" ? "(Yükseliş)" : "(Rise)"}`
+                              ? `${(predictionData.patchtst_predicted_close * 100).toFixed(1)}%`
                               : "---"}
                           </td>
+
 
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
                             {predictionData && predictionData.patchtst_metrics && predictionData.patchtst_metrics.logloss !== undefined && predictionData.patchtst_metrics.logloss !== null ? predictionData.patchtst_metrics.logloss.toFixed(3) : "---"}
