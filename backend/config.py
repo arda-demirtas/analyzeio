@@ -50,8 +50,11 @@ POPULAR_STOCKS = [
 AUTO_TRAINED_SYMBOLS = POPULAR_CRYPTOS + POPULAR_COMMODITIES + POPULAR_STOCKS
 
 FEATURES = [
-    "Return_Lag3", "EMA_50"
+    "Return_Lag1", "Return_Lag3", "Return_Lag5",
+    "RSI", "MACD_Hist", "EMA_Diff", "BB_Position", "ATR",
+    "SPY_Return_1d", "SPY_Return_5d", "VIX_Close"
 ]
+
 
 TICKER_NAMES = {
     "BTC-USD": "Bitcoin USD",
