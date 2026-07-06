@@ -28,7 +28,7 @@ def normalize_symbol(symbol: str) -> str:
     return sym
 
 @router.get("/predict", response_model=PredictionResponse)
-def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_type: str = "xgboost", force_retrain: bool = False, current_user: Optional[User] = Depends(get_current_user_optional)):
+def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_type: str = "analyzeio", force_retrain: bool = False, current_user: Optional[User] = Depends(get_current_user_optional)):
     """
     Triggers historical data loading, computes technical indicators,
     and runs XGBoost (default) or LSTM model inference to predict the close price for the next candle of the selected interval.
@@ -39,10 +39,10 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_typ
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported interval. Allowed: 15m, 1h, 4h, 1d"
         )
-    if model_type not in ["xgboost", "lstm", "linear_regression", "patchtst"]:
+    if model_type not in ["xgboost", "lstm", "linear_regression", "patchtst", "analyzeio"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Unsupported model_type. Allowed: xgboost, lstm, linear_regression"
+            detail="Unsupported model_type. Allowed: xgboost, lstm, linear_regression, patchtst, analyzeio"
         )
     is_btc = symbol_upper == "BTC-USD"
     is_premium = current_user.is_premium if current_user else False
