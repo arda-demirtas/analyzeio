@@ -4,7 +4,7 @@ import datetime
 import pickle
 import numpy as np
 from typing import Tuple, Dict, Any, Optional
-from backend.config import MODEL_CACHE_DIR, FEATURES
+from backend.config import MODEL_CACHE_DIR, FEATURES, AUTO_TRAINED_SYMBOLS
 from backend.prediction_engine import train_lr_model, evaluate_lr_performance
 
 def get_lr_prediction(
@@ -64,10 +64,23 @@ def get_lr_prediction(
                     pass
                     
         if not lr_model_loaded:
-            model_lr = train_lr_model(x_lr_train, y_lr_train)
-            with open(cache_path_lr, "wb") as f:
-                pickle.dump(model_lr, f)
-            lr_status = f"Trained LR model ({interval})"
+            is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
+            if is_auto_trained_asset and not force_retrain and not is_daemon:
+                if os.path.exists(cache_path_lr):
+                    try:
+                        with open(cache_path_lr, "rb") as f:
+                            model_lr = pickle.load(f)
+                        lr_model_loaded = True
+                        lr_status = f"Loaded cached LR model ({interval} - Fallback)"
+                    except Exception:
+                        pass
+                if not lr_model_loaded:
+                    raise ValueError(f"LR Model for {symbol} is currently training.")
+            else:
+                model_lr = train_lr_model(x_lr_train, y_lr_train)
+                with open(cache_path_lr, "wb") as f:
+                    pickle.dump(model_lr, f)
+                lr_status = f"Trained LR model ({interval})"
             try:
                 meta_path_lr = cache_path_lr.replace("_lr.pkl", "_lr_meta.json")
                 last_candle_start = df.index[-1]
