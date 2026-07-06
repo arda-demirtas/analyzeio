@@ -784,7 +784,7 @@ export default function Home() {
       const c = closes[closes.length - 1];
       const pivot = (h + l + c) / 3.0;
       
-      if (supports.length === 0) {
+    if (supports.length === 0) {
         supports = [2 * pivot - h, pivot - (h - l)];
       }
       if (resistances.length === 0) {
@@ -800,595 +800,599 @@ export default function Home() {
 
   // Helper: Render price, RSI, and MACD charts
   const renderCharts = () => {
-    destroyCharts();
-    if (!predictionData || !chartHistory || chartHistory.length === 0) return;
+    try {
+      destroyCharts();
+      if (!predictionData || !chartHistory || chartHistory.length === 0) return;
 
-    const ctxPrice = priceChartRef.current?.getContext("2d");
-    const ctxRsi = rsiChartRef.current?.getContext("2d");
-    const ctxMacd = macdChartRef.current?.getContext("2d");
-    const ctxStoch = stochChartRef.current?.getContext("2d");
-    const ctxAtr = atrChartRef.current?.getContext("2d");
-    const ctxObv = obvChartRef.current?.getContext("2d");
-    const ctxCci = cciChartRef.current?.getContext("2d");
-    const ctxWilliams = williamsChartRef.current?.getContext("2d");
+      const ctxPrice = priceChartRef.current?.getContext("2d");
+      const ctxRsi = rsiChartRef.current?.getContext("2d");
+      const ctxMacd = macdChartRef.current?.getContext("2d");
+      const ctxStoch = stochChartRef.current?.getContext("2d");
+      const ctxAtr = atrChartRef.current?.getContext("2d");
+      const ctxObv = obvChartRef.current?.getContext("2d");
+      const ctxCci = cciChartRef.current?.getContext("2d");
+      const ctxWilliams = williamsChartRef.current?.getContext("2d");
 
-    const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
-    const chartEvents = isTouchDevice ? ["click"] : ["mousemove", "mouseout", "click", "touchstart", "touchmove", "touchend"];
+      const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+      const chartEvents = isTouchDevice ? ["click"] : ["mousemove", "mouseout", "click", "touchstart", "touchmove", "touchend"];
 
-    const history = chartHistory.slice(-historyLimit);
-    const labels = history.map(item => item.date);
-    const closePrices = history.map(item => item.close);
-    const ema20Prices = history.map(item => item.ema_20);
-    const ema50Prices = history.map(item => item.ema_50);
-    const bbUpperPrices = history.map(item => item.bb_upper);
-    const bbLowerPrices = history.map(item => item.bb_lower);
-    
-    // Include prediction point only for daily (1d) interval
-    let extendedLabels = [...labels];
-    const isPendingData = predictionData && predictionData.prediction_status === "pending_data";
-    if (predictionData && predictionData.prediction_date && !isPendingData) {
-      extendedLabels.push(predictionData.prediction_date);
-    }
-    let datasets = [];
-    if (chartType === "candle") {
-      const candleColors = history.map(h => h.close >= h.open ? "rgba(16, 185, 129, 0.75)" : "rgba(239, 68, 68, 0.75)");
-      const candleBorderColors = history.map(h => h.close >= h.open ? "#10b981" : "#ef4848");
+      const history = chartHistory.slice(-historyLimit);
+      const labels = history.map(item => item.date);
+      const closePrices = history.map(item => item.close);
+      const ema20Prices = history.map(item => item.ema_20);
+      const ema50Prices = history.map(item => item.ema_50);
+      const bbUpperPrices = history.map(item => item.bb_upper);
+      const bbLowerPrices = history.map(item => item.bb_lower);
       
-      datasets.push({
-        label: activeSymbol,
-        type: "bar",
-        data: history.map(h => [h.open, h.close]),
-        backgroundColor: candleColors,
-        borderColor: candleBorderColors,
-        borderWidth: 1,
-        barPercentage: 0.75,
-        categoryPercentage: 0.95
-      });
-    } else {
-      datasets.push({
-        label: "Historical Close",
-        type: "line",
-        data: closePrices,
-        borderColor: "#8b5cf6",
-        backgroundColor: "rgba(139, 92, 246, 0.05)",
-        borderWidth: 2.5,
-        pointRadius: 0,
-        tension: 0.15,
-        fill: true,
-      });
-    }
-
-
-
-    datasets.push(
-      {
-        label: "EMA 20",
-        data: ema20Prices,
-        borderColor: "rgba(59, 130, 246, 0.65)",
-        borderWidth: 1.5,
-        pointRadius: 0,
-        fill: false,
-        tension: 0.15,
-        hidden: true,
-      },
-      {
-        label: "EMA 50",
-        data: ema50Prices,
-        borderColor: "rgba(236, 72, 153, 0.65)",
-        borderWidth: 1.5,
-        pointRadius: 0,
-        fill: false,
-        tension: 0.15,
-        hidden: true,
-      },
-      {
-        label: "BB Upper",
-        data: bbUpperPrices,
-        borderColor: "rgba(245, 158, 11, 0.35)",
-        borderWidth: 1,
-        borderDash: [3, 3],
-        pointRadius: 0,
-        fill: false,
-        hidden: true,
-      },
-      {
-        label: "BB Lower",
-        data: bbLowerPrices,
-        borderColor: "rgba(245, 158, 11, 0.35)",
-        borderWidth: 1,
-        borderDash: [3, 3],
-        pointRadius: 0,
-        fill: false,
-        hidden: true,
+      // Include prediction point only for daily (1d) interval
+      let extendedLabels = [...labels];
+      const isPendingData = predictionData && predictionData.prediction_status === "pending_data";
+      if (predictionData && predictionData.prediction_date && !isPendingData) {
+        extendedLabels.push(predictionData.prediction_date);
       }
-    );
+      let datasets = [];
+      if (chartType === "candle") {
+        const candleColors = history.map(h => h.close >= h.open ? "rgba(16, 185, 129, 0.75)" : "rgba(239, 68, 68, 0.75)");
+        const candleBorderColors = history.map(h => h.close >= h.open ? "#10b981" : "#ef4848");
+        
+        datasets.push({
+          label: activeSymbol,
+          type: "bar",
+          data: history.map(h => [h.open, h.close]),
+          backgroundColor: candleColors,
+          borderColor: candleBorderColors,
+          borderWidth: 1,
+          barPercentage: 0.75,
+          categoryPercentage: 0.95
+        });
+      } else {
+        datasets.push({
+          label: "Historical Close",
+          type: "line",
+          data: closePrices,
+          borderColor: "#8b5cf6",
+          backgroundColor: "rgba(139, 92, 246, 0.05)",
+          borderWidth: 2.5,
+          pointRadius: 0,
+          tension: 0.15,
+          fill: true,
+        });
+      }
 
-    // Add Prediction Points for all models
-    if (predictionData && predictionData.prediction_date && !isPendingData) {
-      const lastClosePrice = closePrices[closePrices.length - 1];
-      
-      const modelsConfig = [
+
+
+      datasets.push(
         {
-          key: "analyzeio",
-          label: lang === "tr" ? "Analyzeio Ensemble Tahmini" : "Analyzeio Ensemble Prediction",
-          close: predictionData.analyzeio_predicted_close,
-          color: "rgba(16, 185, 129, 0.95)"
+          label: "EMA 20",
+          data: ema20Prices,
+          borderColor: "rgba(59, 130, 246, 0.65)",
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.15,
+          hidden: true,
         },
         {
-          key: "xgboost",
-          label: lang === "tr" ? "XGBoost Tahmini" : "XGBoost Prediction",
-          close: predictionData.xgb_predicted_close,
-          color: "rgba(168, 85, 247, 0.95)"
+          label: "EMA 50",
+          data: ema50Prices,
+          borderColor: "rgba(236, 72, 153, 0.65)",
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.15,
+          hidden: true,
         },
         {
-          key: "lstm",
-          label: lang === "tr" ? "LSTM Tahmini" : "LSTM Prediction",
-          close: predictionData.lstm_predicted_close,
-          color: "rgba(14, 165, 233, 0.95)"
+          label: "BB Upper",
+          data: bbUpperPrices,
+          borderColor: "rgba(245, 158, 11, 0.35)",
+          borderWidth: 1,
+          borderDash: [3, 3],
+          pointRadius: 0,
+          fill: false,
+          hidden: true,
         },
         {
-          key: "linear_regression",
-          label: lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction",
-          close: predictionData.lr_predicted_close,
-          color: "rgba(59, 130, 246, 0.95)"
-        },
-        {
-          key: "patchtst",
-          label: lang === "tr" ? "PatchTST Tahmini" : "PatchTST Prediction",
-          close: predictionData.patchtst_predicted_close,
-          color: "rgba(245, 158, 11, 0.95)"
+          label: "BB Lower",
+          data: bbLowerPrices,
+          borderColor: "rgba(245, 158, 11, 0.35)",
+          borderWidth: 1,
+          borderDash: [3, 3],
+          pointRadius: 0,
+          fill: false,
+          hidden: true,
         }
-      ];
+      );
 
-      modelsConfig.forEach(m => {
-        if (m.close !== null && m.close !== undefined) {
-          const predDataPoints = Array(labels.length - 1).fill(null);
-          predDataPoints.push(lastClosePrice);
-          predDataPoints.push(lastClosePrice * (1 + (m.close - 0.5) * 0.04));
+      // Add Prediction Points for all models
+      if (predictionData && predictionData.prediction_date && !isPendingData) {
+        const lastClosePrice = closePrices[closePrices.length - 1];
+        
+        const modelsConfig = [
+          {
+            key: "analyzeio",
+            label: lang === "tr" ? "Analyzeio Ensemble Tahmini" : "Analyzeio Ensemble Prediction",
+            close: predictionData.analyzeio_predicted_close,
+            color: "rgba(16, 185, 129, 0.95)"
+          },
+          {
+            key: "xgboost",
+            label: lang === "tr" ? "XGBoost Tahmini" : "XGBoost Prediction",
+            close: predictionData.xgb_predicted_close,
+            color: "rgba(168, 85, 247, 0.95)"
+          },
+          {
+            key: "lstm",
+            label: lang === "tr" ? "LSTM Tahmini" : "LSTM Prediction",
+            close: predictionData.lstm_predicted_close,
+            color: "rgba(14, 165, 233, 0.95)"
+          },
+          {
+            key: "linear_regression",
+            label: lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction",
+            close: predictionData.lr_predicted_close,
+            color: "rgba(59, 130, 246, 0.95)"
+          },
+          {
+            key: "patchtst",
+            label: lang === "tr" ? "PatchTST Tahmini" : "PatchTST Prediction",
+            close: predictionData.patchtst_predicted_close,
+            color: "rgba(245, 158, 11, 0.95)"
+          }
+        ];
 
+        modelsConfig.forEach(m => {
+          if (m.close !== null && m.close !== undefined) {
+            const predDataPoints = Array(labels.length - 1).fill(null);
+            predDataPoints.push(lastClosePrice);
+            predDataPoints.push(lastClosePrice * (1 + (m.close - 0.5) * 0.04));
+
+            datasets.push({
+              label: m.label,
+              type: "line",
+              data: predDataPoints,
+              borderColor: m.color,
+              borderWidth: 2.5,
+              borderDash: [5, 5],
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              pointBackgroundColor: m.color,
+              pointBorderColor: "#ffffff",
+              pointBorderWidth: 1.5,
+              fill: false,
+              tension: 0,
+              hidden: modelType !== m.key,
+            });
+          }
+        });
+      }
+
+      // Add Linear Regression Prediction Line (boydan boya)
+      const hasLrHistory = history.some(h => h.lr_predicted_close !== undefined && h.lr_predicted_close !== null);
+      if (predictionData && (hasLrHistory || (predictionData.lr_predicted_close !== null && predictionData.lr_predicted_close !== undefined && !isPendingData))) {
+        const lrLabel = lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction";
+        const lrColor = "rgba(59, 130, 246, 0.9)"; // Sleek blue for LR
+        
+        const lrDataPoints = history.map(h => h.lr_predicted_close !== undefined ? h.lr_predicted_close : null);
+        if (predictionData.lr_predicted_close !== null && predictionData.lr_predicted_close !== undefined && !isPendingData) {
+          lrDataPoints.push(lastClosePrice * (1 + (predictionData.lr_predicted_close - 0.5) * 0.04));
+        } else {
+          lrDataPoints.push(null);
+        }
+
+        
+        datasets.push({
+          label: lrLabel,
+          type: "line",
+          data: lrDataPoints,
+          borderColor: lrColor,
+          borderWidth: 2,
+          borderDash: [4, 4],
+          pointRadius: (ctx) => {
+            return ctx.dataIndex === lrDataPoints.length - 1 ? 6 : 0;
+          },
+          pointHoverRadius: (ctx) => {
+            return ctx.dataIndex === lrDataPoints.length - 1 ? 8 : 0;
+          },
+          pointBackgroundColor: lrColor,
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 1.5,
+          fill: false,
+          tension: 0.1,
+          hidden: true,
+        });
+      }
+
+      // Add Support and Resistance Levels (All-symbols for premium, BTC-USD for everyone)
+      const canShowSR = (activeSymbol === "BTC-USD") || (user && user.is_premium);
+      
+      if (canShowSR) {
+        const { supports, resistances } = calculateSupportResistance(history);
+        
+        supports.forEach((val, idx) => {
           datasets.push({
-            label: m.label,
-            type: "line",
-            data: predDataPoints,
-            borderColor: m.color,
-            borderWidth: 2.5,
-            borderDash: [5, 5],
-            pointRadius: 6,
-            pointHoverRadius: 8,
-            pointBackgroundColor: m.color,
-            pointBorderColor: "#ffffff",
-            pointBorderWidth: 1.5,
+            label: `${t("support")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
+            data: Array(extendedLabels.length).fill(val),
+            borderColor: "rgba(16, 185, 129, 0.7)",
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            pointRadius: 0,
             fill: false,
             tension: 0,
-            hidden: modelType !== m.key,
+            hidden: true,
           });
-        }
-      });
-    }
+        });
 
-    // Add Linear Regression Prediction Line (boydan boya)
-    const hasLrHistory = history.some(h => h.lr_predicted_close !== null);
-    if (predictionData && (hasLrHistory || (predictionData.lr_predicted_close !== null && !isPendingData))) {
-      const lrLabel = lang === "tr" ? "Lineer Regresyon Tahmini" : "Linear Regression Prediction";
-      const lrColor = "rgba(59, 130, 246, 0.9)"; // Sleek blue for LR
-      
-      const lrDataPoints = history.map(h => h.lr_predicted_close);
-      if (predictionData.lr_predicted_close !== null && !isPendingData) {
-        lrDataPoints.push(lastClosePrice * (1 + (predictionData.lr_predicted_close - 0.5) * 0.04));
-      } else {
-        lrDataPoints.push(null);
+        resistances.forEach((val, idx) => {
+          datasets.push({
+            label: `${t("resistance")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
+            data: Array(extendedLabels.length).fill(val),
+            borderColor: "rgba(239, 68, 68, 0.7)",
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            pointRadius: 0,
+            fill: false,
+            tension: 0,
+            hidden: true,
+          });
+        });
       }
 
-      
-      datasets.push({
-        label: lrLabel,
-        type: "line",
-        data: lrDataPoints,
-        borderColor: lrColor,
-        borderWidth: 2,
-        borderDash: [4, 4],
-        pointRadius: (ctx) => {
-          return ctx.dataIndex === lrDataPoints.length - 1 ? 6 : 0;
-        },
-        pointHoverRadius: (ctx) => {
-          return ctx.dataIndex === lrDataPoints.length - 1 ? 8 : 0;
-        },
-        pointBackgroundColor: lrColor,
-        pointBorderColor: "#ffffff",
-        pointBorderWidth: 1.5,
-        fill: false,
-        tension: 0.1,
-        hidden: true,
-      });
-    }
-
-    // Add Support and Resistance Levels (All-symbols for premium, BTC-USD for everyone)
-    const canShowSR = (activeSymbol === "BTC-USD") || (user && user.is_premium);
-    
-    if (canShowSR) {
-      const { supports, resistances } = calculateSupportResistance(history);
-      
-      supports.forEach((val, idx) => {
-        datasets.push({
-          label: `${t("support")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
-          data: Array(extendedLabels.length).fill(val),
-          borderColor: "rgba(16, 185, 129, 0.7)",
-          borderWidth: 1.5,
-          borderDash: [6, 4],
-          pointRadius: 0,
-          fill: false,
-          tension: 0,
-          hidden: true,
-        });
-      });
-
-      resistances.forEach((val, idx) => {
-        datasets.push({
-          label: `${t("resistance")} ${idx + 1} (${val.toLocaleString(undefined, { maximumFractionDigits: 1 })})`,
-          data: Array(extendedLabels.length).fill(val),
-          borderColor: "rgba(239, 68, 68, 0.7)",
-          borderWidth: 1.5,
-          borderDash: [6, 4],
-          pointRadius: 0,
-          fill: false,
-          tension: 0,
-          hidden: true,
-        });
-      });
-    }
-
-    // Price Chart
-    if (ctxPrice) {
-      priceChartInst.current = new Chart(ctxPrice, {
-        type: "line",
-        data: {
-          labels: extendedLabels,
-          datasets: datasets
-        },
-        options: {
-          events: chartEvents,
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            candlestickWicks: {
-              enabled: chartType === "candle",
-              history: history
-            },
-            legend: {
-              labels: { color: "#9ca3af", font: { family: "Inter" } }
-            },
-            tooltip: {
-              mode: "index",
-              intersect: false,
-            },
-            zoom: {
-              zoom: {
-                wheel: {
-                  enabled: isChartFullscreen,
-                  speed: 0.05,
-                },
-                pinch: {
-                  enabled: isChartFullscreen
-                },
-                mode: "x",
-                onZoom: ({ chart }) => {
-                  const lastIndex = chart.data.labels.length - 1;
-                  if (chart.options.scales.x) {
-                    chart.options.scales.x.max = lastIndex;
-                  }
-                  chart.update("none");
-                }
+      // Price Chart
+      if (ctxPrice) {
+        priceChartInst.current = new Chart(ctxPrice, {
+          type: "line",
+          data: {
+            labels: extendedLabels,
+            datasets: datasets
+          },
+          options: {
+            events: chartEvents,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              candlestickWicks: {
+                enabled: chartType === "candle",
+                history: history
               },
-              pan: {
-                enabled: isChartFullscreen,
-                mode: "x",
-                modifierKey: null,
+              legend: {
+                labels: { color: "#9ca3af", font: { family: "Inter" } }
+              },
+              tooltip: {
+                mode: "index",
+                intersect: false,
+              },
+              zoom: {
+                zoom: {
+                  wheel: {
+                    enabled: isChartFullscreen,
+                    speed: 0.05,
+                  },
+                  pinch: {
+                    enabled: isChartFullscreen
+                  },
+                  mode: "x",
+                  onZoom: ({ chart }) => {
+                    const lastIndex = chart.data.labels.length - 1;
+                    if (chart.options.scales.x) {
+                      chart.options.scales.x.max = lastIndex;
+                    }
+                    chart.update("none");
+                  }
+                },
+                pan: {
+                  enabled: isChartFullscreen,
+                  mode: "x",
+                  modifierKey: null,
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { color: "#9ca3af", maxTicksLimit: 8 }
+              },
+              y: {
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { color: "#9ca3af" }
               }
             }
-          },
-          scales: {
-            x: {
-              grid: { color: "rgba(255, 255, 255, 0.05)" },
-              ticks: { color: "#9ca3af", maxTicksLimit: 8 }
-            },
-            y: {
-              grid: { color: "rgba(255, 255, 255, 0.05)" },
-              ticks: { color: "#9ca3af" }
-            }
           }
-        }
-      });
-    }
+        });
+      }
 
-    // RSI Chart
-    if (ctxRsi) {
-      const rsiValues = history.map(item => item.rsi);
-      rsiChartInst.current = new Chart(ctxRsi, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "RSI (14)",
-            data: rsiValues,
-            borderColor: "#f59e0b",
-            borderWidth: 1.5,
-            pointRadius: 0,
-            tension: 0.1,
-          }]
-        },
-        options: {
-          events: chartEvents,
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { display: false }
-            },
-            y: {
-              min: 0,
-              max: 100,
-              grid: { color: "rgba(255, 255, 255, 0.05)" },
-              ticks: { color: "#9ca3af", stepSize: 20 },
-              // Draw horizontal helper lines at 30 and 70
-              border: { dash: [5, 5] }
-            }
-          }
-        }
-      });
-    }
-
-    // MACD Chart
-    if (ctxMacd) {
-      const macdValues = history.map(item => item.macd);
-      const signalValues = history.map(item => item.macd_signal);
-      const histValues = history.map(item => item.macd_hist);
-      
-      macdChartInst.current = new Chart(ctxMacd, {
-        type: "bar",
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              type: "line",
-              label: "MACD",
-              data: macdValues,
-              borderColor: "#3b82f6",
-              borderWidth: 1.5,
-              pointRadius: 0,
-              tension: 0.1,
-            },
-            {
-              type: "line",
-              label: "Signal",
-              data: signalValues,
-              borderColor: "#ec4899",
-              borderWidth: 1.5,
-              pointRadius: 0,
-              tension: 0.1,
-            },
-            {
-              label: "Histogram",
-              data: histValues,
-              backgroundColor: histValues.map(h => h >= 0 ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.4)"),
-              borderWidth: 0,
-              barPercentage: 0.8
-            }
-          ]
-        },
-        options: {
-          events: chartEvents,
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { display: false }
-            },
-            y: {
-              grid: { color: "rgba(255, 255, 255, 0.05)" },
-              ticks: { color: "#9ca3af", maxTicksLimit: 5 }
-            }
-          }
-        }
-      });
-    }
-
-    // Stochastic RSI Chart
-    if (ctxStoch) {
-      const stochKValues = history.map(item => item.stoch_k !== undefined ? item.stoch_k : 50.0);
-      const stochDValues = history.map(item => item.stoch_d !== undefined ? item.stoch_d : 50.0);
-      
-      stochChartInst.current = new Chart(ctxStoch, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: "%K",
-              data: stochKValues,
+      // RSI Chart
+      if (ctxRsi) {
+        const rsiValues = history.map(item => item.rsi);
+        rsiChartInst.current = new Chart(ctxRsi, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "RSI (14)",
+              data: rsiValues,
               borderColor: "#f59e0b",
               borderWidth: 1.5,
               pointRadius: 0,
               tension: 0.1,
+            }]
+          },
+          options: {
+            events: chartEvents,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
             },
-            {
-              label: "%D",
-              data: stochDValues,
-              borderColor: "#06b6d4",
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { display: false }
+              },
+              y: {
+                min: 0,
+                max: 100,
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { color: "#9ca3af", stepSize: 20 },
+                // Draw horizontal helper lines at 30 and 70
+                border: { dash: [5, 5] }
+              }
+            }
+          }
+        });
+      }
+
+      // MACD Chart
+      if (ctxMacd) {
+        const macdValues = history.map(item => item.macd);
+        const signalValues = history.map(item => item.macd_signal);
+        const histValues = history.map(item => item.macd_hist);
+        
+        macdChartInst.current = new Chart(ctxMacd, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                type: "line",
+                label: "MACD",
+                data: macdValues,
+                borderColor: "#3b82f6",
+                borderWidth: 1.5,
+                pointRadius: 0,
+                tension: 0.1,
+              },
+              {
+                type: "line",
+                label: "Signal",
+                data: signalValues,
+                borderColor: "#ec4899",
+                borderWidth: 1.5,
+                pointRadius: 0,
+                tension: 0.1,
+              },
+              {
+                label: "Histogram",
+                data: histValues,
+                backgroundColor: histValues.map(h => h >= 0 ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.4)"),
+                borderWidth: 0,
+                barPercentage: 0.8
+              }
+            ]
+          },
+          options: {
+            events: chartEvents,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { display: false }
+              },
+              y: {
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { color: "#9ca3af", maxTicksLimit: 5 }
+              }
+            }
+          }
+        });
+      }
+
+      // Stochastic RSI Chart
+      if (ctxStoch) {
+        const stochKValues = history.map(item => item.stoch_k !== undefined ? item.stoch_k : 50.0);
+        const stochDValues = history.map(item => item.stoch_d !== undefined ? item.stoch_d : 50.0);
+        
+        stochChartInst.current = new Chart(ctxStoch, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "%K",
+                data: stochKValues,
+                borderColor: "#f59e0b",
+                borderWidth: 1.5,
+                pointRadius: 0,
+                tension: 0.1,
+              },
+              {
+                label: "%D",
+                data: stochDValues,
+                borderColor: "#06b6d4",
+                borderWidth: 1.5,
+                pointRadius: 0,
+                tension: 0.1,
+              }
+            ]
+          },
+          options: {
+            events: chartEvents,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { display: false } },
+              y: {
+                min: 0,
+                max: 100,
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { color: "#9ca3af", stepSize: 20 },
+                border: { dash: [5, 5] }
+              }
+            }
+          }
+        });
+      }
+
+      // ATR Chart
+      if (ctxAtr) {
+        const atrValues = history.map(item => item.atr !== undefined ? item.atr : 0.0);
+        
+        atrChartInst.current = new Chart(ctxAtr, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "ATR",
+              data: atrValues,
+              borderColor: "#a855f7",
               borderWidth: 1.5,
               pointRadius: 0,
               tension: 0.1,
-            }
-          ]
-        },
-        options: {
-          events: chartEvents,
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { display: false }, ticks: { display: false } },
-            y: {
-              min: 0,
-              max: 100,
-              grid: { color: "rgba(255, 255, 255, 0.05)" },
-              ticks: { color: "#9ca3af", stepSize: 20 },
-              border: { dash: [5, 5] }
+            }]
+          },
+          options: {
+            events: chartEvents,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { display: false } },
+              y: {
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { color: "#9ca3af" }
+              }
             }
           }
-        }
-      });
-    }
+        });
+      }
 
-    // ATR Chart
-    if (ctxAtr) {
-      const atrValues = history.map(item => item.atr !== undefined ? item.atr : 0.0);
-      
-      atrChartInst.current = new Chart(ctxAtr, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "ATR",
-            data: atrValues,
-            borderColor: "#a855f7",
-            borderWidth: 1.5,
-            pointRadius: 0,
-            tension: 0.1,
-          }]
-        },
-        options: {
-          events: chartEvents,
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { display: false }, ticks: { display: false } },
-            y: {
-              grid: { color: "rgba(255, 255, 255, 0.05)" },
-              ticks: { color: "#9ca3af" }
-            }
-          }
-        }
-      });
-    }
-
-    // OBV Chart
-    if (ctxObv) {
-      const obvValues = history.map(item => item.obv !== undefined ? item.obv : 0.0);
-      
-      obvChartInst.current = new Chart(ctxObv, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "OBV",
-            data: obvValues,
-            borderColor: "#10b981",
-            borderWidth: 1.5,
-            pointRadius: 0,
-            tension: 0.1,
-          }]
-        },
-        options: {
-          events: chartEvents,
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { display: false }, ticks: { display: false } },
-            y: {
-              grid: { color: "rgba(255, 255, 255, 0.05)" },
-              ticks: { 
-                color: "#9ca3af",
-                callback: (val) => {
-                  if (Math.abs(val) >= 1e9) return (val / 1e9).toFixed(1) + "B";
-                  if (Math.abs(val) >= 1e6) return (val / 1e6).toFixed(1) + "M";
-                  if (Math.abs(val) >= 1e3) return (val / 1e3).toFixed(1) + "K";
-                  return val;
+      // OBV Chart
+      if (ctxObv) {
+        const obvValues = history.map(item => item.obv !== undefined ? item.obv : 0.0);
+        
+        obvChartInst.current = new Chart(ctxObv, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "OBV",
+              data: obvValues,
+              borderColor: "#10b981",
+              borderWidth: 1.5,
+              pointRadius: 0,
+              tension: 0.1,
+            }]
+          },
+          options: {
+            events: chartEvents,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { display: false } },
+              y: {
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { 
+                  color: "#9ca3af",
+                  callback: (val) => {
+                    if (Math.abs(val) >= 1e9) return (val / 1e9).toFixed(1) + "B";
+                    if (Math.abs(val) >= 1e6) return (val / 1e6).toFixed(1) + "M";
+                    if (Math.abs(val) >= 1e3) return (val / 1e3).toFixed(1) + "K";
+                    return val;
+                  }
                 }
               }
             }
           }
-        }
-      });
-    }
+        });
+      }
 
-    // CCI Chart
-    if (ctxCci) {
-      const cciValues = history.map(item => item.cci !== undefined ? item.cci : 0.0);
-      
-      cciChartInst.current = new Chart(ctxCci, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "CCI",
-            data: cciValues,
-            borderColor: "#3b82f6",
-            borderWidth: 1.5,
-            pointRadius: 0,
-            tension: 0.1,
-          }]
-        },
-        options: {
-          events: chartEvents,
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { display: false }, ticks: { display: false } },
-            y: {
-              grid: { color: "rgba(255, 255, 255, 0.05)" },
-              ticks: { color: "#9ca3af", stepSize: 100 },
-              border: { dash: [5, 5] }
+      // CCI Chart
+      if (ctxCci) {
+        const cciValues = history.map(item => item.cci !== undefined ? item.cci : 0.0);
+        
+        cciChartInst.current = new Chart(ctxCci, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "CCI",
+              data: cciValues,
+              borderColor: "#3b82f6",
+              borderWidth: 1.5,
+              pointRadius: 0,
+              tension: 0.1,
+            }]
+          },
+          options: {
+            events: chartEvents,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { display: false } },
+              y: {
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { color: "#9ca3af", stepSize: 100 },
+                border: { dash: [5, 5] }
+              }
             }
           }
-        }
-      });
-    }
+        });
+      }
 
-    // Williams %R Chart
-    if (ctxWilliams) {
-      const williamsValues = history.map(item => item.williams_r !== undefined ? item.williams_r : -50.0);
-      
-      williamsChartInst.current = new Chart(ctxWilliams, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "Williams %R",
-            data: williamsValues,
-            borderColor: "#ec4899",
-            borderWidth: 1.5,
-            pointRadius: 0,
-            tension: 0.1,
-          }]
-        },
-        options: {
-          events: chartEvents,
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { display: false }, ticks: { display: false } },
-            y: {
-              min: -100,
-              max: 0,
-              grid: { color: "rgba(255, 255, 255, 0.05)" },
-              ticks: { color: "#9ca3af", stepSize: 20 },
-              border: { dash: [5, 5] }
+      // Williams %R Chart
+      if (ctxWilliams) {
+        const williamsValues = history.map(item => item.williams_r !== undefined ? item.williams_r : -50.0);
+        
+        williamsChartInst.current = new Chart(ctxWilliams, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "Williams %R",
+              data: williamsValues,
+              borderColor: "#ec4899",
+              borderWidth: 1.5,
+              pointRadius: 0,
+              tension: 0.1,
+            }]
+          },
+          options: {
+            events: chartEvents,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { display: false } },
+              y: {
+                min: -100,
+                max: 0,
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { color: "#9ca3af", stepSize: 20 },
+                border: { dash: [5, 5] }
+              }
             }
           }
-        }
-      });
+        });
+      }
+    } catch (err) {
+      console.error("Error inside renderCharts:", err);
     }
   };
 
