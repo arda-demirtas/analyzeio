@@ -355,8 +355,25 @@ def get_prediction(
                 )
                 .first()
             )
+            
+            # Find the best model's prediction probability to log
+            models_da = []
+            if xgb_predicted_close is not None and xgb_metrics and xgb_metrics.get("directional_accuracy") is not None:
+                models_da.append((xgb_metrics["directional_accuracy"], xgb_predicted_close))
+            if lstm_predicted_close is not None and lstm_metrics and lstm_metrics.get("directional_accuracy") is not None:
+                models_da.append((lstm_metrics["directional_accuracy"], lstm_predicted_close))
+            if lr_predicted_close is not None and lr_metrics and lr_metrics.get("directional_accuracy") is not None:
+                models_da.append((lr_metrics["directional_accuracy"], lr_predicted_close))
+            if patchtst_predicted_close is not None and patchtst_metrics and patchtst_metrics.get("directional_accuracy") is not None:
+                models_da.append((patchtst_metrics["directional_accuracy"], patchtst_predicted_close))
+
+            best_model_predicted_close = predicted_close # fallback to ensemble
+            if models_da:
+                models_da.sort(key=lambda x: x[0], reverse=True)
+                best_model_predicted_close = models_da[0][1]
+
             if existing_log:
-                existing_log.predicted_close = predicted_close
+                existing_log.predicted_close = best_model_predicted_close
                 existing_log.last_close = last_close
                 existing_log.created_at = datetime.datetime.utcnow()
             else:
@@ -364,7 +381,7 @@ def get_prediction(
                     symbol=symbol,
                     interval=interval,
                     prediction_date=pred_date_str,
-                    predicted_close=predicted_close,
+                    predicted_close=best_model_predicted_close,
                     last_close=last_close,
                     actual_close=None
                 )
