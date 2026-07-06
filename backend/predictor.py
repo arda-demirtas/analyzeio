@@ -89,7 +89,7 @@ def get_prediction(
     last_row = df.iloc[-1]
     last_close = float(last_row["Close"])
 
-    # Determine fallback and requested predicted close
+    # Determine fallback and requested predicted close (representing probability of UP)
     predicted_close = None
     metrics = None
     analyzeio_predicted_close = None
@@ -106,12 +106,10 @@ def get_prediction(
         # Average performance metrics
         valid_metrics_list = [m for m in [xgb_metrics, lstm_metrics, lr_metrics, patchtst_metrics] if m is not None]
         if valid_metrics_list:
-            avg_rmse = sum(m.get("rmse", 0.0) for m in valid_metrics_list) / len(valid_metrics_list)
-            avg_mape = sum(m.get("mape", 0.0) for m in valid_metrics_list) / len(valid_metrics_list)
+            avg_logloss = sum(m.get("logloss", 0.693) for m in valid_metrics_list) / len(valid_metrics_list)
             avg_da = sum(m.get("directional_accuracy", 50.0) for m in valid_metrics_list) / len(valid_metrics_list)
             analyzeio_metrics = {
-                "rmse": avg_rmse,
-                "mape": avg_mape,
+                "logloss": avg_logloss,
                 "directional_accuracy": avg_da,
                 "training_status": "Average of 4 models (Analyzeio)"
             }
@@ -133,6 +131,7 @@ def get_prediction(
         else:
             predicted_close = analyzeio_predicted_close
             metrics = analyzeio_metrics
+
             
         if predicted_close is None:
             predicted_close = xgb_predicted_close or lstm_predicted_close or lr_predicted_close or patchtst_predicted_close
@@ -183,18 +182,18 @@ def get_prediction(
         
     if not is_pending_data:
         valid_predictions = [
-            v for v in [xgb_predicted_close, lstm_predicted_close, lr_predicted_close]
+            v for v in [xgb_predicted_close, lstm_predicted_close, lr_predicted_close, patchtst_predicted_close]
             if v is not None
         ]
         if valid_predictions:
-            avg_predicted_close = sum(valid_predictions) / len(valid_predictions)
-            change_percent = ((avg_predicted_close - last_close) / last_close) * 100
+            avg_predicted_prob = sum(valid_predictions) / len(valid_predictions)
+            change_percent = (avg_predicted_prob - 0.5) * 100
         else:
             change_percent = 0.0
     else:
         change_percent = None
     
-    # Calculate threshold-filtered technical recommendation (0.2% threshold)
+    # Calculate threshold-filtered technical recommendation (4% confidence threshold, equivalent to 54% probability limit)
     if is_pending_data:
         tech_signal = "HOLD"
         if lang == "tr":
@@ -209,117 +208,64 @@ def get_prediction(
             tech_text = "Recomendación comercial pendiente por falta de datos. Esperando el nuevo cierre diario."
         else:
             tech_text = "Trading recommendation is pending due to missing data. Waiting for the new daily candle close."
-    elif change_percent > 0.2:
+    elif change_percent > 4.0:
         tech_signal = "STRONG_BUY"
         if lang == "tr":
-            tech_text = "Modellerin ortalama tahmini, yüksek güvenilirlikli yukarı yönlü ivme öngörüyor (>0.2%). Long (Alış) pozisyonu açılması önerilir."
+            tech_text = "Modellerin ortalama tahmini, yüksek güvenilirlikli yukarı yönlü ivme öngörüyor (>54%). Long (Alış) pozisyonu açılması önerilir."
         elif lang == "de":
-            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf eine hohe Aufwärtsdynamik (>0.2%) hin. Die Eröffnung einer Long-Position wird empfohlen."
+            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf eine hohe Aufwärtsdynamik (>54%) hin. Die Eröffnung einer Long-Position wird empfohlen."
         elif lang == "ru":
-            tech_text = "Средний прогноз моделей указывает на восходящий импульс высокой степени надежности (>0.2%). Рекомендуется открыть позицию Long."
+            tech_text = "Средний прогноз моделей указывает на восходящий импульс высокой степени надежности (>54%). Рекомендуется открыть позицию Long."
         elif lang == "zh":
-            tech_text = "模型的平均预测显示高置信度上行趋势 (>0.2%)。建议开立多单（做多）。"
+            tech_text = "模型的平均预测显示高置信度上行趋势 (>54%)。建议开立多单（做多）。"
         elif lang == "es":
-            tech_text = "El pronóstico promedio de los modelos indica un impulso alcista de alta convicción (>0.2%). Se recomienda abrir una posición Long."
+            tech_text = "El pronóstico promedio de los modelos indica un impulso alcista de alta convicción (>54%). Se recomienda abrir una posición Long."
         else:
-            tech_text = "Models' average prediction forecasts high-conviction upward momentum (>0.2%). Opening a Long position is recommended."
-    elif change_percent < -0.2:
+            tech_text = "Models' average prediction forecasts high-conviction upward momentum (>54%). Opening a Long position is recommended."
+    elif change_percent < -4.0:
         tech_signal = "STRONG_SELL"
         if lang == "tr":
-            tech_text = "Modellerin ortalama tahmini, yüksek güvenilirlikli aşağı yönlü ivme öngörüyor (<-0.2%). Short (Satış) pozisyonu açılması veya Nakitte kalınması önerilir."
+            tech_text = "Modellerin ortalama tahmini, yüksek güvenilirlikli aşağı yönlü ivme öngörüyor (<46%). Short (Satış) pozisyonu açılması veya Nakitte kalınması önerilir."
         elif lang == "de":
-            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf eine hohe Abwärtsdynamik (<-0.2%) hin. Die Eröffnung einer Short-Position oder das Verbleiben in bar wird empfohlen."
+            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf eine hohe Abwärtsdynamik (<46%) hin. Die Eröffnung einer Short-Position oder das Verbleiben in bar wird empfohlen."
         elif lang == "ru":
-            tech_text = "Средний прогноз моделей указывает на нисходящий импульс высокой степени надежности (<-0.2%). Рекомендуется открыть позицию Short или оставаться в кэше."
+            tech_text = "Средний прогноз моделей указывает на нисходящий импульс высокой степени надежности (<46%). Рекомендуется открыть позицию Short или оставаться в кэше."
         elif lang == "zh":
-            tech_text = "模型的平均预测显示高置信度下行趋势 (<-0.2%)。建议开立空单（做空）或持有现金。"
+            tech_text = "模型的平均预测显示高置信度下行趋势 (<46%)。建议开立空单（做空）或持有现金。"
         elif lang == "es":
-            tech_text = "El pronóstico promedio de los modelos indica un impulso bajista de alta convicción (<-0.2%). Se recomienda abrir una posición Short o permanecer en Efectivo."
+            tech_text = "El pronóstico promedio de los modelos indica un impulso bajista de alta convicción (<46%). Se recomienda abrir una posición Short o permanecer en Efectivo."
         else:
-            tech_text = "Models' average prediction forecasts high-conviction downward momentum (<-0.2%). Opening a Short position or staying in Cash is recommended."
+            tech_text = "Models' average prediction forecasts high-conviction downward momentum (<46%). Opening a Short position or staying in Cash is recommended."
     else:
         tech_signal = "HOLD"
         if lang == "tr":
-            tech_text = "Modellerin ortalama tahmini, düşük güvenilirlikli fiyat konsolidasyonu öngörüyor (-0.2% ile 0.2% arasında). Nakitte kalınması önerilir."
+            tech_text = "Modellerin ortalama tahmini, kararsız yön öngörüyor (46% ile 54% arasında). Nakitte kalınması önerilir."
         elif lang == "de":
-            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf eine geringe Preiskonsolidierung hin (zwischen -0.2% und 0.2%). Es wird empfohlen, in bar zu bleiben."
+            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf eine unklare Richtung hin (zwischen 46% und 54%). Es wird empfohlen, in bar zu bleiben."
         elif lang == "ru":
-            tech_text = "Средний прогноз моделей указывает на низкую консолидацию цены (между -0.2% и 0.2%). Рекомендуется оставаться в кэше."
+            tech_text = "Средний прогноз моделей указывает на неопределенное направление цены (между 46% ve 54%). Rekomenduetsya ostavatsya v keshe."
         elif lang == "zh":
-            tech_text = "模型的平均预测显示低置信度震荡整理（在 -0.2% 至 0.2% 之间）。建议持有现金。"
+            tech_text = "模型的平均预测显示方向不明（在 46% 至 54% 之间）。建议持有现金。"
         elif lang == "es":
-            tech_text = "El pronóstico promedio de los modelos indica una consolidación de precios de baja convicción (entre -0.2% y 0.2%). Se recomienda permanecer en Efectivo."
+            tech_text = "El pronóstico promedio de los modelos indica una dirección incierta (entre 46% y 54%). Se recomienda permanecer en Efectivo."
         else:
-            tech_text = "Models' average prediction forecasts low-conviction price consolidation (between -0.2% and 0.2%). Staying in Cash is recommended."
+            tech_text = "Models' average prediction forecasts uncertain direction (between 46% and 54%). Staying in Cash is recommended."
             
     technical_recommendation = {
         "signal": tech_signal,
         "text": tech_text
     }
     
-    # Load Linear Regression model once to populate historical predictions
+    # Load model_lr from cache for historical chart predictions
     model_lr = None
-    lr_predicted_close = None
-    if not is_pending_data:
+    cache_path_lr = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model_lr.pkl")
+    if os.path.exists(cache_path_lr):
         try:
-            split_idx_lr = int(len(df) * 0.8)
-            df_train_lr = df.iloc[:split_idx_lr]
+            with open(cache_path_lr, "rb") as f:
+                model_lr = pickle.load(f)
+        except Exception:
+            pass
             
-            def make_raw_lr_sequences_bg(x_data, y_data):
-                xs, ys = [], []
-                for i in range(seq_length, len(x_data)):
-                    xs.append(x_data[i-seq_length:i])
-                    ys.append(y_data[i])
-                return np.array(xs).reshape(len(xs), -1), np.array(ys)
-                
-            x_lr_train_bg, y_lr_train_bg = make_raw_lr_sequences_bg(df_train_lr[FEATURES].values, df_train_lr["Daily_Return"].values)
-            
-            cache_path_lr = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model_lr.pkl")
-            lr_model_loaded = False
-            
-            if not force_retrain and os.path.exists(cache_path_lr):
-                meta_path_lr = cache_path_lr.replace("_lr.pkl", "_lr_meta.json")
-                is_cache_valid = False
-                if os.path.exists(meta_path_lr):
-                    try:
-                        with open(meta_path_lr, "r", encoding="utf-8") as f:
-                            meta_data = json.load(f)
-                        last_trained_str = meta_data.get("predicted_candle_start")
-                        current_predicted_candle = df.attrs.get("predicted_candle_start")
-                        if last_trained_str and current_predicted_candle and current_predicted_candle <= last_trained_str:
-                            is_cache_valid = True
-                    except Exception:
-                        pass
-                if is_cache_valid:
-                    try:
-                        with open(cache_path_lr, "rb") as f:
-                            model_lr = pickle.load(f)
-                        lr_model_loaded = True
-                    except Exception:
-                        pass
-            
-            if not lr_model_loaded:
-                model_lr = train_lr_model(x_lr_train_bg, y_lr_train_bg)
-                with open(cache_path_lr, "wb") as f:
-                    pickle.dump(model_lr, f)
-                try:
-                    meta_path_lr = cache_path_lr.replace("_lr.pkl", "_lr_meta.json")
-                    last_candle_start = df.index[-1]
-                    current_predicted_candle = df.attrs.get("predicted_candle_start")
-                    with open(meta_path_lr, "w", encoding="utf-8") as f:
-                        json.dump({
-                            "last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S"),
-                            "predicted_candle_start": current_predicted_candle
-                        }, f)
-                except Exception:
-                    pass
-                    
-            last_features_lr = df[FEATURES].iloc[-seq_length:].values.flatten().reshape(1, -1)
-            predicted_lr_return = float(model_lr.predict(last_features_lr)[0])
-            lr_predicted_close = float(last_close * (1 + predicted_lr_return))
-        except Exception as lr_err:
-            print(f"Error calculating linear regression prediction: {lr_err}")
-
     chart_limit = 730
     history_df = df.tail(chart_limit)
     df_indices = {dt: idx for idx, dt in enumerate(df.index)}
@@ -337,9 +283,9 @@ def get_prediction(
             if pos is not None and pos >= seq_length:
                 try:
                     feat_seq = df[FEATURES].iloc[pos - seq_length : pos].values.flatten().reshape(1, -1)
-                    pred_ret = float(model_lr.predict(feat_seq)[0])
+                    pred_prob = float(model_lr.predict_proba(feat_seq)[0][1])
                     prev_close = float(df["Close"].iloc[pos - 1])
-                    lr_hist_val = float(prev_close * (1 + pred_ret))
+                    lr_hist_val = float(prev_close * (1 + (pred_prob - 0.5) * 0.04))
                 except Exception:
                     pass
             
