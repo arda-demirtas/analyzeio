@@ -3953,20 +3953,41 @@ export default function Home() {
                         <RefreshCw style={{ width: "10px", marginRight: "5px" }} /> {lang === "tr" ? "Yeniden Sorgula" : "Query Again"}
                       </button>
                     </div>
-                  ) : predictionData && predictionData.predicted_close === null ? (
-                    <div style={{ textAlign: "center", padding: "10px" }}>
-                      <span style={{ fontSize: "28px", display: "block", marginBottom: "8px" }}>🔒</span>
-                      <h4 style={{ fontSize: "14px", fontWeight: "700", color: "#f59e0b", marginBottom: "6px" }}>
-                        ★ {t("premium_badge")} {t("expected_close")}
-                      </h4>
-                      <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 12px 0", lineHeight: "1.4" }}>
-                        {t("premium_only_msg")}
-                      </p>
-                      <button onClick={handlePremiumToggle} className="btn-primary" style={{ fontSize: "11px", height: "30px", padding: "0 15px", background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", border: "none" }}>
-                        ★ {t("premium_upgrade")}
-                      </button>
-                    </div>
-                  ) : (
+                  ) : predictionData && predictionData.predicted_close === null ? (() => {
+                    const hasAccess = (activeSymbol === "BTC-USD") || (user && user.is_premium);
+                    if (hasAccess) {
+                      return (
+                        <div style={{ textAlign: "center", padding: "20px 10px" }}>
+                          <span style={{ fontSize: "28px", display: "block", marginBottom: "10px", animation: "spin 3s linear infinite" }}>⚙️</span>
+                          <h4 style={{ fontSize: "14px", fontWeight: "700", color: "var(--accent-primary)", marginBottom: "6px" }}>
+                            {lang === "tr" ? "Modeller Eğitiliyor..." : "Models Training..."}
+                          </h4>
+                          <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 12px 0", lineHeight: "1.4" }}>
+                            {lang === "tr" 
+                              ? "Yapay zeka modelleri arka planda eğitilmektedir. Sıra bu hisseye ulaştığında tahminler aktif olacaktır." 
+                              : "AI models are currently training in the background. Predictions will be live once the queue reaches this asset."}
+                          </p>
+                          <button onClick={() => loadPrediction(activeSymbol, chartInterval)} className="btn-secondary" style={{ fontSize: "11px", height: "30px", padding: "0 15px" }}>
+                            <RefreshCw style={{ width: "10px", marginRight: "5px" }} /> {lang === "tr" ? "Yeniden Sorgula" : "Query Again"}
+                          </button>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div style={{ textAlign: "center", padding: "10px" }}>
+                        <span style={{ fontSize: "28px", display: "block", marginBottom: "8px" }}>🔒</span>
+                        <h4 style={{ fontSize: "14px", fontWeight: "700", color: "#f59e0b", marginBottom: "6px" }}>
+                          ★ {t("premium_badge")} {t("expected_close")}
+                        </h4>
+                        <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 12px 0", lineHeight: "1.4" }}>
+                          {t("premium_only_msg")}
+                        </p>
+                        <button onClick={handlePremiumToggle} className="btn-primary" style={{ fontSize: "11px", height: "30px", padding: "0 15px", background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", border: "none" }}>
+                          ★ {t("premium_upgrade")}
+                        </button>
+                      </div>
+                    );
+                  })() : (
                     <>
                       <span className="prediction-label" style={{ marginBottom: "12px", display: "block" }}>
                         {lang === "tr" ? "Model Tahmin Fiyatları" : "Model Prediction Prices"}
