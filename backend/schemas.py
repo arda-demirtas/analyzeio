@@ -83,10 +83,12 @@ class IndicatorPoint(BaseModel):
     williams_r: Optional[float] = None
 
 class PredictionMetrics(BaseModel):
-    rmse: float
-    mape: float
+    rmse: Optional[float] = None
+    mape: Optional[float] = None
+    logloss: Optional[float] = None
     directional_accuracy: float  # Percentage of days predicted direction matches actual direction
     training_status: str
+
 
 class NewsArticle(BaseModel):
     title: str
