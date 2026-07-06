@@ -8,11 +8,11 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
 # Database configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./analyzeio.db")
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.abspath(os.path.join(os.path.dirname(__file__), 'analyzeio.db'))}")
 
 # Prediction settings
 DEFAULT_SEQUENCE_LENGTH = 60
-MODEL_CACHE_DIR = "./model_cache"
+MODEL_CACHE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "model_cache"))
 
 # Create directories if they do not exist
 os.makedirs(MODEL_CACHE_DIR, exist_ok=True)
