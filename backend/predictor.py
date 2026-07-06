@@ -37,19 +37,9 @@ def get_prediction(
     if current_price is None and not df.empty:
         current_price = float(df["Close"].iloc[-1])
 
-    # For daily intervals, ensure today's candle was present in the raw data feed
+    # We no longer support pending_data states. The models will run using the latest available data.
     is_pending_data = False
     pending_error_msg = None
-    if interval == "1d" and not df.empty:
-        has_today_candle = df.attrs.get("has_today_candle", False)
-        if not has_today_candle:
-            is_pending_data = True
-            today_utc = datetime.datetime.utcnow().date()
-            lang_msg = {
-                "tr": f"{symbol} için bugünün ({today_utc.strftime('%Y-%m-%d')}) günlük verisi henüz mevcut değil. Tahmin beklemede.",
-                "en": f"Today's ({today_utc.strftime('%Y-%m-%d')}) daily candle for {symbol} is not yet available. Prediction is pending."
-            }
-            pending_error_msg = lang_msg.get(lang, lang_msg["en"])
 
     predicted_close = None
     change_percent = None
@@ -285,12 +275,10 @@ def get_prediction(
                     try:
                         with open(meta_path_lr, "r", encoding="utf-8") as f:
                             meta_data = json.load(f)
-                        last_trained_str = meta_data.get("last_candle_start")
-                        if last_trained_str:
-                            last_trained_candle_start = datetime.datetime.strptime(last_trained_str, "%Y-%m-%d %H:%M:%S")
-                            last_candle_start = df.index[-1]
-                            if last_candle_start <= last_trained_candle_start:
-                                is_cache_valid = True
+                        last_trained_str = meta_data.get("predicted_candle_start")
+                        current_predicted_candle = df.attrs.get("predicted_candle_start")
+                        if last_trained_str and current_predicted_candle and current_predicted_candle <= last_trained_str:
+                            is_cache_valid = True
                     except Exception:
                         pass
                 if is_cache_valid:
@@ -308,9 +296,11 @@ def get_prediction(
                 try:
                     meta_path_lr = cache_path_lr.replace("_lr.pkl", "_lr_meta.json")
                     last_candle_start = df.index[-1]
+                    current_predicted_candle = df.attrs.get("predicted_candle_start")
                     with open(meta_path_lr, "w", encoding="utf-8") as f:
                         json.dump({
-                            "last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S")
+                            "last_candle_start": last_candle_start.strftime("%Y-%m-%d %H:%M:%S"),
+                            "predicted_candle_start": current_predicted_candle
                         }, f)
                 except Exception:
                     pass
@@ -447,6 +437,7 @@ def get_prediction(
         "prediction_status": "pending_data" if is_pending_data else "success",
         "prediction_error": pending_error_msg,
         "model_type": model_type,
+        "has_today_candle": df.attrs.get("has_today_candle", False),
         "xgb_predicted_close": xgb_predicted_close,
         "lstm_predicted_close": lstm_predicted_close,
         "lr_predicted_close": lr_predicted_close,
