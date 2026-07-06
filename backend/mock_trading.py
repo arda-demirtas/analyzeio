@@ -72,9 +72,9 @@ def score_symbol_for_trading(symbol: str) -> float:
             return -999.0
             
         returns = []
-        returns.append((xgb_close - last_close) / last_close)
-        returns.append((lstm_close - last_close) / last_close)
-        returns.append((lr_close - last_close) / last_close)
+        returns.append(xgb_close - 0.5)
+        returns.append(lstm_close - 0.5)
+        returns.append(lr_close - 0.5)
             
         avg_expected_return = sum(returns) / len(returns)
     except Exception:
