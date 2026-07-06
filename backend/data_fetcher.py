@@ -214,7 +214,40 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
     df["Daily_Return"] = df["Close"].pct_change()
     df["Return_Lag1"] = df["Daily_Return"].shift(1)
     df["Return_Lag3"] = df["Daily_Return"].shift(3)
-    df["Return_Lag7"] = df["Daily_Return"].shift(7)
+    df["Return_Lag5"] = df["Daily_Return"].shift(5)
+    df["EMA_Diff"] = (df["EMA_20"] - df["EMA_50"]) / (df["EMA_50"] + 1e-10)
+    df["BB_Position"] = (df["Close"] - df["BB_Lower"]) / (df["BB_Upper"] - df["BB_Lower"] + 1e-10)
+
+    # Download and merge SPY and VIX macro indicators
+    try:
+        import yfinance as yf
+        macro_df = yf.download(["SPY", "^VIX"], period="5y", interval="1d", progress=False)
+        if isinstance(macro_df.columns, pd.MultiIndex):
+            macro_df.columns = [f"{col[0]}_{col[1]}" for col in macro_df.columns]
+        
+        spy_close_col = next((c for c in macro_df.columns if "Close" in c and "SPY" in c), None)
+        vix_close_col = next((c for c in macro_df.columns if "Close" in c and "VIX" in c), None)
+        
+        if spy_close_col and vix_close_col:
+            macro_df["SPY_Return_1d"] = macro_df[spy_close_col].pct_change(1)
+            macro_df["SPY_Return_5d"] = macro_df[spy_close_col].pct_change(5)
+            macro_df["VIX_Close"] = macro_df[vix_close_col]
+            
+            macro_clean = macro_df[["SPY_Return_1d", "SPY_Return_5d", "VIX_Close"]].copy()
+            
+            df = df.join(macro_clean, how="left")
+            df["SPY_Return_1d"] = df["SPY_Return_1d"].ffill().fillna(0.0)
+            df["SPY_Return_5d"] = df["SPY_Return_5d"].ffill().fillna(0.0)
+            df["VIX_Close"] = df["VIX_Close"].ffill().fillna(15.0)
+        else:
+            df["SPY_Return_1d"] = 0.0
+            df["SPY_Return_5d"] = 0.0
+            df["VIX_Close"] = 15.0
+    except Exception as e:
+        print(f"Error fetching macro data: {e}")
+        df["SPY_Return_1d"] = 0.0
+        df["SPY_Return_5d"] = 0.0
+        df["VIX_Close"] = 15.0
 
     # Replace all infinite values (inf, -inf) with NaN
     df = df.replace([np.inf, -np.inf], np.nan)
@@ -223,6 +256,7 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
     df = df.dropna(subset=FEATURES)
     
     return df, asset_name, is_crypto, current_price
+
 
 def fetch_interval_history(symbol: str, interval: str) -> List[Dict[str, Any]]:
     """
