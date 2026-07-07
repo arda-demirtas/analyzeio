@@ -145,41 +145,41 @@ def select_best_symbol_to_buy() -> Tuple[str, float]:
             
     return best_symbol, best_score
 
-def run_mock_trading_daily_buy(state=None):
+def run_mock_trading_daily_buy(state=None) -> bool:
     """Tries to select and purchase the most bullish asset at the start of a daily candle."""
     # Enforce start time constraint: July 5th, 2026 at 03:00 UTC (06:00 TRT)
     start_time = datetime.datetime(2026, 7, 5, 3, 0, 0)
     if datetime.datetime.utcnow() < start_time:
-        return
+        return False
 
     if state is None:
         state = get_mock_trading_state()
         
     # Check if we already have a position or a pending order
     if state.get("position") or state.get("pending_order"):
-        return
+        return False
         
     balance = state.get("balance", 2000.0)
     if balance <= 1.0:  # No cash left to trade
-        return
+        return False
         
     print("[Mock Trading] Executing daily selection and buy...")
     selected_symbol, score = select_best_symbol_to_buy()
     if not selected_symbol or score < -10.0:
         print("[Mock Trading] No valid symbol found for daily buy.")
-        return
+        return False
         
     # Get the daily open price and yesterday's close price
     try:
         df, _, _, _ = fetch_market_data(selected_symbol, interval="1d")
         if df.empty:
             print(f"[Mock Trading] Data empty for {selected_symbol}")
-            return
+            return False
         yesterday_close = float(df["Close"].iloc[-2])
         current_price = float(df["Close"].iloc[-1])
     except Exception as e:
         print(f"[Mock Trading] Error loading prices for {selected_symbol}: {e}")
-        return
+        return False
         
     now_utc = datetime.datetime.utcnow()
     
@@ -193,13 +193,13 @@ def run_mock_trading_daily_buy(state=None):
             "qty": qty,
             "buy_time": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
         }
-        state["last_buy_date"] = now_utc.date().isoformat()
         state["pending_order"] = None
         
         event_str = f"OPENED position for {selected_symbol} immediately: Price (${current_price:,.2f}) is at/below yesterday's close (${yesterday_close:,.2f}). Purchased {qty:.6f} units."
         log_mock_event(state, event_str)
         save_mock_trading_state(state)
         print(f"[Mock Trading] {event_str}")
+        return True
     else:
         # Otherwise, place a PENDING limit order at yesterday's close price
         qty = balance / yesterday_close
@@ -209,12 +209,12 @@ def run_mock_trading_daily_buy(state=None):
             "qty": qty,
             "placed_time": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
         }
-        state["last_buy_date"] = now_utc.date().isoformat()
         
         event_str = f"Placed PENDING limit order for {selected_symbol}: Current price (${current_price:,.2f}) is above yesterday's close (${yesterday_close:,.2f}). Order placed at limit price ${yesterday_close:,.2f} for {qty:.6f} units."
         log_mock_event(state, event_str)
         save_mock_trading_state(state)
         print(f"[Mock Trading] {event_str}")
+        return True
 
 def check_mock_trading_rule():
     """
@@ -268,11 +268,14 @@ def check_mock_trading_rule():
             log_mock_event(state, event_str)
             print(f"[Mock Trading] {event_str}")
             
-        state["last_buy_date"] = today_str
-        save_mock_trading_state(state)
-        
-        # Execute the new daily buy
-        run_mock_trading_daily_buy(state)
+        # Execute the new daily buy. Only set last_buy_date to today if a purchase or limit order was successfully placed.
+        success = run_mock_trading_daily_buy(state)
+        if success:
+            state["last_buy_date"] = today_str
+            save_mock_trading_state(state)
+        else:
+            # Save the close position logs anyway, but keep last_buy_date empty so it retries!
+            save_mock_trading_state(state)
         return
 
     # Check if there is a pending limit order to execute
