@@ -52,11 +52,12 @@ def log_mock_event(state: Dict[str, Any], event_text: str):
 def score_symbol_for_trading(symbol: str) -> float:
     """
     Computes a bullish preference score for the given symbol based on:
-    1. Average predicted return across the 3 models (XGBoost, LSTM, Linear Regression)
+    1. Average predicted return across all 4 models (XGBoost, LSTM, Linear Regression, PatchTST)
+       - Requires ALL 5 models (4 individual + 1 ensemble average) to be BULLISH (probability >= 50%).
     2. News Sentiment score
     3. Technical Indicators (RSI, MACD, EMA 50)
     """
-    # 1. 3-Model predictions average expected return
+    # 1. 4-Model predictions average expected return
     try:
         res = get_prediction(symbol, interval="1d", force_retrain=False)
         # Check if predictions are pending, locked, or unavailable
@@ -67,14 +68,22 @@ def score_symbol_for_trading(symbol: str) -> float:
         xgb_close = res.get("xgb_predicted_close")
         lstm_close = res.get("lstm_predicted_close")
         lr_close = res.get("lr_predicted_close")
+        patch_close = res.get("patchtst_predicted_close")
         
-        if last_close is None or xgb_close is None or lstm_close is None or lr_close is None:
+        if last_close is None or xgb_close is None or lstm_close is None or lr_close is None or patch_close is None:
+            return -999.0
+            
+        # Consensus check: Require all 4 individual models to be BULLISH (probability >= 0.5)
+        # (This automatically guarantees the Ensemble/Average model is also BULLISH)
+        is_all_bullish = (xgb_close >= 0.5) and (lstm_close >= 0.5) and (lr_close >= 0.5) and (patch_close >= 0.5)
+        if not is_all_bullish:
             return -999.0
             
         returns = []
         returns.append(xgb_close - 0.5)
         returns.append(lstm_close - 0.5)
         returns.append(lr_close - 0.5)
+        returns.append(patch_close - 0.5)
             
         avg_expected_return = sum(returns) / len(returns)
     except Exception:
