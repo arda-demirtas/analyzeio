@@ -47,15 +47,15 @@ def get_lstm_prediction(
                     current_predicted_candle = df.attrs.get("predicted_candle_start")
                     if last_trained_str and current_predicted_candle and current_predicted_candle <= last_trained_str:
                         is_cache_valid = True
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"Error reading LSTM meta for {symbol}: {e}")
             if is_cache_valid:
                 try:
                     model_lstm = tf.keras.models.load_model(cache_path_lstm)
                     lstm_loaded = True
                     lstm_status = f"Loaded cached LSTM model ({interval})"
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"Error loading cached LSTM model for {symbol}: {e}")
         
         if not lstm_loaded:
             is_auto_trained_asset = (symbol in AUTO_TRAINED_SYMBOLS) and (interval == "1d")
@@ -65,8 +65,8 @@ def get_lstm_prediction(
                         model_lstm = tf.keras.models.load_model(cache_path_lstm)
                         lstm_loaded = True
                         lstm_status = f"Loaded cached LSTM model ({interval} - Fallback)"
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        print(f"Error loading fallback LSTM model for {symbol}: {e}")
                 if not lstm_loaded:
                     raise ValueError(f"LSTM Model for {symbol} is currently training.")
             else:
