@@ -3,6 +3,7 @@ import sys
 import time
 import datetime
 import traceback
+import json
 
 # Ensure parent directory is in python path if run directly
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -30,41 +31,71 @@ def delete_symbol_cache_files(symbol: str):
     if deleted_count > 0:
         print(f"Deleted {deleted_count} stale cache files for pending symbol {symbol}.")
 
-def check_and_train_assets(symbols_to_train=None):
-    """Runs daily model training sequentially for the popular cryptos, stocks, and commodities."""
-    print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Starting Auto-Training loop...")
+def check_and_train_assets():
+    """Checks all symbols to see if their cache is outdated compared to the latest completed candle.
+    If outdated, deletes cache immediately (triggering pending on UI) and retrains from scratch.
+    """
+    print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Starting Hourly Cache Verification and Auto-Training Loop...")
     
-    if symbols_to_train is None:
-        db = SessionLocal()
-        try:
-            db_symbols = [s.symbol for s in db.query(AutoTrainSymbol).order_by(AutoTrainSymbol.symbol).all()]
-            symbols = db_symbols if db_symbols else AUTO_TRAINED_SYMBOLS
-        except Exception as e:
-            print(f"Error loading auto-train symbols from DB: {e}")
-            symbols = AUTO_TRAINED_SYMBOLS
-        finally:
-            db.close()
-    else:
-        symbols = symbols_to_train
+    db = SessionLocal()
+    try:
+        db_symbols = [s.symbol for s in db.query(AutoTrainSymbol).order_by(AutoTrainSymbol.symbol).all()]
+        symbols = db_symbols if db_symbols else AUTO_TRAINED_SYMBOLS
+    except Exception as e:
+        print(f"Error loading auto-train symbols from DB: {e}")
+        symbols = AUTO_TRAINED_SYMBOLS
+    finally:
+        db.close()
+
+    from backend.data_fetcher import fetch_market_data
 
     success_count = 0
+    skipped_count = 0
     fail_count = 0
-    pending_symbols = []
     
     for idx, symbol in enumerate(symbols):
         try:
-            print(f"[{idx+1}/{len(symbols)}] Training/Updating cache for {symbol} (1d)...")
-            res = get_prediction(symbol, interval="1d", force_retrain=False, is_daemon=True)
+            print(f"\n[{idx+1}/{len(symbols)}] Checking status for {symbol} (1d)...")
             
-            # Check if today's daily candle is present in the raw data feed.
-            # If not, the asset is kept in the pending list to retry on subsequent hourly runs.
-            # We do NOT delete the existing cache, keeping it active and available for users.
-            if not res.get("has_today_candle", False):
-                print(f"Skipped {symbol} from finalization: today's daily candle is not yet open in data feed. Kept in pending retry queue.")
-                pending_symbols.append(symbol)
+            # 1. Fetch live market data to find the latest completed candle
+            try:
+                df, _, _, _ = fetch_market_data(symbol, interval="1d")
+                if df.empty:
+                    raise ValueError("Dataframe is empty")
+                current_candle_start = df.attrs.get("predicted_candle_start")
+            except Exception as fe:
+                print(f"  -> Error fetching market data for {symbol}: {fe}. Skipping for now.")
                 fail_count += 1
                 continue
-                
+
+            # 2. Check if cached metadata is up-to-date
+            meta_path_xgb = os.path.join(MODEL_CACHE_DIR, f"{symbol}_1d_model_meta.json")
+            cache_valid = False
+            cached_candle = None
+            if os.path.exists(meta_path_xgb):
+                try:
+                    with open(meta_path_xgb, "r", encoding="utf-8") as f:
+                        meta_data = json.load(f)
+                    cached_candle = meta_data.get("predicted_candle_start")
+                    if cached_candle and current_candle_start and cached_candle >= current_candle_start:
+                        cache_valid = True
+                except Exception:
+                    pass
+
+            # 3. Decision
+            if cache_valid:
+                print(f"  -> Cache is up-to-date (Current Candle: {current_candle_start}). Skipping training.")
+                skipped_count += 1
+                continue
+            
+            # Cache is outdated or missing! Delete and retrain.
+            print(f"  -> Cache is OUTDATED or MISSING (Market: {current_candle_start}, Cache: {cached_candle}).")
+            print(f"  -> Deleting old prediction files to show pending state on UI...")
+            delete_symbol_cache_files(symbol)
+            
+            print(f"  -> Starting training from scratch for {symbol}...")
+            res = get_prediction(symbol, interval="1d", force_retrain=True, is_daemon=True)
+            
             # Update screener table
             from backend.predictor import update_screener_cache
             db_run = SessionLocal()
@@ -73,13 +104,16 @@ def check_and_train_assets(symbols_to_train=None):
             finally:
                 db_run.close()
                 
+            print(f"  -> Training successful for {symbol} (Candle: {current_candle_start})")
             success_count += 1
         except Exception as e:
-            print(f"Error training {symbol}: {e}")
+            print(f"  -> Error training {symbol}: {e}")
             traceback.print_exc()
             fail_count += 1
             
-    print(f"[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Auto-training cycle completed. Success: {success_count}, Failed/Pending: {fail_count}")
+    print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Auto-training cycle completed.")
+    print(f"Summary -> Success: {success_count}, Skipped (Up-to-date): {skipped_count}, Failed: {fail_count}")
+    
     cleanup_old_models()
     
     # Run daily mock trading choice and execution
@@ -88,8 +122,6 @@ def check_and_train_assets(symbols_to_train=None):
         run_mock_trading_daily_buy()
     except Exception as mock_err:
         print(f"Error executing daily mock buy: {mock_err}")
-        
-    return pending_symbols
 
 def cleanup_old_models():
     """Deletes any cached model files in model_cache that are older than 72 hours."""
@@ -116,14 +148,6 @@ def cleanup_old_models():
                     
     print(f"Cleanup finished. Stale models deleted: {deleted_count}")
 
-def get_seconds_until_time(hour: int, minute: int) -> float:
-    """Calculates seconds remaining until the next occurrence of specified UTC time."""
-    now = datetime.datetime.utcnow()
-    target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-    if now >= target:
-        target += datetime.timedelta(days=1)
-    return (target - now).total_seconds()
-
 def get_seconds_until_next_hourly_retry() -> float:
     """Calculates seconds remaining until the next hour's 05-minute mark (e.g., 01:05, 02:05, etc.)."""
     now = datetime.datetime.utcnow()
@@ -134,7 +158,7 @@ def get_seconds_until_next_hourly_retry() -> float:
 
 def main():
     print("====================================================")
-    print("Daily Asset Auto-Training Daemon Started!")
+    print("Asset Auto-Training Daemon Started (Hourly Active Mode)!")
     print("====================================================")
     
     # Start background mock trading monitoring thread (runs every 5 minutes)
@@ -144,7 +168,6 @@ def main():
         
         def run_mock_trading_monitor():
             print("[Mock Trading] Background monitor thread started.")
-            # Sleep 15 seconds initially to let startup settle
             time.sleep(15)
             while True:
                 try:
@@ -158,38 +181,16 @@ def main():
     except Exception as thread_err:
         print(f"Error starting mock trading monitor thread: {thread_err}")
         
-    # 1. Warm up cache immediately on startup (skip if within 1 hour of scheduled daily run)
-    sec_to_main = get_seconds_until_time(0, 5)
-    if sec_to_main < 3600:
-        print(f"[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Startup warmup skipped: very close to the scheduled daily run ({sec_to_main:.0f} seconds remaining). Waiting for main scheduler.")
-        pending_symbols = []
-    else:
-        pending_symbols = check_and_train_assets()
+    # 1. Check and train immediately on startup
+    check_and_train_assets()
     
-    # 2. Main sleep-and-run loop
+    # 2. Main hourly active check loop
     while True:
-        # Determine if we should sleep until the hourly retry run or the next daily main run
-        now_utc = datetime.datetime.utcnow()
-        sec_to_main = get_seconds_until_time(0, 5)
+        sec_to_retry = get_seconds_until_next_hourly_retry()
+        print(f"Sleeping {sec_to_retry:.0f} seconds (approx {sec_to_retry/60:.1f} minutes) until next hourly check mark...")
+        time.sleep(sec_to_retry)
         
-        # If we have pending symbols, we try hourly
-        if pending_symbols:
-            sec_to_retry = get_seconds_until_next_hourly_retry()
-            # Only run retry if it starts before the main run
-            if sec_to_retry < sec_to_main - 60:
-                print(f"Daily training completed with {len(pending_symbols)} pending symbols. Sleeping {sec_to_retry:.0f} seconds until next hourly retry at {(now_utc + datetime.timedelta(seconds=sec_to_retry)).strftime('%Y-%m-%d %H:%M:%S')} UTC...")
-                time.sleep(sec_to_retry)
-                
-                print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Starting hourly retry training for pending symbols: {pending_symbols}...")
-                pending_symbols = check_and_train_assets(symbols_to_train=pending_symbols)
-                continue
-            
-        # Otherwise, sleep until the next day's main 00:05 UTC run
-        print(f"Daily cycle finished. Sleeping for {sec_to_main:.0f} seconds (approx {sec_to_main/3600:.2f} hours) until next scheduled run at {(datetime.datetime.utcnow() + datetime.timedelta(seconds=sec_to_main)).strftime('%Y-%m-%d %H:%M:%S')} UTC...")
-        time.sleep(sec_to_main)
-        
-        # Trigger daily training for all symbols
-        pending_symbols = check_and_train_assets()
+        check_and_train_assets()
 
 if __name__ == "__main__":
     main()
