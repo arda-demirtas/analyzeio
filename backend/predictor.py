@@ -147,6 +147,9 @@ def get_prediction(
         metrics = None
 
 
+    candle_open_time = None
+    candle_close_time = None
+
     # Calculate expected close time of the predicted candle using UTC explicitly
     if interval == "1d":
         last_date_str = last_row.name.strftime("%Y-%m-%d")
@@ -156,14 +159,18 @@ def get_prediction(
             pred_date = now_utc.date()
             close_time = datetime.datetime.combine(pred_date, datetime.time.min) + datetime.timedelta(days=1)
             expected_close_time = f"{close_time.strftime('%Y-%m-%d')} 03:00 (TRT)"
+            candle_open_time = f"{pred_date.strftime('%Y-%m-%d')} 03:00 (TRT)"
+            candle_close_time = expected_close_time
         else:
             # Determine close hour in UTC
             if symbol.endswith(".IS"):
                 close_hour_utc = 15  # BIST closes at 18:00 TRT (15:00 UTC)
                 close_time_str = "18:00 (TRT)"
+                open_time_str = "10:00 (TRT)"
             else:
                 close_hour_utc = 20  # US markets close at 16:00 EST (20:00 UTC)
                 close_time_str = "23:00 (TRT)"
+                open_time_str = "16:30 (TRT)"
 
             # If current UTC hour is past market close, target is the next day
             if now_utc.hour >= close_hour_utc:
@@ -176,6 +183,8 @@ def get_prediction(
                 pred_date += datetime.timedelta(days=1)
 
             expected_close_time = f"{pred_date.strftime('%Y-%m-%d')} {close_time_str}"
+            candle_open_time = f"{pred_date.strftime('%Y-%m-%d')} {open_time_str}"
+            candle_close_time = expected_close_time
 
         pred_date_str = pred_date.strftime("%Y-%m-%d")
     else:
@@ -188,6 +197,8 @@ def get_prediction(
             pred_time = last_row.name + datetime.timedelta(hours=4)
         pred_date_str = pred_time.strftime("%Y-%m-%d %H:%M")
         expected_close_time = f"{pred_date_str} (TRT)"
+        candle_open_time = f"{last_row.name.strftime('%Y-%m-%d %H:%M')} (TRT)"
+        candle_close_time = expected_close_time
         
     if not is_pending_data and not is_pending_prediction:
         valid_predictions = [
@@ -410,6 +421,8 @@ def get_prediction(
         "predicted_close": predicted_close,
         "prediction_date": pred_date_str,
         "expected_close_time": expected_close_time,
+        "candle_open_time": candle_open_time,
+        "candle_close_time": candle_close_time,
         "price_change_percent": change_percent,
         "current_price": current_price,
         "metrics": metrics,
