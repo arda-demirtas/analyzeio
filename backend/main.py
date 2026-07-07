@@ -60,14 +60,27 @@ def get_temp_logs():
                 
         out_path = "/root/.pm2/logs/backend-out.log"
         err_path = "/root/.pm2/logs/backend-error.log"
+        daemon_out_path = "/root/.pm2/logs/crypto-daemon-out.log"
+        daemon_err_path = "/root/.pm2/logs/crypto-daemon-error.log"
+        
         out_logs = []
         err_logs = []
+        daemon_out = []
+        daemon_err = []
+        
         if os.path.exists(out_path):
             with open(out_path, "r", encoding="utf-8", errors="ignore") as f:
                 out_logs = f.readlines()[-50:]
         if os.path.exists(err_path):
             with open(err_path, "r", encoding="utf-8", errors="ignore") as f:
                 err_logs = f.readlines()[-50:]
+        if os.path.exists(daemon_out_path):
+            with open(daemon_out_path, "r", encoding="utf-8", errors="ignore") as f:
+                daemon_out = f.readlines()[-50:]
+        if os.path.exists(daemon_err_path):
+            with open(daemon_err_path, "r", encoding="utf-8", errors="ignore") as f:
+                daemon_err = f.readlines()[-50:]
+                
         return {
             "env_file_exists": env_exists,
             "env_file_size": env_size,
@@ -75,6 +88,8 @@ def get_temp_logs():
             "model_cache_files": model_files,
             "out": out_logs,
             "error": err_logs,
+            "daemon_out": daemon_out,
+            "daemon_err": daemon_err,
             "env_smtp_user": os.getenv("SMTP_USER"),
             "env_smtp_pass": "SET" if os.getenv("SMTP_PASSWORD") else "NOT_SET",
             "env_db_url": "SET" if os.getenv("DATABASE_URL") else "NOT_SET"
