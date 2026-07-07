@@ -146,8 +146,8 @@ def run_mock_trading_daily_buy(state=None):
     if state is None:
         state = get_mock_trading_state()
         
-    # Check if we already have a position
-    if state.get("position"):
+    # Check if we already have a position or a pending order
+    if state.get("position") or state.get("pending_order"):
         return
         
     balance = state.get("balance", 2000.0)
@@ -160,40 +160,59 @@ def run_mock_trading_daily_buy(state=None):
         print("[Mock Trading] No valid symbol found for daily buy.")
         return
         
-    # Get the daily open price
+    # Get the daily open price and yesterday's close price
     try:
         df, _, _, _ = fetch_market_data(selected_symbol, interval="1d")
         if df.empty:
             print(f"[Mock Trading] Data empty for {selected_symbol}")
             return
-        open_price = float(df["Open"].iloc[-1])
+        yesterday_close = float(df["Close"].iloc[-2])
+        current_price = float(df["Close"].iloc[-1])
     except Exception as e:
-        print(f"[Mock Trading] Error loading open price for {selected_symbol}: {e}")
+        print(f"[Mock Trading] Error loading prices for {selected_symbol}: {e}")
         return
         
-    qty = balance / open_price
     now_utc = datetime.datetime.utcnow()
     
-    state["balance"] = 0.0
-    state["position"] = {
-        "symbol": selected_symbol,
-        "entry_price": open_price,
-        "qty": qty,
-        "buy_time": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
-    }
-    state["last_buy_date"] = now_utc.date().isoformat()
-    
-    event_str = f"OPENED position for {selected_symbol}: Selected based on predictions, sentiment, and indicators (Score: {score:.4f}). Purchased {qty:.6f} units at daily open price ${open_price:,.2f}."
-    log_mock_event(state, event_str)
-    save_mock_trading_state(state)
-    print(f"[Mock Trading] {event_str}")
+    # Entry Discount Rule: Buy immediately if current price is at or below yesterday's close price
+    if current_price <= yesterday_close:
+        qty = balance / current_price
+        state["balance"] = 0.0
+        state["position"] = {
+            "symbol": selected_symbol,
+            "entry_price": current_price,
+            "qty": qty,
+            "buy_time": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+        }
+        state["last_buy_date"] = now_utc.date().isoformat()
+        state["pending_order"] = None
+        
+        event_str = f"OPENED position for {selected_symbol} immediately: Price (${current_price:,.2f}) is at/below yesterday's close (${yesterday_close:,.2f}). Purchased {qty:.6f} units."
+        log_mock_event(state, event_str)
+        save_mock_trading_state(state)
+        print(f"[Mock Trading] {event_str}")
+    else:
+        # Otherwise, place a PENDING limit order at yesterday's close price
+        qty = balance / yesterday_close
+        state["pending_order"] = {
+            "symbol": selected_symbol,
+            "limit_price": yesterday_close,
+            "qty": qty,
+            "placed_time": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+        }
+        state["last_buy_date"] = now_utc.date().isoformat()
+        
+        event_str = f"Placed PENDING limit order for {selected_symbol}: Current price (${current_price:,.2f}) is above yesterday's close (${yesterday_close:,.2f}). Order placed at limit price ${yesterday_close:,.2f} for {qty:.6f} units."
+        log_mock_event(state, event_str)
+        save_mock_trading_state(state)
+        print(f"[Mock Trading] {event_str}")
 
 def check_mock_trading_rule():
     """
-    Evaluates current active position against the rules:
-    - 0.5% profit target (Take Profit)
-    - 0.5% loss limit (Stop Loss)
-    - End of day (23:50+ UTC or different calendar date)
+    Evaluates current active position or pending order against the rules:
+    - 1.0% profit target (Take Profit)
+    - 1.5% loss limit (Stop Loss)
+    - End of day (23:50+ UTC or different calendar date) for position close or pending order cancel
     - Daily 6:00 AM TRT (03:00 UTC) cycle reset and buy
     """
     # Enforce start time constraint: July 5th, 2026 at 03:00 UTC (06:00 TRT)
@@ -208,6 +227,15 @@ def check_mock_trading_rule():
     today_str = now_utc.date().isoformat()
     if now_utc.hour == 3 and now_utc.minute >= 10 and state.get("last_buy_date") != today_str:
         print(f"[Mock Trading] Resetting cycle at {now_utc.strftime('%H:%M:%S UTC')}...")
+        
+        # Cancel any pending order from yesterday
+        if state.get("pending_order"):
+            pending = state["pending_order"]
+            state["pending_order"] = None
+            event_str = f"CANCELLED yesterday's pending order for {pending['symbol']}: Daily cycle reset reached without fill."
+            log_mock_event(state, event_str)
+            print(f"[Mock Trading] {event_str}")
+            
         pos = state.get("position")
         if pos:
             symbol = pos["symbol"]
@@ -238,6 +266,56 @@ def check_mock_trading_rule():
         run_mock_trading_daily_buy(state)
         return
 
+    # Check if there is a pending limit order to execute
+    pending = state.get("pending_order")
+    if pending:
+        symbol = pending["symbol"]
+        limit_price = pending["limit_price"]
+        qty = pending["qty"]
+        placed_time_str = pending.get("placed_time")
+        
+        try:
+            df, _, _, current_price = fetch_market_data(symbol, interval="1d")
+            if current_price is None and not df.empty:
+                current_price = float(df["Close"].iloc[-1])
+        except Exception:
+            current_price = None
+            
+        if current_price is not None:
+            # If current price dipped to or below our limit price, execute the buy!
+            if current_price <= limit_price:
+                state["balance"] = 0.0
+                state["position"] = {
+                    "symbol": symbol,
+                    "entry_price": limit_price,
+                    "qty": qty,
+                    "buy_time": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+                }
+                state["pending_order"] = None
+                
+                event_str = f"PENDING limit order filled for {symbol}: Price dipped to ${current_price:,.2f} (Limit: ${limit_price:,.2f}). Entry price set to limit price. Position active."
+                log_mock_event(state, event_str)
+                save_mock_trading_state(state)
+                print(f"[Mock Trading] {event_str}")
+            else:
+                # Cancel the pending order if 24 hours have passed or at the end of the day (23:50 UTC)
+                should_cancel = False
+                if now_utc.hour == 23 and now_utc.minute >= 50:
+                    should_cancel = True
+                elif placed_time_str:
+                    try:
+                        placed_dt = datetime.datetime.strptime(placed_time_str, "%Y-%m-%d %H:%M:%S UTC")
+                        if now_utc.date() > placed_dt.date():
+                            should_cancel = True
+                    except Exception:
+                        pass
+                if should_cancel:
+                    state["pending_order"] = None
+                    event_str = f"CANCELLED pending order for {symbol}: Limit price (${limit_price:,.2f}) was not reached today (Current: ${current_price:,.2f})."
+                    log_mock_event(state, event_str)
+                    save_mock_trading_state(state)
+                    print(f"[Mock Trading] {event_str}")
+
     pos = state.get("position")
     if not pos:
         return
@@ -259,15 +337,14 @@ def check_mock_trading_rule():
         return
         
     change_pct = (current_price - entry_price) / entry_price
-    now_utc = datetime.datetime.utcnow()
     sell_reason = None
     
-    # 1. Check Take Profit (+0.5%)
-    if change_pct >= 0.005:
-        sell_reason = f"Price hit profit target (+0.5% at ${current_price:,.2f})"
-    # 2. Check Stop Loss (-0.5%)
-    elif change_pct <= -0.005:
-        sell_reason = f"Price hit stop loss (-0.5% at ${current_price:,.2f})"
+    # 1. Check Take Profit (+1.0%)
+    if change_pct >= 0.010:
+        sell_reason = f"Price hit profit target (+1.0% at ${current_price:,.2f})"
+    # 2. Check Stop Loss (-1.5%)
+    elif change_pct <= -0.015:
+        sell_reason = f"Price hit stop loss (-1.5% at ${current_price:,.2f})"
     # 3. Check End of Day
     elif now_utc.hour == 23 and now_utc.minute >= 50:
         sell_reason = f"End of day reached (Close price: ${current_price:,.2f})"
