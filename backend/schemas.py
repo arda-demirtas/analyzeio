@@ -114,6 +114,8 @@ class PredictionResponse(BaseModel):
     predicted_close: Optional[float] = None
     prediction_date: Optional[str] = None
     expected_close_time: Optional[str] = None
+    candle_open_time: Optional[str] = None
+    candle_close_time: Optional[str] = None
     price_change_percent: Optional[float] = None
     current_price: Optional[float] = None
     metrics: Optional[PredictionMetrics] = None
