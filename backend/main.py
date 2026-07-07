@@ -45,6 +45,14 @@ def read_root():
 def get_temp_logs():
     import os
     try:
+        env_path = "/var/www/analyzeio/.env"
+        env_exists = os.path.exists(env_path)
+        env_size = os.path.getsize(env_path) if env_exists else 0
+        first_line = ""
+        if env_exists:
+            with open(env_path, "r", encoding="utf-8") as f:
+                first_line = f.readline().strip()
+                
         out_path = "/root/.pm2/logs/backend-out.log"
         err_path = "/root/.pm2/logs/backend-error.log"
         out_logs = []
@@ -56,6 +64,9 @@ def get_temp_logs():
             with open(err_path, "r", encoding="utf-8", errors="ignore") as f:
                 err_logs = f.readlines()[-50:]
         return {
+            "env_file_exists": env_exists,
+            "env_file_size": env_size,
+            "env_first_line": first_line,
             "out": out_logs,
             "error": err_logs,
             "env_smtp_user": os.getenv("SMTP_USER"),
