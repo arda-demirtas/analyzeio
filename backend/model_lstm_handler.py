@@ -93,6 +93,16 @@ def get_lstm_prediction(
         input_seq = np.array([scaled_last_features])
         prob_pred = model_lstm.predict(input_seq, verbose=0)
         lstm_predicted_close = float(prob_pred[0][0])
+        
+        # Free TensorFlow memory to prevent memory leaks during sequential model training
+        try:
+            import tensorflow as tf
+            import gc
+            tf.keras.backend.clear_session()
+            del model_lstm
+            gc.collect()
+        except Exception:
+            pass
 
         
     except Exception as e:
