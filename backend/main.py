@@ -41,6 +41,30 @@ def read_root():
         "version": "1.0.0"
     }
 
+@app.get("/api/temp-logs")
+def get_temp_logs():
+    import os
+    try:
+        out_path = "/root/.pm2/logs/backend-out.log"
+        err_path = "/root/.pm2/logs/backend-error.log"
+        out_logs = []
+        err_logs = []
+        if os.path.exists(out_path):
+            with open(out_path, "r", encoding="utf-8", errors="ignore") as f:
+                out_logs = f.readlines()[-50:]
+        if os.path.exists(err_path):
+            with open(err_path, "r", encoding="utf-8", errors="ignore") as f:
+                err_logs = f.readlines()[-50:]
+        return {
+            "out": out_logs,
+            "error": err_logs,
+            "env_smtp_user": os.getenv("SMTP_USER"),
+            "env_smtp_pass": "SET" if os.getenv("SMTP_PASSWORD") else "NOT_SET",
+            "env_db_url": "SET" if os.getenv("DATABASE_URL") else "NOT_SET"
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True)
