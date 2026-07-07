@@ -53,6 +53,11 @@ def get_temp_logs():
             with open(env_path, "r", encoding="utf-8") as f:
                 first_line = f.readline().strip()
                 
+        model_cache_path = "/var/www/analyzeio/backend/model_cache"
+        model_files = []
+        if os.path.exists(model_cache_path):
+            model_files = os.listdir(model_cache_path)
+                
         out_path = "/root/.pm2/logs/backend-out.log"
         err_path = "/root/.pm2/logs/backend-error.log"
         out_logs = []
@@ -67,6 +72,7 @@ def get_temp_logs():
             "env_file_exists": env_exists,
             "env_file_size": env_size,
             "env_first_line": first_line,
+            "model_cache_files": model_files,
             "out": out_logs,
             "error": err_logs,
             "env_smtp_user": os.getenv("SMTP_USER"),
