@@ -96,7 +96,6 @@ def get_lstm_prediction(
         
         # Free TensorFlow memory to prevent memory leaks during sequential model training
         try:
-            import tensorflow as tf
             import gc
             tf.keras.backend.clear_session()
             del model_lstm
