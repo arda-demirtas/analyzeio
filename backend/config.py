@@ -1,5 +1,9 @@
 import os
 import secrets
+from dotenv import load_dotenv
+
+# Load environment variables from .env file in the root project folder
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
 # JWT and Security Settings
 # In production, this should be loaded from environment variables
