@@ -213,7 +213,7 @@ def check_mock_trading_rule():
     - 1.0% profit target (Take Profit)
     - 1.5% loss limit (Stop Loss)
     - End of day (23:50+ UTC or different calendar date) for position close or pending order cancel
-    - Daily 6:00 AM TRT (03:00 UTC) cycle reset and buy
+    # - Daily 11:00 AM TRT (08:00 UTC) cycle reset and buy
     """
     # Enforce start time constraint: July 5th, 2026 at 03:00 UTC (06:00 TRT)
     start_time = datetime.datetime(2026, 7, 5, 3, 0, 0)
@@ -223,9 +223,9 @@ def check_mock_trading_rule():
 
     state = get_mock_trading_state()
     
-    # 6:10 AM TRT (03:10 UTC) daily reset and buy (gives 03:05 UTC retry training time to finish)
+    # 11:00 AM TRT (08:00 UTC) daily reset and buy (ensures all daily retry trainings have completed)
     today_str = now_utc.date().isoformat()
-    if now_utc.hour == 3 and now_utc.minute >= 10 and state.get("last_buy_date") != today_str:
+    if now_utc.hour == 8 and now_utc.minute >= 0 and state.get("last_buy_date") != today_str:
         print(f"[Mock Trading] Resetting cycle at {now_utc.strftime('%H:%M:%S UTC')}...")
         
         # Cancel any pending order from yesterday
