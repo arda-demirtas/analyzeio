@@ -66,55 +66,63 @@ def get_prediction(
         min_ret = -0.15 if is_crypto else -0.08
 
         # A. XGBoost Flow
-        xgb_predicted_close, xgb_metrics = get_xgb_prediction(
-            symbol, interval, df, df_train, df_test, seq_length, force_retrain, is_daemon, max_ret, min_ret
-        )
+        try:
+            xgb_predicted_close, xgb_metrics = get_xgb_prediction(
+                symbol, interval, df, df_train, df_test, seq_length, force_retrain, is_daemon, max_ret, min_ret
+            )
+        except Exception as e:
+            print(f"Error in XGBoost flow: {e}")
+            xgb_predicted_close, xgb_metrics = None, None
 
         # B. LSTM Flow
-        lstm_predicted_close, lstm_metrics = get_lstm_prediction(
-            symbol, interval, df, df_train, df_test, seq_length, force_retrain, is_daemon, max_ret, min_ret
-        )
+        try:
+            lstm_predicted_close, lstm_metrics = get_lstm_prediction(
+                symbol, interval, df, df_train, df_test, seq_length, force_retrain, is_daemon, max_ret, min_ret
+            )
+        except Exception as e:
+            print(f"Error in LSTM flow: {e}")
+            lstm_predicted_close, lstm_metrics = None, None
 
         # C. Linear Regression Flow
-        lr_predicted_close, lr_metrics = get_lr_prediction(
-            symbol, interval, df, df_train, df_test, seq_length, force_retrain, is_daemon, max_ret, min_ret
-        )
+        try:
+            lr_predicted_close, lr_metrics = get_lr_prediction(
+                symbol, interval, df, df_train, df_test, seq_length, force_retrain, is_daemon, max_ret, min_ret
+            )
+        except Exception as e:
+            print(f"Error in Linear Regression flow: {e}")
+            lr_predicted_close, lr_metrics = None, None
 
         # D. PatchTST Flow
-        patchtst_predicted_close, patchtst_metrics = get_patchtst_prediction(
-            symbol, interval, df, df_train, df_test, seq_length, force_retrain, is_daemon, max_ret, min_ret
-        )
+        try:
+            patchtst_predicted_close, patchtst_metrics = get_patchtst_prediction(
+                symbol, interval, df, df_train, df_test, seq_length, force_retrain, is_daemon, max_ret, min_ret
+            )
+        except Exception as e:
+            print(f"Error in PatchTST flow: {e}")
+            patchtst_predicted_close, patchtst_metrics = None, None
 
     # Details of the last available candle
     last_row = df.iloc[-1]
     last_close = float(last_row["Close"])
 
-    # Determine fallback and requested predicted close (representing probability of UP)
-    predicted_close = None
-    metrics = None
-    analyzeio_predicted_close = None
-    analyzeio_metrics = None
+    is_pending_prediction = (xgb_predicted_close is None or 
+                             lstm_predicted_close is None or 
+                             lr_predicted_close is None or 
+                             patchtst_predicted_close is None)
 
-    if not is_pending_data:
+    if not is_pending_data and not is_pending_prediction:
         # "analyzeio" is the average of all 4 models!
-        valid_predictions = [p for p in [xgb_predicted_close, lstm_predicted_close, lr_predicted_close, patchtst_predicted_close] if p is not None]
-        if valid_predictions:
-            analyzeio_predicted_close = sum(valid_predictions) / len(valid_predictions)
-        else:
-            analyzeio_predicted_close = xgb_predicted_close
+        analyzeio_predicted_close = (xgb_predicted_close + lstm_predicted_close + lr_predicted_close + patchtst_predicted_close) / 4.0
             
         # Average performance metrics
-        valid_metrics_list = [m for m in [xgb_metrics, lstm_metrics, lr_metrics, patchtst_metrics] if m is not None]
-        if valid_metrics_list:
-            avg_logloss = sum(m.get("logloss", 0.693) for m in valid_metrics_list) / len(valid_metrics_list)
-            avg_da = sum(m.get("directional_accuracy", 50.0) for m in valid_metrics_list) / len(valid_metrics_list)
-            analyzeio_metrics = {
-                "logloss": avg_logloss,
-                "directional_accuracy": avg_da,
-                "training_status": "Average of 4 models (Analyzeio)"
-            }
-        else:
-            analyzeio_metrics = xgb_metrics
+        valid_metrics_list = [xgb_metrics, lstm_metrics, lr_metrics, patchtst_metrics]
+        avg_logloss = sum(m.get("logloss", 0.693) for m in valid_metrics_list) / 4.0
+        avg_da = sum(m.get("directional_accuracy", 50.0) for m in valid_metrics_list) / 4.0
+        analyzeio_metrics = {
+            "logloss": avg_logloss,
+            "directional_accuracy": avg_da,
+            "training_status": "Average of 4 models (Analyzeio)"
+        }
 
         if model_type == "lstm":
             predicted_close = lstm_predicted_close
@@ -131,11 +139,12 @@ def get_prediction(
         else:
             predicted_close = analyzeio_predicted_close
             metrics = analyzeio_metrics
-
-            
-        if predicted_close is None:
-            predicted_close = xgb_predicted_close or lstm_predicted_close or lr_predicted_close or patchtst_predicted_close
-            metrics = xgb_metrics or lstm_metrics or lr_metrics or patchtst_metrics
+    else:
+        # If any model is missing/training, the ensemble and all outputs are pending (None)
+        analyzeio_predicted_close = None
+        analyzeio_metrics = None
+        predicted_close = None
+        metrics = None
 
 
     # Calculate expected close time of the predicted candle using UTC explicitly
@@ -180,7 +189,7 @@ def get_prediction(
         pred_date_str = pred_time.strftime("%Y-%m-%d %H:%M")
         expected_close_time = f"{pred_date_str} (TRT)"
         
-    if not is_pending_data:
+    if not is_pending_data and not is_pending_prediction:
         valid_predictions = [
             v for v in [xgb_predicted_close, lstm_predicted_close, lr_predicted_close, patchtst_predicted_close]
             if v is not None
@@ -194,20 +203,20 @@ def get_prediction(
         change_percent = None
     
     # Calculate threshold-filtered technical recommendation (4% confidence threshold, equivalent to 54% probability limit)
-    if is_pending_data:
+    if is_pending_data or is_pending_prediction:
         tech_signal = "HOLD"
         if lang == "tr":
-            tech_text = "Veri eksikliği nedeniyle işlem tavsiyesi beklemede. Yeni günlük mum kapanışı bekleniyor."
+            tech_text = "Modellerin eğitimi veya veri güncellemesi sürüyor. Lütfen bekleyin..."
         elif lang == "de":
-            tech_text = "Handelsempfehlung steht wegen fehlender Daten aus. Warten auf den neuen Tagesschluss."
+            tech_text = "Modelltraining oder Datenaktualisierung läuft. Bitte warten..."
         elif lang == "ru":
-            tech_text = "Торговая рекомендация отложена из-за отсутствия данных. Ожидание нового дневного закрытия."
+            tech_text = "Обучение моделей или обновление данных продолжается. Пожалуйста, подождите..."
         elif lang == "zh":
-            tech_text = "由于数据缺失，交易建议待定。等待新的日线收盘。"
+            tech_text = "模型训练或数据更新中。请稍候..."
         elif lang == "es":
-            tech_text = "Recomendación comercial pendiente por falta de datos. Esperando el nuevo cierre diario."
+            tech_text = "El entrenamiento del modelo o la actualización de datos está en curso. Por favor, espere..."
         else:
-            tech_text = "Trading recommendation is pending due to missing data. Waiting for the new daily candle close."
+            tech_text = "Model training or data update is in progress. Please wait..."
     elif change_percent > 4.0:
         tech_signal = "STRONG_BUY"
         if lang == "tr":
@@ -345,7 +354,7 @@ def get_prediction(
                 db_session.commit()
                 
         # B. Save or update the active prediction log to avoid duplicates on the same target candle date
-        if not is_pending_data:
+        if not is_pending_data and not is_pending_prediction:
             existing_log = (
                 db_session.query(PredictionLog)
                 .filter(
@@ -372,21 +381,22 @@ def get_prediction(
                 models_da.sort(key=lambda x: x[0], reverse=True)
                 best_model_predicted_close = models_da[0][1]
 
-            if existing_log:
-                existing_log.predicted_close = best_model_predicted_close
-                existing_log.last_close = last_close
-                existing_log.created_at = datetime.datetime.utcnow()
-            else:
-                new_log = PredictionLog(
-                    symbol=symbol,
-                    interval=interval,
-                    prediction_date=pred_date_str,
-                    predicted_close=best_model_predicted_close,
-                    last_close=last_close,
-                    actual_close=None
-                )
-                db_session.add(new_log)
-            db_session.commit()
+            if best_model_predicted_close is not None:
+                if existing_log:
+                    existing_log.predicted_close = best_model_predicted_close
+                    existing_log.last_close = last_close
+                    existing_log.created_at = datetime.datetime.utcnow()
+                else:
+                    new_log = PredictionLog(
+                        symbol=symbol,
+                        interval=interval,
+                        prediction_date=pred_date_str,
+                        predicted_close=best_model_predicted_close,
+                        last_close=last_close,
+                        actual_close=None
+                    )
+                    db_session.add(new_log)
+                db_session.commit()
     except Exception as db_err:
         print(f"Database logging error in get_prediction: {db_err}")
     finally:
@@ -406,8 +416,8 @@ def get_prediction(
         "history": history_list,
         "fundamental_analysis": fundamental_result,
         "technical_recommendation": technical_recommendation,
-        "prediction_status": "pending_data" if is_pending_data else "success",
-        "prediction_error": pending_error_msg,
+        "prediction_status": "pending" if (is_pending_data or is_pending_prediction) else "success",
+        "prediction_error": "Modellerin eğitimi sürüyor. Lütfen bekleyin..." if is_pending_prediction else pending_error_msg,
         "model_type": model_type,
         "has_today_candle": df.attrs.get("has_today_candle", False),
         "xgb_predicted_close": xgb_predicted_close,
