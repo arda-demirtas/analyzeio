@@ -517,6 +517,7 @@ export default function Home() {
   const [newAutoTrainSymbol, setNewAutoTrainSymbol] = useState("");
   const [mockTradingState, setMockTradingState] = useState(null);
   const [modelType, setModelType] = useState("xgboost");
+  const [daemonLogs, setDaemonLogs] = useState({ out: [], error: [], daemon_out: [], daemon_err: [] });
 
   const lastCloseVal = predictionData ? predictionData.last_close : null;
   const xgbChangeVal = (predictionData && predictionData.xgb_predicted_close !== null)
@@ -2017,6 +2018,12 @@ export default function Home() {
       if (symbolsRes.ok) {
         const symbolsData = await symbolsRes.json();
         setAutoTrainSymbols(Array.isArray(symbolsData) ? symbolsData : []);
+      }
+      
+      const logsRes = await fetch(`${API_BASE_URL}/api/temp-logs`);
+      if (logsRes.ok) {
+        const logsData = await logsRes.json();
+        setDaemonLogs(logsData);
       }
       
       await fetchMockTradingState();
@@ -5073,6 +5080,18 @@ export default function Home() {
               >
                 💸 Mock Trading
               </button>
+              <button 
+                onClick={() => setAdminActiveTab("system_logs")} 
+                className={adminActiveTab === "system_logs" ? "btn-primary" : "btn-secondary"}
+                style={{ 
+                  flex: 1, 
+                  background: adminActiveTab === "system_logs" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
+                  border: "none",
+                  fontWeight: "600"
+                }}
+              >
+                📋 System Logs
+              </button>
             </div>
             
             {/* Main Content Area (Scrollable) */}
@@ -5259,6 +5278,49 @@ export default function Home() {
                         </div>
                       ))
                     )}
+                  </div>
+                </div>
+              ) : adminActiveTab === "system_logs" ? (
+                <div>
+                  <h4 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-muted)" }}>
+                    🤖 Auto-Train Daemon Logs
+                  </h4>
+                  <div style={{ 
+                    background: "#0a0c16", 
+                    padding: "15px", 
+                    borderRadius: "8px", 
+                    border: "1px solid rgba(255, 255, 255, 0.08)", 
+                    fontFamily: "monospace", 
+                    fontSize: "12px", 
+                    color: "#a7f3d0", 
+                    height: "250px", 
+                    overflowY: "auto", 
+                    marginBottom: "25px",
+                    whiteSpace: "pre-wrap"
+                  }}>
+                    {daemonLogs && daemonLogs.daemon_out && daemonLogs.daemon_out.length > 0 
+                      ? daemonLogs.daemon_out.join("") 
+                      : "Loading daemon logs or log file is empty..."}
+                  </div>
+
+                  <h4 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-muted)" }}>
+                    🌐 Web API Logs
+                  </h4>
+                  <div style={{ 
+                    background: "#0a0c16", 
+                    padding: "15px", 
+                    borderRadius: "8px", 
+                    border: "1px solid rgba(255, 255, 255, 0.08)", 
+                    fontFamily: "monospace", 
+                    fontSize: "12px", 
+                    color: "#93c5fd", 
+                    height: "250px", 
+                    overflowY: "auto", 
+                    whiteSpace: "pre-wrap"
+                  }}>
+                    {daemonLogs && daemonLogs.out && daemonLogs.out.length > 0 
+                      ? daemonLogs.out.join("") 
+                      : "Loading API logs or log file is empty..."}
                   </div>
                 </div>
               ) : (
