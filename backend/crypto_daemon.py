@@ -13,21 +13,6 @@ from backend.config import MODEL_CACHE_DIR, AUTO_TRAINED_SYMBOLS
 from backend.database import SessionLocal
 from backend.models import AutoTrainSymbol
 
-def update_daemon_status(symbol, index, total, status="training"):
-    status_path = os.path.join(MODEL_CACHE_DIR, "daemon_status.json")
-    try:
-        os.makedirs(os.path.dirname(status_path), exist_ok=True)
-        with open(status_path, "w", encoding="utf-8") as f:
-            json.dump({
-                "status": status,
-                "current_symbol": symbol,
-                "current_index": index,
-                "total_symbols": total,
-                "last_updated": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-            }, f)
-    except Exception as e:
-        print(f"Error writing daemon status: {e}")
-
 def delete_symbol_cache_files(symbol: str):
     """Deletes all cached model files for the specified symbol to keep cache clean."""
     if not os.path.exists(MODEL_CACHE_DIR):
@@ -70,7 +55,6 @@ def check_and_train_assets():
     
     for idx, symbol in enumerate(symbols):
         try:
-            update_daemon_status(symbol, idx + 1, len(symbols), "training")
             print(f"\n[{idx+1}/{len(symbols)}] Checking status for {symbol} (1d)...")
             
             # 1. Fetch live market data to find the latest completed candle
@@ -138,8 +122,6 @@ def check_and_train_assets():
         run_mock_trading_daily_buy()
     except Exception as mock_err:
         print(f"Error executing daily mock buy: {mock_err}")
-        
-    update_daemon_status(None, None, len(symbols), "idle")
 
 def cleanup_old_models():
     """Deletes any cached model files in model_cache that are older than 72 hours."""
