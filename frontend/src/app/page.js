@@ -5232,33 +5232,6 @@ export default function Home() {
                 </div>
               ) : adminActiveTab === "models" ? (
                 <div>
-                  {adminStats && adminStats.daemon_status && (
-                    <div style={{ 
-                      background: "rgba(245, 158, 11, 0.04)", 
-                      padding: "15px", 
-                      borderRadius: "8px", 
-                      border: "1px solid rgba(245, 158, 11, 0.15)", 
-                      marginBottom: "20px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between"
-                    }}>
-                      <div>
-                        <span style={{ fontSize: "11px", color: "#f59e0b", display: "block", marginBottom: "3px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                          {adminStats.daemon_status.status === "training" ? "⚡ EĞİTİM AKTİF" : "💤 DAEMON BEKLEMEDE"}
-                        </span>
-                        <span style={{ fontSize: "13.5px", color: "var(--text-main)", fontWeight: "500" }}>
-                          {adminStats.daemon_status.status === "training" 
-                            ? `Şu An Eğitilen: ${adminStats.daemon_status.current_symbol} (${adminStats.daemon_status.current_index}/${adminStats.daemon_status.total_symbols})` 
-                            : "Tüm günlük eğitimler tamamlandı."}
-                        </span>
-                      </div>
-                      {adminStats.daemon_status.status === "training" && (
-                        <RefreshCw className="animate-spin" style={{ color: "#f59e0b", width: "18px", height: "18px" }} />
-                      )}
-                    </div>
-                  )}
-
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "20px" }}>
                     <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
                       <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Total Users</span>
