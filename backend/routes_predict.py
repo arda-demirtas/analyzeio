@@ -54,7 +54,7 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_typ
             has_exceeded_free = True
         elif interval != "1d":
             has_exceeded_free = True
-        elif model_type not in ["analyzeio", "xgboost"]:
+        elif model_type not in ["lstm"]:
             has_exceeded_free = True
 
     if has_exceeded_free:
