@@ -531,6 +531,9 @@ export default function Home() {
   const lrChangeVal = (predictionData && predictionData.lr_predicted_close !== null)
     ? (predictionData.lr_predicted_close - 0.5) * 100
     : null;
+  const srChangeVal = (predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined)
+    ? (predictionData.sr_predicted_close - 0.5) * 100
+    : null;
 
 
   const getPredictionHeader = () => {
@@ -4317,6 +4320,32 @@ export default function Home() {
                                 <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
                                   <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#f59e0b" }}></span>
                                   PatchTST:
+                                </span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+                                  {isBullish ? (
+                                    <>
+                                      <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-success)" }}>{confidence.toFixed(1)}% ({t("bullish")})</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-danger)" }}>{confidence.toFixed(1)}% ({t("bearish")})</span>
+                                    </>
+                                  )}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Support/Resistance Signal */}
+                          {srChangeVal !== null && (() => {
+                            const isBullish = srChangeVal >= 0;
+                            const confidence = isBullish ? (srChangeVal + 50) : (50 - srChangeVal);
+                            return (
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                                <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#14b8a6" }}></span>
+                                  {lang === "tr" ? "Destek/Direnç" : "S/R Standalone"}:
                                 </span>
                                 <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
                                   {isBullish ? (
