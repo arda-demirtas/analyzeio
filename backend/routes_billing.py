@@ -137,6 +137,30 @@ async def handle_paddle_webhook(request: Request, db: Session = Depends(get_db))
                     pass
                     
         if subscription_id and customer_id and status_val:
+            # Self-healing: Ensure Customer exists in DB to prevent ForeignKeyViolation
+            customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
+            if not customer:
+                # Fetch customer details from Paddle API
+                email = ""
+                api_key_fetch = os.environ.get("PADDLE_LIVE_API_KEY") if paddle_env == "production" else os.environ.get("PADDLE_SANDBOX_API_KEY")
+                base_url_fetch = "https://api.paddle.com" if paddle_env == "production" else "https://sandbox-api.paddle.com"
+                
+                if api_key_fetch:
+                    try:
+                        r_fetch = requests.get(
+                            f"{base_url_fetch}/customers/{customer_id}",
+                            headers={"Authorization": f"Bearer {api_key_fetch}"},
+                            timeout=10
+                        )
+                        if r_fetch.status_code in [200, 201]:
+                            email = r_fetch.json().get("data", {}).get("email", "")
+                    except Exception as e:
+                        print(f"Error fetching customer details from Paddle: {e}")
+                
+                customer = Customer(customer_id=customer_id, email=email)
+                db.add(customer)
+                db.commit()
+
             # Idempotent upsert
             sub = db.query(Subscription).filter(Subscription.subscription_id == subscription_id).first()
             if not sub:
