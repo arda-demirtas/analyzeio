@@ -2732,6 +2732,19 @@ export default function Home() {
           <span style={{ fontSize: "9px", color: "var(--text-dark)", textAlign: "center" }}>
             &copy; {new Date().getFullYear()} analyzeio
           </span>
+          <span style={{ 
+            fontSize: "8px", 
+            color: "var(--text-dark)", 
+            textAlign: "center", 
+            lineHeight: "1.3", 
+            marginTop: "6px", 
+            padding: "0 10px", 
+            opacity: 0.7 
+          }}>
+            {lang === "tr" 
+              ? "Yasal Uyarı: Bu platform eğitim ve veri analitiği amaçlıdır. Yatırım tavsiyesi veya işlem sinyali vermez." 
+              : "Disclaimer: This platform is for educational and data analytics purposes only. It does not provide investment advice or trading signals."}
+          </span>
         </div>
 
       </aside>
