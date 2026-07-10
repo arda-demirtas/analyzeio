@@ -2829,7 +2829,7 @@ export default function Home() {
                 </div>
                 
                 {/* Dropdown Menu */}
-                {showProfileDropdown && (
+                {showProfileDropdown && user && (
                   <>
                     <div 
                       onClick={() => setShowProfileDropdown(false)} 
