@@ -20,7 +20,7 @@ export const PricingTiers = [
     features: [
       "Access to all 5 AI Models (XGBoost, LSTM, LR, PatchTST, S/R)",
       "High-frequency intra-day prediction cycles (15m, 1h, 4h)",
-      "100% Bullish Consensus Screener",
+      "100% Upward Trend Consensus Analysis",
       "Automatic Support & Resistance level overlays",
       "Unlimited watchlists and caching prioritisation",
       "Priority server processing and GPU training queues",
