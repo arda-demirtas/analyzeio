@@ -5,6 +5,7 @@ from backend.routes_auth import router as auth_router
 from backend.routes_predict import router as predict_router
 from backend.routes_comments import router as comments_router
 from backend.routes_admin import router as admin_router
+from backend.routes_billing import router as billing_router
 
 # Initialize database tables
 # Run startup database migrations for SQLite schemas
@@ -31,6 +32,7 @@ app.include_router(auth_router)
 app.include_router(predict_router)
 app.include_router(comments_router, prefix="/api")
 app.include_router(admin_router)
+app.include_router(billing_router)
 
 @app.get("/")
 def read_root():
