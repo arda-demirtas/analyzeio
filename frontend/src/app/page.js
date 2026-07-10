@@ -518,7 +518,7 @@ export default function Home() {
   const [autoTrainSymbols, setAutoTrainSymbols] = useState([]);
   const [newAutoTrainSymbol, setNewAutoTrainSymbol] = useState("");
   const [mockTradingState, setMockTradingState] = useState(null);
-  const [modelType, setModelType] = useState("xgboost");
+  const [modelType, setModelType] = useState("lstm");
   const [daemonLogs, setDaemonLogs] = useState({ out: [], error: [], daemon_out: [], daemon_err: [] });
   const [allBullishAssets, setAllBullishAssets] = useState([]);
 
