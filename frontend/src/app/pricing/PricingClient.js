@@ -286,9 +286,18 @@ export function PricingClient({ initialCountry }) {
         </div>
 
         {/* Legal & Notice footer */}
-        <div className="text-center text-[10px] text-gray-600 max-w-sm mx-auto leading-relaxed mt-12">
-          Your <strong>7-day free trial</strong> will automatically convert to a paid subscription. 
-          Cancel anytime via your account dropdown settings.
+        <div className="text-center text-[10px] text-gray-600 max-w-md mx-auto leading-relaxed mt-12">
+          <p className="mb-3">
+            Your <strong>7-day free trial</strong> will automatically convert to a paid subscription. 
+            Cancel anytime via your account dropdown settings.
+          </p>
+          <div className="flex items-center justify-center gap-4 text-gray-500 font-medium">
+            <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms of Service</Link>
+            <span>•</span>
+            <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</Link>
+            <span>•</span>
+            <Link href="/refunds" className="hover:text-gray-300 transition-colors">Refund Policy</Link>
+          </div>
         </div>
 
       </div>
