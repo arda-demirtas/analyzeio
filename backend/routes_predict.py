@@ -169,7 +169,7 @@ def get_market_screener(db: Session = Depends(get_db)):
 
 @router.get("/all-bullish")
 def get_all_model_bullish_assets(db: Session = Depends(get_db)):
-    """Returns a list of assets where all 4 models are bullish (>0.5 probability)."""
+    """Returns a list of assets where all 5 models are bullish (>0.5 probability)."""
     import os
     import json
     from backend.predictor import MODEL_CACHE_DIR
@@ -187,13 +187,15 @@ def get_all_model_bullish_assets(db: Session = Depends(get_db)):
                 lstm = preds.get("lstm")
                 lr = preds.get("lr")
                 patchtst = preds.get("patchtst")
+                sr = preds.get("sr")
                 
                 if (xgb is not None and xgb > 0.5 and 
                     lstm is not None and lstm > 0.5 and 
                     lr is not None and lr > 0.5 and 
-                    patchtst is not None and patchtst > 0.5):
+                    patchtst is not None and patchtst > 0.5 and
+                    sr is not None and sr > 0.5):
                     
-                    avg_prob = (xgb + lstm + lr + patchtst) / 4.0
+                    avg_prob = (xgb + lstm + lr + patchtst + sr) / 5.0
                     all_bullish.append({
                         "symbol": s.symbol,
                         "name": s.name,
@@ -202,6 +204,7 @@ def get_all_model_bullish_assets(db: Session = Depends(get_db)):
                         "lstm": lstm,
                         "lr": lr,
                         "patchtst": patchtst,
+                        "sr": sr,
                         "ensemble": avg_prob
                     })
             except Exception:
