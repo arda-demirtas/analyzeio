@@ -8,9 +8,9 @@ import Link from "next/link";
 // Single-Tier Premium Pricing Definition
 export const PricingTiers = [
   {
-    name: "Premium",
+    name: "Premium Access",
     id: "premium",
-    description: "Full access to institutional-grade AI models and technical screening tools.",
+    description: "Designed for active traders seeking maximum model ensemble power.",
     features: [
       "All 5 AI Models (XGBoost, LSTM, Linear Regression, PatchTST, S/R Model)",
       "Intra-day prediction cycles (15m, 1h, 4h) + Daily (1d)",
@@ -154,8 +154,12 @@ export function PricingClient({ initialCountry }) {
   const displayPrice = prices[currentPriceId];
 
   return (
-    <div className="min-h-screen bg-[#0d0f14] text-gray-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#070a13] text-gray-100 flex flex-col font-sans relative overflow-hidden">
       
+      {/* Background radial glowing ambient lights */}
+      <div className="absolute top-[-100px] left-[50%] -translate-x-[50%] w-[600px] h-[600px] bg-[#8b5cf6]/10 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[10%] w-[350px] h-[350px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
+
       {/* Configuration Error Banner */}
       {hasConfigError && (
         <div style={{
@@ -178,34 +182,41 @@ export function PricingClient({ initialCountry }) {
       )}
 
       {/* Main Container */}
-      <div className="max-w-4xl w-full mx-auto px-6 py-12 flex-grow flex flex-col justify-center">
+      <div className="max-w-4xl w-full mx-auto px-6 py-16 flex-grow flex flex-col justify-center relative z-10">
         
-        {/* Header */}
-        <div className="mb-12 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+        {/* Header Navigation */}
+        <div className="mb-16 flex items-center justify-between">
+          <Link href="/" className="btn-secondary" style={{ width: "fit-content" }}>
             <ArrowLeft style={{ width: "16px", height: "16px" }} /> Back to Dashboard
           </Link>
-          <div className="text-xs text-gray-500 bg-gray-900/60 px-3 py-1.5 rounded-full border border-gray-800">
-            Detected Country: <span className="text-[#3b82f6] font-semibold">{initialCountry || "Auto (IP)"}</span>
+          <div className="text-[11px] text-gray-400 bg-white/[0.03] px-3.5 py-2 rounded-full border border-white/[0.08] backdrop-blur-md">
+            Country: <span className="text-[#a78bfa] font-bold">{initialCountry || "Auto (IP)"}</span>
           </div>
         </div>
 
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-black mb-4 tracking-tight" style={{ background: "linear-gradient(to right, #ffffff, #9ca3af)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            Get analyzeio Premium
+        {/* Hero Title Area */}
+        <div className="text-center mb-16">
+          <h1 
+            className="text-4xl md:text-5xl font-black mb-4 tracking-tight" 
+            style={{ 
+              background: "linear-gradient(to right, #a78bfa, #8b5cf6, #3b82f6)", 
+              WebkitBackgroundClip: "text", 
+              WebkitTextFillColor: "transparent" 
+            }}
+          >
+            Upgrade to Premium
           </h1>
-          <p className="text-gray-400 max-w-lg mx-auto text-sm md:text-base mb-8">
-            Ensemble AI engine forecasts, automated support/resistance zones, and bullish trend screeners.
+          <p className="text-[#9ca3af] max-w-lg mx-auto text-sm md:text-base mb-10 leading-relaxed">
+            Unlock advanced machine learning predictions, deep technical consensus analysis, and premium indicators.
           </p>
 
           {/* Billing Frequency Toggle */}
-          <div className="inline-flex bg-gray-900/80 p-1.5 rounded-full border border-gray-800">
+          <div className="inline-flex bg-black/40 p-1 rounded-2xl border border-white/5 backdrop-blur-md">
             <button
               onClick={() => setFrequency("month")}
-              className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
+              className={`px-7 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 frequency === "month"
-                  ? "bg-[#3b82f6] text-white shadow-lg shadow-blue-500/20"
+                  ? "bg-[#8b5cf6] text-white shadow-lg shadow-purple-500/25"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
@@ -213,45 +224,51 @@ export function PricingClient({ initialCountry }) {
             </button>
             <button
               onClick={() => setFrequency("year")}
-              className={`px-6 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-7 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 frequency === "year"
-                  ? "bg-[#3b82f6] text-white shadow-lg shadow-blue-500/20"
+                  ? "bg-[#8b5cf6] text-white shadow-lg shadow-purple-500/25"
                   : "text-gray-400 hover:text-gray-200"
               }`}
             >
               Yearly
-              <span className="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full text-[10px] font-black border border-emerald-500/20">
+              <span className="bg-[#10b981]/15 text-[#10b981] px-2.5 py-0.5 rounded-full text-[10px] font-black border border-[#10b981]/25">
                 Save 17%
               </span>
             </button>
           </div>
         </div>
 
-        {/* Single Premium Plan Card (Centered) */}
-        <div className="max-w-md w-full mx-auto">
-          <div className="relative rounded-3xl p-8 bg-gradient-to-b from-[#141822] to-[#0f111a] border border-[#3b82f6]/40 shadow-2xl shadow-blue-500/5">
+        {/* Premium Plan Card (Aligned to Glassmorphic Design System) */}
+        <div className="max-w-lg w-full mx-auto">
+          <div 
+            className="glass-panel relative rounded-3xl p-10 flex flex-col border border-white/[0.08] shadow-2xl hover:border-[#8b5cf6]/35 group transition-all duration-300"
+            style={{ background: "rgba(17, 24, 39, 0.55)" }}
+          >
             
-            {/* Featured Badge */}
-            <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase shadow-md flex items-center gap-1">
-              <Sparkles style={{ width: "10px", height: "10px" }} /> Full Access
+            {/* Ambient inner glow on hover */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#8b5cf6]/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+            {/* Premium Star Badge */}
+            <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white px-5 py-1.5 rounded-full text-[9px] font-black tracking-widest uppercase shadow-lg shadow-purple-500/20 flex items-center gap-1.5">
+              <Sparkles style={{ width: "10px", height: "10px" }} /> PREMIUM ENSEMBLE
             </span>
 
-            {/* Plan Title & Desc */}
-            <div className="mb-6 text-center">
-              <h3 className="text-2xl font-black mb-2 text-white">{premiumTier.name}</h3>
-              <p className="text-gray-400 text-xs">{premiumTier.description}</p>
+            {/* Plan Info */}
+            <div className="mb-8 text-center relative z-10">
+              <h3 className="text-2xl font-black mb-2 text-white">analyzeio Premium</h3>
+              <p className="text-gray-400 text-xs leading-relaxed max-w-xs mx-auto">{premiumTier.description}</p>
             </div>
 
             {/* Price Display */}
-            <div className="mb-8 flex items-baseline justify-center">
+            <div className="mb-8 flex items-baseline justify-center relative z-10">
               {loadingPrices ? (
                 <div className="flex items-center gap-2 text-2xl font-black text-gray-500 animate-pulse">
-                  <RefreshCw className="animate-spin" style={{ width: "16px", height: "16px" }} /> Loading...
+                  <RefreshCw className="animate-spin text-[#8b5cf6]" style={{ width: "18px", height: "18px" }} /> Loading...
                 </div>
               ) : displayPrice ? (
                 <>
-                  <span className="text-5xl font-extrabold text-white tracking-tight">{displayPrice}</span>
-                  <span className="text-gray-500 text-xs font-semibold ml-1">
+                  <span className="text-5xl font-black text-white tracking-tight">{displayPrice}</span>
+                  <span className="text-gray-500 text-xs font-semibold ml-1.5">
                     /{frequency === "month" ? "mo" : "yr"}
                   </span>
                 </>
@@ -260,23 +277,25 @@ export function PricingClient({ initialCountry }) {
               )}
             </div>
 
-            {/* Subscribe Button */}
+            {/* Subscribe Action */}
             <button
               onClick={() => handleSubscribe(premiumTier)}
               disabled={loadingPrices || hasConfigError || !displayPrice}
-              className="w-full py-4 px-6 rounded-2xl text-xs font-bold transition-all mb-8 bg-[#3b82f6] text-white hover:bg-blue-600 shadow-lg shadow-blue-500/20 disabled:opacity-40"
+              className="btn-primary w-full py-4 text-xs font-black shadow-lg shadow-purple-500/20 mb-8 relative z-10"
             >
               {loadingPrices ? "Loading Plan..." : "Start 7-Day Free Trial"}
             </button>
 
-            {/* Features List */}
-            <div>
-              <h4 className="text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-4 text-center">Included Privileges</h4>
-              <ul className="space-y-3.5 text-xs text-gray-300">
+            {/* Features list */}
+            <div className="relative z-10">
+              <h4 className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-5 text-center">Included Privileges</h4>
+              <ul className="space-y-4 text-xs text-gray-300">
                 {premiumTier.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-3">
-                    <Check style={{ width: "14px", height: "14px", color: "var(--accent-success)", flexShrink: 0, marginTop: "2px" }} />
-                    <span>{feature}</span>
+                    <div className="w-4 h-4 bg-[#10b981]/10 rounded-full flex items-center justify-center border border-[#10b981]/25 flex-shrink-0 mt-0.5">
+                      <Check style={{ width: "10px", height: "10px", color: "#10b981" }} />
+                    </div>
+                    <span className="leading-normal">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -286,17 +305,17 @@ export function PricingClient({ initialCountry }) {
         </div>
 
         {/* Legal & Notice footer */}
-        <div className="text-center text-[10px] text-gray-600 max-w-md mx-auto leading-relaxed mt-12">
-          <p className="mb-3">
+        <div className="text-center text-[10px] text-gray-500 max-w-md mx-auto leading-relaxed mt-16 relative z-10">
+          <p className="mb-4">
             Your <strong>7-day free trial</strong> will automatically convert to a paid subscription. 
             Cancel anytime via your account dropdown settings.
           </p>
           <div className="flex items-center justify-center gap-4 text-gray-500 font-medium">
-            <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms of Service</Link>
+            <Link href="/terms" className="hover:text-[#a78bfa] transition-colors">Terms of Service</Link>
             <span>•</span>
-            <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</Link>
+            <Link href="/privacy" className="hover:text-[#a78bfa] transition-colors">Privacy Policy</Link>
             <span>•</span>
-            <Link href="/refunds" className="hover:text-gray-300 transition-colors">Refund Policy</Link>
+            <Link href="/refunds" className="hover:text-[#a78bfa] transition-colors">Refund Policy</Link>
           </div>
         </div>
 
