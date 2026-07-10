@@ -4333,6 +4333,7 @@ export default function Home() {
                                       <span style={{ color: "var(--accent-danger)" }}>{confidence.toFixed(1)}% ({t("bearish")})</span>
                                     </>
                                   )}
+                                </div>
                               </div>
                             );
                           })()}
