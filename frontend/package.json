@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@paddle/paddle-js": "^1.6.4",
     "chart.js": "^4.5.1",
     "chartjs-plugin-zoom": "^2.2.0",
     "lucide-react": "^1.21.0",
