@@ -9,7 +9,7 @@ from backend.config import MODEL_CACHE_DIR, AUTO_TRAINED_SYMBOLS
 from backend.prediction_engine import train_lr_model, evaluate_lr_performance
 
 def calculate_sr_features_handler(df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
-    """Computes daily support and resistance distance features without lookahead bias."""
+    """Computes daily support and resistance distance features without lookahead bias using vectorized operations."""
     closes = df["Close"].values
     highs = df["High"].values if "High" in df.columns else closes
     lows = df["Low"].values if "Low" in df.columns else closes
@@ -18,40 +18,42 @@ def calculate_sr_features_handler(df: pd.DataFrame) -> Tuple[np.ndarray, np.ndar
     dist_to_res_list = []
     min_history = 30
     
+    # Pre-calculate rolling masks for window sizes 5 and 20
+    rolling_max_5 = df["High"].rolling(window=2*5 + 1, center=True).max().values
+    peaks_5 = (df["High"].values == rolling_max_5)
+    rolling_min_5 = df["Low"].rolling(window=2*5 + 1, center=True).min().values
+    valleys_5 = (df["Low"].values == rolling_min_5)
+    
+    rolling_max_20 = df["High"].rolling(window=2*20 + 1, center=True).max().values
+    peaks_20 = (df["High"].values == rolling_max_20)
+    rolling_min_20 = df["Low"].rolling(window=2*20 + 1, center=True).min().values
+    valleys_20 = (df["Low"].values == rolling_min_20)
+    
     for i in range(len(df)):
         if i < min_history:
             dist_to_sup_list.append(0.02)
             dist_to_res_list.append(0.02)
             continue
             
-        hist_df = df.iloc[:i]
-        hist_closes = hist_df["Close"].values
-        hist_highs = hist_df["High"].values if "High" in hist_df.columns else hist_closes
-        hist_lows = hist_df["Low"].values if "Low" in hist_df.columns else hist_closes
+        # Determine window size based on historical length (i)
+        window_size = 20 if i > 300 else 5
+        peaks_mask = peaks_20 if i > 300 else peaks_5
+        valleys_mask = valleys_20 if i > 300 else valleys_5
         
-        window_size = 20 if len(hist_df) > 300 else 5
-        peaks = []
-        valleys = []
+        # Max confirmed index k
+        max_k = i - window_size - 1
         
-        for k in range(window_size, len(hist_df) - window_size):
-            left_highs = hist_highs[k - window_size : k]
-            right_highs = hist_highs[k + 1 : k + window_size + 1]
-            if hist_highs[k] == max(hist_highs[k], max(left_highs), max(right_highs)):
-                peaks.append(hist_highs[k])
-                
-            left_lows = hist_lows[k - window_size : k]
-            right_lows = hist_lows[k + 1 : k + window_size + 1]
-            if hist_lows[k] == min(hist_lows[k], min(left_lows), min(right_lows)):
-                valleys.append(hist_lows[k])
-                
+        confirmed_peaks = highs[:max_k + 1][peaks_mask[:max_k + 1]]
+        confirmed_valleys = lows[:max_k + 1][valleys_mask[:max_k + 1]]
+        
         current_price = closes[i]
-        supports = sorted(list(set([v for v in valleys if v < current_price])), reverse=True)[:5]
-        resistances = sorted(list(set([p for p in peaks if p > current_price])))[:5]
+        supports = sorted(list(set([v for v in confirmed_valleys if v < current_price])), reverse=True)[:5]
+        resistances = sorted(list(set([p for p in confirmed_peaks if p > current_price])))[:5]
         
         if not supports or not resistances:
-            h = hist_highs[-1]
-            l = hist_lows[-1]
-            c = hist_closes[-1]
+            h = highs[i-1]
+            l = lows[i-1]
+            c = closes[i-1]
             pivot = (h + l + c) / 3.0
             if not supports:
                 supports = [2 * pivot - h]
