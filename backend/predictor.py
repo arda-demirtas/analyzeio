@@ -139,6 +139,20 @@ def get_prediction(
         else:
             predicted_close = analyzeio_predicted_close
             metrics = analyzeio_metrics
+
+        # Cache individual model predictions for all-bullish scanning
+        try:
+            pred_cache_path = os.path.join(MODEL_CACHE_DIR, f"{symbol.upper().strip()}_{interval}_predictions.json")
+            with open(pred_cache_path, "w", encoding="utf-8") as f:
+                json.dump({
+                    "xgb": float(xgb_predicted_close) if xgb_predicted_close is not None else None,
+                    "lstm": float(lstm_predicted_close) if lstm_predicted_close is not None else None,
+                    "lr": float(lr_predicted_close) if lr_predicted_close is not None else None,
+                    "patchtst": float(patchtst_predicted_close) if patchtst_predicted_close is not None else None,
+                    "updated_at": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                }, f)
+        except Exception as pe:
+            print(f"Error caching predictions for {symbol}: {pe}")
     else:
         # If any model is missing/training, the ensemble and all outputs are pending (None)
         analyzeio_predicted_close = None
