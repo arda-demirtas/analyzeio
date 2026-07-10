@@ -53,8 +53,8 @@ export default function WelcomePage() {
               <Layers style={{ width: "14px", height: "14px", color: "#e0f2fe" }} />
             </div>
             <div className="feature-text-wrapper">
-              <span className="feature-label">100% Bullish Consensus Screener</span>
-              <span className="feature-sublabel">Filter and discover assets where all 5 models have strong bullish alignment.</span>
+              <span className="feature-label">100% Upward Trend Consensus Analysis</span>
+              <span className="feature-sublabel">Filter and discover assets where all 5 models have strong upward trend alignment.</span>
             </div>
           </div>
         </div>
