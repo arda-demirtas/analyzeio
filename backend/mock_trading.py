@@ -49,6 +49,49 @@ def log_mock_event(state: Dict[str, Any], event_text: str):
     if len(state["logs"]) > 150:
         state["logs"] = state["logs"][-150:]
 
+
+def calculate_support_resistance(df) -> Tuple[list, list]:
+    """Calculates support and resistance levels from daily candle history."""
+    import pandas as pd
+    if df.empty or len(df) < 10:
+        return [], []
+        
+    closes = df["Close"].values
+    highs = df["High"].values if "High" in df.columns else closes
+    lows = df["Low"].values if "Low" in df.columns else closes
+    
+    window_size = 20 if len(df) > 300 else 5
+    peaks = []
+    valleys = []
+    
+    for i in range(window_size, len(df) - window_size):
+        left_highs = highs[i - window_size : i]
+        right_highs = highs[i + 1 : i + window_size + 1]
+        if highs[i] == max(highs[i], max(left_highs), max(right_highs)):
+            peaks.append(highs[i])
+            
+        left_lows = lows[i - window_size : i]
+        right_lows = lows[i + 1 : i + window_size + 1]
+        if lows[i] == min(lows[i], min(left_lows), min(right_lows)):
+            valleys.append(lows[i])
+            
+    current_price = closes[-1]
+    supports = sorted(list(set([v for v in valleys if v < current_price])), reverse=True)[:5]
+    resistances = sorted(list(set([p for p in peaks if p > current_price])))[:5]
+    
+    if not supports or not resistances:
+        h = highs[-1]
+        l = lows[-1]
+        c = closes[-1]
+        pivot = (h + l + c) / 3.0
+        if not supports:
+            supports = [2 * pivot - h, pivot - (h - l)]
+        if not resistances:
+            resistances = [2 * pivot - l, pivot + (h - l)]
+            
+    return sorted(supports), sorted(resistances)
+
+
 def score_symbol_for_trading(symbol: str) -> float:
     """
     Computes a bullish preference score for the given symbol based on:
@@ -98,11 +141,13 @@ def score_symbol_for_trading(symbol: str) -> float:
     except Exception:
         pass
 
-    # 3. Technical Indicators
+    # 3. Technical Indicators & Support/Resistance
     rsi = 50.0
     macd_hist = 0.0
     last_price = last_close
     ema_50 = last_close
+    supports = []
+    resistances = []
     try:
         df, _, _, _ = fetch_market_data(symbol, interval="1d")
         if not df.empty:
@@ -110,6 +155,7 @@ def score_symbol_for_trading(symbol: str) -> float:
             macd_hist = float(df["MACD_Hist"].iloc[-1]) if "MACD_Hist" in df.columns else 0.0
             last_price = float(df["Close"].iloc[-1])
             ema_50 = float(df["EMA_50"].iloc[-1]) if "EMA_50" in df.columns else last_price
+            supports, resistances = calculate_support_resistance(df)
     except Exception:
         pass
 
@@ -129,15 +175,36 @@ def score_symbol_for_trading(symbol: str) -> float:
     if last_price > ema_50:
         score += 0.005
         
+    # Support & Resistance adjustments
+    closest_resistance = min(resistances) if resistances else None
+    closest_support = max(supports) if supports else None
+    
+    if closest_resistance is not None:
+        dist_to_res = (closest_resistance - last_price) / last_price
+        if dist_to_res < 0.01:  # Within 1% of major resistance
+            # Penalty for buying near resistance
+            score -= 0.02 * (1.0 - (dist_to_res / 0.01))
+            
+    if closest_support is not None:
+        dist_to_sup = (last_price - closest_support) / last_price
+        if dist_to_sup < 0.01:  # Within 1% of major support
+            # Bonus for buying near support floor
+            score += 0.01 * (1.0 - (dist_to_sup / 0.01))
+
+    # Fundamental penalty: if news sentiment is heavily negative
+    if sentiment_score < -0.15:
+        score -= 0.05
+        
     return score
 
 def select_best_symbol_to_buy() -> Tuple[str, float]:
-    """Finds the symbol with the highest score from the top 10 popular cryptos."""
+    """Finds the symbol with the highest score from all AUTO_TRAINED_SYMBOLS."""
     best_symbol = ""
     best_score = -999.0
     
-    # Scan the top 10 popular cryptos
-    for symbol in POPULAR_CRYPTOS[:10]:
+    # Scan all trained symbols in the system
+    from backend.config import AUTO_TRAINED_SYMBOLS
+    for symbol in AUTO_TRAINED_SYMBOLS:
         score = score_symbol_for_trading(symbol)
         if score > best_score:
             best_score = score
@@ -166,7 +233,10 @@ def run_mock_trading_daily_buy(state=None) -> bool:
     print("[Mock Trading] Executing daily selection and buy...")
     selected_symbol, score = select_best_symbol_to_buy()
     if not selected_symbol or score < -10.0:
-        print("[Mock Trading] No valid symbol found for daily buy.")
+        event_str = "No symbols met the strict All-Model Bullish criteria today. Remaining in cash balance to manage risk."
+        log_mock_event(state, event_str)
+        save_mock_trading_state(state)
+        print(f"[Mock Trading] {event_str}")
         return False
         
     # Get the daily open price and yesterday's close price
