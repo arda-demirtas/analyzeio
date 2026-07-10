@@ -105,3 +105,27 @@ class MarketScreener(Base):
     rsi = Column(Float, nullable=True)
     macd_signal = Column(String, nullable=True)     # "BULLISH", "BEARISH", "NEUTRAL"
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+
+class Customer(Base):
+    __tablename__ = "customers"
+
+    customer_id = Column(String, primary_key=True, index=True)
+    email = Column(String, nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    subscription_id = Column(String, primary_key=True, index=True)
+    customer_id = Column(String, ForeignKey("customers.customer_id", ondelete="CASCADE"), nullable=False)
+    status = Column(String, nullable=False, index=True)
+    price_id = Column(String, nullable=False)
+    product_id = Column(String, nullable=False)
+    scheduled_change_action = Column(String, nullable=True)
+    scheduled_change_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
