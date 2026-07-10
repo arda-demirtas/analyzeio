@@ -46,7 +46,18 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_typ
         )
     is_btc = symbol_upper == "BTC-USD"
     is_premium = current_user.is_premium if current_user else False
-    if not is_premium and not is_btc:
+    
+    # Premium Gate: Access to non-BTC symbols, intra-day intervals (15m, 1h, 4h), and non-default models (lstm, lr, patchtst, sr)
+    has_exceeded_free = False
+    if not is_premium:
+        if not is_btc:
+            has_exceeded_free = True
+        elif interval != "1d":
+            has_exceeded_free = True
+        elif model_type not in ["analyzeio", "xgboost"]:
+            has_exceeded_free = True
+
+    if has_exceeded_free:
         try:
             history_points = fetch_interval_history(symbol_upper, interval=interval)
             if not history_points:
@@ -168,8 +179,14 @@ def get_market_screener(db: Session = Depends(get_db)):
 
 
 @router.get("/all-bullish")
-def get_all_model_bullish_assets(db: Session = Depends(get_db)):
+def get_all_model_bullish_assets(db: Session = Depends(get_db), current_user: Optional[User] = Depends(get_current_user_optional)):
     """Returns a list of assets where all 5 models are bullish (>0.5 probability)."""
+    is_premium = current_user.is_premium if current_user else False
+    if not is_premium:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="All-Model Bullish Screener is a Premium feature. Please upgrade to Premium."
+        )
     import os
     import json
     from backend.predictor import MODEL_CACHE_DIR
