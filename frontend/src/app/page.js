@@ -26,7 +26,8 @@ import {
   Maximize2,
   Minimize2,
   LogIn,
-  UserPlus
+  UserPlus,
+  Zap
 } from "lucide-react";
 import { Chart, registerables } from "chart.js";
 import { TRANSLATIONS } from "./translations";
@@ -518,6 +519,7 @@ export default function Home() {
   const [mockTradingState, setMockTradingState] = useState(null);
   const [modelType, setModelType] = useState("xgboost");
   const [daemonLogs, setDaemonLogs] = useState({ out: [], error: [], daemon_out: [], daemon_err: [] });
+  const [allBullishAssets, setAllBullishAssets] = useState([]);
 
   const lastCloseVal = predictionData ? predictionData.last_close : null;
   const xgbChangeVal = (predictionData && predictionData.xgb_predicted_close !== null)
@@ -595,6 +597,7 @@ export default function Home() {
       fetchWatchlist(savedToken);
       fetchCurrentUser(savedToken);
     }
+    fetchAllBullishAssets();
   }, []);
 
   // Clear chart tooltips on outside clicks/touches
@@ -1522,6 +1525,19 @@ export default function Home() {
       console.error("Error fetching screener data:", err);
     } finally {
       setScreenerLoading(false);
+    }
+  };
+
+  // API Call: Fetch All-Model Bullish Assets
+  const fetchAllBullishAssets = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/all-bullish`);
+      if (res.ok) {
+        const data = await res.json();
+        setAllBullishAssets(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error("Error fetching all bullish assets:", err);
     }
   };
 
@@ -4470,6 +4486,70 @@ export default function Home() {
                           })
                         )}
                       </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* All-Model Bullish Assets Card */}
+                <div className="glass-panel" style={{ 
+                  marginTop: "10px", 
+                  background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%)",
+                  border: "1px solid rgba(245, 158, 11, 0.25)",
+                }}>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Zap style={{ color: "#f59e0b", width: "18px", height: "18px", filter: "drop-shadow(0 0 6px #f59e0b)" }} /> 
+                    {lang === "tr" ? "Tüm Modellerin Boğa Öngördüğü Varlıklar" : "All-Model Bullish Assets"}
+                  </h3>
+                  
+                  {allBullishAssets.length === 0 ? (
+                    <div style={{ fontSize: "12.5px", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", padding: "10px 0" }}>
+                      {lang === "tr" ? "Şu an 4 modelin birden Boğa (Bullish) sinyali verdiği bir varlık bulunmamaktadır." : "No assets currently show Bullish signals across all 4 models."}
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "300px", overflowY: "auto", paddingRight: "5px" }}>
+                      {allBullishAssets.map((asset, idx) => (
+                        <div 
+                          key={idx}
+                          onClick={() => selectSymbol(asset.symbol)}
+                          className={`watchlist-item ${activeSymbol === asset.symbol ? "active" : ""}`}
+                          style={{ 
+                            display: "flex", 
+                            justifyContent: "space-between", 
+                            alignItems: "center", 
+                            padding: "10px 14px", 
+                            cursor: "pointer",
+                            background: activeSymbol === asset.symbol ? "rgba(245, 158, 11, 0.12)" : "rgba(255, 255, 255, 0.02)",
+                            border: activeSymbol === asset.symbol ? "1px solid rgba(245, 158, 11, 0.35)" : "1px solid rgba(255, 255, 255, 0.05)"
+                          }}
+                        >
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <span style={{ fontSize: "13.5px", fontWeight: "700", color: "#fff" }}>{asset.symbol}</span>
+                            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{asset.name}</span>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-main)" }}>
+                              ${asset.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 3 })}
+                            </span>
+                            <span 
+                              className="badge badge-success" 
+                              style={{ 
+                                fontSize: "11px", 
+                                fontWeight: "800",
+                                padding: "3px 8px", 
+                                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                                border: "none",
+                                borderRadius: "12px",
+                                color: "#fff",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "2px"
+                              }}
+                            >
+                              ▲ {((asset.ensemble - 0.5) * 100 + 50).toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
