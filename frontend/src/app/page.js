@@ -4189,6 +4189,43 @@ export default function Home() {
                             })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
                           </div>
                         )}
+
+                        {/* Support/Resistance Box */}
+                        {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined && (
+                          <div style={getBoxStyle("support_resistance", "rgba(20, 184, 166, 0.04)", "1px solid rgba(20, 184, 166, 0.2)")}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#14b8a6", boxShadow: "0 0 8px #14b8a6" }}></span>
+                              <span style={{ fontSize: "13px", fontWeight: "600", color: "#ccfbf1" }}>
+                                {lang === "tr" ? "Destek/Direnç" : "S/R Standalone"}
+                                {getBestModel()?.key === "support_resistance" && (
+                                  <span style={{
+                                    marginLeft: "6px",
+                                    padding: "2px 6px",
+                                    background: "#f59e0b",
+                                    color: "#000",
+                                    borderRadius: "10px",
+                                    fontSize: "9px",
+                                    fontWeight: "900",
+                                    textTransform: "uppercase"
+                                  }}>
+                                    {lang === "tr" ? "👑 EN BAŞARILI" : "👑 BEST MODEL"}
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                            {(() => {
+                              const prob = predictionData.sr_predicted_close;
+                              const isBullish = prob >= 0.5;
+                              const conf = isBullish ? prob * 100 : (1 - prob) * 100;
+                              const label = lang === "tr" ? "Olasılık" : "Probability";
+                              return (
+                                <span style={{ fontSize: "14px", fontWeight: "800", color: isBullish ? "#10b981" : "#ef4444" }}>
+                                  {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({label}: {conf.toFixed(1)}%)
+                                </span>
+                              );
+                            })()}
+                          </div>
+                        )}
                       </div>
 
                       <div style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", width: "100%" }}>
