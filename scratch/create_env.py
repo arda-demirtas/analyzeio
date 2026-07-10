@@ -19,6 +19,11 @@ NEXT_PUBLIC_PADDLE_PRICE_PRO_MONTH=pri_pro_monthly_dummy
 NEXT_PUBLIC_PADDLE_PRICE_PRO_YEAR=pri_pro_yearly_dummy
 NEXT_PUBLIC_PADDLE_PRICE_ADVANCED_MONTH=pri_advanced_monthly_dummy
 NEXT_PUBLIC_PADDLE_PRICE_ADVANCED_YEAR=pri_advanced_yearly_dummy
+PADDLE_SANDBOX_WEBHOOK_SECRET=pdl_ntf_secret_sandbox_dummy
+PADDLE_LIVE_WEBHOOK_SECRET=pdl_ntf_secret_live_dummy
+PADDLE_WEBHOOK_SECRET=pdl_ntf_secret_general_dummy
+PADDLE_SANDBOX_API_KEY=pdl_sb_dummy_key_1234567890abcdef
+PADDLE_LIVE_API_KEY=pdl_live_dummy_key_1234567890abcdef
 """
     
     print(f"Creating .env file at {env_path}...")
