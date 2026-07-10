@@ -2453,7 +2453,8 @@ export default function Home() {
       { key: "xgboost", name: "XGBoost", da: predictionData.xgb_metrics?.directional_accuracy, pred: predictionData.xgb_predicted_close },
       { key: "lstm", name: "LSTM", da: predictionData.lstm_metrics?.directional_accuracy, pred: predictionData.lstm_predicted_close },
       { key: "linear_regression", name: lang === "tr" ? "Lineer Regresyon" : "Linear Regression", da: predictionData.lr_metrics?.directional_accuracy, pred: predictionData.lr_predicted_close },
-      { key: "patchtst", name: "PatchTST", da: predictionData.patchtst_metrics?.directional_accuracy, pred: predictionData.patchtst_predicted_close }
+      { key: "patchtst", name: "PatchTST", da: predictionData.patchtst_metrics?.directional_accuracy, pred: predictionData.patchtst_predicted_close },
+      { key: "support_resistance", name: lang === "tr" ? "Destek/Direnç" : "Support/Resistance", da: predictionData.sr_metrics?.directional_accuracy, pred: predictionData.sr_predicted_close }
     ];
     
     // Do not select a best model if any model is still training/pending (shows ---)
@@ -4685,13 +4686,35 @@ export default function Home() {
                               ? `${(predictionData.patchtst_predicted_close * 100).toFixed(1)}%`
                               : "---"}
                           </td>
-
-
                           <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
                             {predictionData && predictionData.patchtst_metrics && predictionData.patchtst_metrics.logloss !== undefined && predictionData.patchtst_metrics.logloss !== null ? predictionData.patchtst_metrics.logloss.toFixed(3) : "---"}
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
                             {predictionData && predictionData.patchtst_metrics && predictionData.patchtst_metrics.directional_accuracy !== null ? `${predictionData.patchtst_metrics.directional_accuracy.toFixed(1)}%` : "---"}
+                          </td>
+                        </tr>
+
+                        {/* Support/Resistance row */}
+                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                          <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#14b8a6" }}></span>
+                            <span style={{ fontWeight: "600", color: "#ccfbf1" }}>{lang === "tr" ? "Destek/Direnç" : "S/R Standalone"}</span>
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700", color: predictionData && predictionData.sr_predicted_close >= 0.5 ? "var(--accent-success)" : "var(--accent-danger)" }}>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined
+                              ? (predictionData.sr_predicted_close >= 0.5 ? "▲ BULLISH" : "▼ BEARISH")
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined
+                              ? `${(predictionData.sr_predicted_close * 100).toFixed(1)}%`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.sr_metrics && predictionData.sr_metrics.logloss !== undefined && predictionData.sr_metrics.logloss !== null ? predictionData.sr_metrics.logloss.toFixed(3) : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
+                            {predictionData && predictionData.sr_metrics && predictionData.sr_metrics.directional_accuracy !== null && predictionData.sr_metrics.directional_accuracy !== undefined ? `${predictionData.sr_metrics.directional_accuracy.toFixed(1)}%` : "---"}
                           </td>
                         </tr>
                       </tbody>
