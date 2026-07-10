@@ -1,7 +1,8 @@
 import os
 
 def main():
-    env_path = "/var/www/analyzeio/.env"
+    env_path_root = "/var/www/analyzeio/.env"
+    env_path_frontend = "/var/www/analyzeio/frontend/.env"
     env_content = """# Environment Variables for Analyzeio
 DATABASE_URL=postgresql://analyzeio_user:p%40ssword_analyze_io_99@localhost/analyzeio
 SMTP_HOST=smtp.gmail.com
@@ -22,13 +23,17 @@ PADDLE_SANDBOX_API_KEY=pdl_sb_dummy_key_1234567890abcdef
 PADDLE_LIVE_API_KEY=pdl_live_apikey_01kx6aw8xbjyhw46acgvvd1wd3_99983YAtqkpkEJQjSfJY4Y_Au9
 """
     
-    print(f"Creating .env file at {env_path}...")
+    print(f"Creating .env files...")
     try:
-        with open(env_path, "w", encoding="utf-8") as f:
+        with open(env_path_root, "w", encoding="utf-8") as f:
             f.write(env_content)
-        print("Successfully created .env file!")
+        print(f"Successfully created .env at {env_path_root}!")
+        
+        with open(env_path_frontend, "w", encoding="utf-8") as f:
+            f.write(env_content)
+        print(f"Successfully created .env at {env_path_frontend}!")
     except Exception as e:
-        print(f"Failed to create .env file: {e}")
+        print(f"Failed to create .env files: {e}")
 
 if __name__ == "__main__":
     main()
