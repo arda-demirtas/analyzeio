@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { Chart, registerables } from "chart.js";
 import { TRANSLATIONS } from "./translations";
+import Link from "next/link";
 
 // Custom plugin to draw Candlestick Wicks (High/Low shadows)
 const candlestickPlugin = {
