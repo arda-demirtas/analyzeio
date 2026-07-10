@@ -260,47 +260,47 @@ def get_prediction(
         else:
             tech_text = "Model training or data update is in progress. Please wait..."
     elif change_percent > 4.0:
-        tech_signal = "STRONG_BUY"
+        tech_signal = "UPWARD_TREND"
         if lang == "tr":
-            tech_text = "Modellerin ortalama tahmini, yüksek güvenilirlikli yukarı yönlü ivme öngörüyor (>54%). Long (Alış) pozisyonu açılması önerilir."
+            tech_text = "Modellerin ortalama tahmini, teknik verilere dayanarak yukarı yönlü istatistiksel bir trend öngörüyor (>54% güven oranı)."
         elif lang == "de":
-            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf eine hohe Aufwärtsdynamik (>54%) hin. Die Eröffnung einer Long-Position wird empfohlen."
+            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf einen statistischen Aufwärtstrend hin (>54% Konfidenz)."
         elif lang == "ru":
-            tech_text = "Средний прогноз моделей указывает на восходящий импульс высокой степени надежности (>54%). Рекомендуется открыть позицию Long."
+            tech_text = "Средний прогноз моделей указывает на статистический восходящий тренд (>54% уверенность)."
         elif lang == "zh":
-            tech_text = "模型的平均预测显示高置信度上行趋势 (>54%)。建议开立多单（做多）。"
+            tech_text = "模型的平均预测显示统计学上行趋势 (>54% 置信度)。"
         elif lang == "es":
-            tech_text = "El pronóstico promedio de los modelos indica un impulso alcista de alta convicción (>54%). Se recomienda abrir una posición Long."
+            tech_text = "El pronóstico promedio de los modelos indica una tendencia alcista estadística (>54% de confianza)."
         else:
-            tech_text = "Models' average prediction forecasts high-conviction upward momentum (>54%). Opening a Long position is recommended."
+            tech_text = "Models' average prediction forecasts a statistical upward trend (>54% confidence)."
     elif change_percent < -4.0:
-        tech_signal = "STRONG_SELL"
+        tech_signal = "DOWNWARD_TREND"
         if lang == "tr":
-            tech_text = "Modellerin ortalama tahmini, yüksek güvenilirlikli aşağı yönlü ivme öngörüyor (<46%). Short (Satış) pozisyonu açılması veya Nakitte kalınması önerilir."
+            tech_text = "Modellerin ortalama tahmini, teknik verilere dayanarak aşağı yönlü istatistiksel bir trend öngörüyor (>54% güven oranı)."
         elif lang == "de":
-            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf eine hohe Abwärtsdynamik (<46%) hin. Die Eröffnung einer Short-Position oder das Verbleiben in bar wird empfohlen."
+            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf einen statistischen Abwärtstrend hin (>54% Konfidenz)."
         elif lang == "ru":
-            tech_text = "Средний прогноз моделей указывает на нисходящий импульс высокой степени надежности (<46%). Рекомендуется открыть позицию Short или оставаться в кэше."
+            tech_text = "Средний прогноз моделей указывает на статистический нисходящий тренд (>54% уверенность)."
         elif lang == "zh":
-            tech_text = "模型的平均预测显示高置信度下行趋势 (<46%)。建议开立空单（做空）或持有现金。"
+            tech_text = "模型的平均预测显示统计学下行趋势 (>54% 置信度)。"
         elif lang == "es":
-            tech_text = "El pronóstico promedio de los modelos indica un impulso bajista de alta convicción (<46%). Se recomienda abrir una posición Short o permanecer en Efectivo."
+            tech_text = "El pronóstico promedio de los modelos indica una tendencia bajista estadística (>54% de confianza)."
         else:
-            tech_text = "Models' average prediction forecasts high-conviction downward momentum (<46%). Opening a Short position or staying in Cash is recommended."
+            tech_text = "Models' average prediction forecasts a statistical downward trend (>54% confidence)."
     else:
-        tech_signal = "HOLD"
+        tech_signal = "STABLE"
         if lang == "tr":
-            tech_text = "Modellerin ortalama tahmini, kararsız yön öngörüyor (46% ile 54% arasında). Nakitte kalınması önerilir."
+            tech_text = "Modellerin ortalama tahmini, yatay ve kararlı bir fiyat aralığı öngörüyor (%46 ile %54 güven aralığı)."
         elif lang == "de":
-            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf eine unklare Richtung hin (zwischen 46% und 54%). Es wird empfohlen, in bar zu bleiben."
+            tech_text = "Die durchschnittliche Prognose der Modelle deutet auf einen stabilen horizontalen Verlauf hin (46% bis 54% Konfidenz)."
         elif lang == "ru":
-            tech_text = "Средний прогноз моделей указывает на неопределенное направление цены (между 46% ve 54%). Rekomenduetsya ostavatsya v keshe."
+            tech_text = "Средний прогноз моделей указывает на стабильный горизонтальный диапазон (от 46% до 54% уверенности)."
         elif lang == "zh":
-            tech_text = "模型的平均预测显示方向不明（在 46% 至 54% 之间）。建议持有现金。"
+            tech_text = "模型的平均预测显示平稳横盘趋势 (46% 至 54% 置信度)。"
         elif lang == "es":
-            tech_text = "El pronóstico promedio de los modelos indica una dirección incierta (entre 46% y 54%). Se recomienda permanecer en Efectivo."
+            tech_text = "El pronóstico promedio de los modelos indica una tendencia lateral estable (entre 46% y 54% de confianza)."
         else:
-            tech_text = "Models' average prediction forecasts uncertain direction (between 46% and 54%). Staying in Cash is recommended."
+            tech_text = "Models' average prediction forecasts a stable horizontal trend (between 46% and 54% confidence)."
             
     technical_recommendation = {
         "signal": tech_signal,
