@@ -59,6 +59,7 @@ def check_premium_access(email: str, db: Session) -> bool:
 
 
 @router.post("/webhooks/paddle", status_code=status.HTTP_200_OK)
+@router.post("/billing/webhook", status_code=status.HTTP_200_OK)
 async def handle_paddle_webhook(request: Request, db: Session = Depends(get_db)):
     """Receives, verifies, and routes Paddle webhook events."""
     raw_body = await request.body()
