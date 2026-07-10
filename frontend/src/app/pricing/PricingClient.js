@@ -1,62 +1,31 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { initializePaddle } from "@paddle/paddle-js";
 import { ArrowLeft, Check, Sparkles, AlertTriangle, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
-// 3-Tier Pricing Model Definition (Tiers easily editable)
+// Single-Tier Premium Pricing Definition
 export const PricingTiers = [
   {
-    name: "Starter",
-    id: "starter",
-    description: "Perfect for beginners exploring AI-driven market prediction.",
+    name: "Premium",
+    id: "premium",
+    description: "Full access to institutional-grade AI models and technical screening tools.",
     features: [
-      "1 Active Watchlist",
-      "3 AI Models (XGBoost, LSTM, Linear Regression)",
-      "Daily (1d) predictions",
-      "Standard email support",
-    ],
-    featured: false,
-    priceId: {
-      month: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTH || "",
-      year: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEAR || "",
-    },
-  },
-  {
-    name: "Pro",
-    id: "pro",
-    description: "Designed for active traders seeking maximum model ensemble power.",
-    features: [
-      "Unlimited Watchlists",
-      "All 5 AI Models (incl. PatchTST & S/R Model)",
-      "Intra-day predictions (15m, 1h, 4h)",
-      "100% Bullish Consensus Page access",
-      "Fast cloud predictions",
+      "All 5 AI Models (XGBoost, LSTM, Linear Regression, PatchTST, S/R Model)",
+      "Intra-day prediction cycles (15m, 1h, 4h) + Daily (1d)",
+      "100% Bullish Consensus Dashboard access",
+      "Automatic Support & Resistance price levels overlay",
+      "Unlimited Watchlists & Symbol tracking",
+      "Priority predictions & live comments feed",
+      "7-Day Free Trial included",
     ],
     featured: true,
     priceId: {
-      month: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_MONTH || "",
-      year: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_YEAR || "",
+      month: process.env.NEXT_PUBLIC_PADDLE_PRICE_PREMIUM_MONTH || process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_MONTH || "",
+      year: process.env.NEXT_PUBLIC_PADDLE_PRICE_PREMIUM_YEAR || process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_YEAR || "",
     },
-  },
-  {
-    name: "Advanced",
-    id: "advanced",
-    description: "For institutional clients and algorithmic trading systems.",
-    features: [
-      "Everything in Pro",
-      "API access for custom trading bots",
-      "Dedicated GPU training priority",
-      "Dedicated account manager",
-      "24/7 Priority developer support",
-    ],
-    featured: false,
-    priceId: {
-      month: process.env.NEXT_PUBLIC_PADDLE_PRICE_ADVANCED_MONTH || "",
-      year: process.env.NEXT_PUBLIC_PADDLE_PRICE_ADVANCED_YEAR || "",
-    },
-  },
+  }
 ];
 
 export function PricingClient({ initialCountry }) {
@@ -65,9 +34,7 @@ export function PricingClient({ initialCountry }) {
   const [prices, setPrices] = useState({});
   const [loadingPrices, setLoadingPrices] = useState(true);
   const [userEmail, setUserEmail] = useState("");
-  const [authError, setAuthError] = useState(null);
 
-  // Configuration check - fail loudly if unset or using default placeholders
   const clientToken = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
   const paddleEnv = process.env.NEXT_PUBLIC_PADDLE_ENV;
   
@@ -79,7 +46,7 @@ export function PricingClient({ initialCountry }) {
   
   const hasConfigError = isConfigMissing || isConfigPlaceholder;
 
-  // 1. Fetch current signed-in user email if token exists in localStorage
+  // 1. Fetch authenticated user email
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
@@ -95,13 +62,13 @@ export function PricingClient({ initialCountry }) {
           }
         }
       } catch (err) {
-        console.error("Failed to fetch authenticated user for prefill:", err);
+        console.error("Failed to fetch user:", err);
       }
     };
     fetchUser();
   }, []);
 
-  // 2. Initialize Paddle.js
+  // 2. Initialize Paddle
   useEffect(() => {
     if (hasConfigError) {
       setLoadingPrices(false);
@@ -121,11 +88,10 @@ export function PricingClient({ initialCountry }) {
     });
   }, [clientToken, paddleEnv, hasConfigError]);
 
-  // 3. Load prices via PricePreview
+  // 3. Fetch Prices
   useEffect(() => {
     if (!paddle) return;
 
-    // Collect all price IDs to fetch in a single batch
     const items = PricingTiers.flatMap((tier) => {
       const itemsList = [];
       if (tier.priceId.month) itemsList.push({ priceId: tier.priceId.month, quantity: 1 });
@@ -140,7 +106,6 @@ export function PricingClient({ initialCountry }) {
 
     const previewParams = {
       items,
-      // If initialCountry is null/absent, do not pass countryCode so Paddle auto-detects via visitor IP
       ...(initialCountry && { address: { countryCode: initialCountry } }),
     };
 
@@ -148,9 +113,8 @@ export function PricingClient({ initialCountry }) {
     paddle.PricePreview(previewParams)
       .then((response) => {
         const priceMap = {};
-        if (response && response.data && response.data.details && response.data.details.lineItems) {
+        if (response?.data?.details?.lineItems) {
           response.data.details.lineItems.forEach((item) => {
-            // Store the formatted totals string directly (e.g. "$9.99" or "£8.50")
             priceMap[item.price.id] = item.formattedTotals.total;
           });
         }
@@ -169,7 +133,7 @@ export function PricingClient({ initialCountry }) {
     
     const priceId = tier.priceId[frequency];
     if (!priceId) {
-      alert("Error: Price ID is not configured for this tier and billing frequency.");
+      alert("Error: Price ID is not configured for this plan.");
       return;
     }
 
@@ -185,10 +149,14 @@ export function PricingClient({ initialCountry }) {
     });
   };
 
+  const premiumTier = PricingTiers[0];
+  const currentPriceId = premiumTier.priceId[frequency];
+  const displayPrice = prices[currentPriceId];
+
   return (
     <div className="min-h-screen bg-[#0d0f14] text-gray-100 flex flex-col font-sans">
       
-      {/* Configuration Error Banner (Fail Loudly Requirement) */}
+      {/* Configuration Error Banner */}
       {hasConfigError && (
         <div style={{
           background: "rgba(239, 68, 68, 0.15)",
@@ -204,13 +172,13 @@ export function PricingClient({ initialCountry }) {
           <AlertTriangle style={{ flexShrink: 0, width: "20px", height: "20px" }} />
           <div>
             <strong>Loud Configuration Error:</strong> Paddle environment variables are missing or contain placeholder values. 
-            Please configure <code>NEXT_PUBLIC_PADDLE_CLIENT_TOKEN</code>, <code>NEXT_PUBLIC_PADDLE_ENV</code>, and tier price IDs inside your <code>.env</code> file.
+            Please configure <code>NEXT_PUBLIC_PADDLE_CLIENT_TOKEN</code>, <code>NEXT_PUBLIC_PADDLE_ENV</code>, and <code>NEXT_PUBLIC_PADDLE_PRICE_PREMIUM_MONTH</code> / <code>NEXT_PUBLIC_PADDLE_PRICE_PREMIUM_YEAR</code> inside your <code>.env</code> file.
           </div>
         </div>
       )}
 
       {/* Main Container */}
-      <div className="max-w-6xl w-full mx-auto px-6 py-12 flex-grow flex flex-col">
+      <div className="max-w-4xl w-full mx-auto px-6 py-12 flex-grow flex flex-col justify-center">
         
         {/* Header */}
         <div className="mb-12 flex items-center justify-between">
@@ -223,12 +191,12 @@ export function PricingClient({ initialCountry }) {
         </div>
 
         {/* Hero Section */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-black mb-4 tracking-tight" style={{ background: "linear-gradient(to right, #ffffff, #9ca3af)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            Choose Your AI Engine Plan
+            Get analyzeio Premium
           </h1>
-          <p className="text-gray-400 max-w-2xl mx-auto text-base md:text-lg mb-8">
-            Access institutional-grade ensemble algorithms, intra-day forecasts, and live bullish consensus lists.
+          <p className="text-gray-400 max-w-lg mx-auto text-sm md:text-base mb-8">
+            Ensemble AI engine forecasts, automated support/resistance zones, and bullish trend screeners.
           </p>
 
           {/* Billing Frequency Toggle */}
@@ -259,86 +227,68 @@ export function PricingClient({ initialCountry }) {
           </div>
         </div>
 
-        {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-16">
-          {PricingTiers.map((tier) => {
-            const currentPriceId = tier.priceId[frequency];
-            const displayPrice = prices[currentPriceId];
+        {/* Single Premium Plan Card (Centered) */}
+        <div className="max-w-md w-full mx-auto">
+          <div className="relative rounded-3xl p-8 bg-gradient-to-b from-[#141822] to-[#0f111a] border border-[#3b82f6]/40 shadow-2xl shadow-blue-500/5">
             
-            return (
-              <div
-                key={tier.id}
-                className={`relative rounded-3xl p-8 flex flex-col border transition-all duration-300 ${
-                  tier.featured
-                    ? "bg-gradient-to-b from-[#141822] to-[#0f111a] border-[#3b82f6]/40 shadow-2xl shadow-blue-500/5 md:-translate-y-2 scale-[1.02]"
-                    : "bg-[#0f111a]/60 border-gray-800/80 hover:border-gray-700/80"
-                }`}
-              >
-                {/* Popular Badge */}
-                {tier.featured && (
-                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase shadow-md flex items-center gap-1">
-                    <Sparkles style={{ width: "10px", height: "10px" }} /> Most Popular
+            {/* Featured Badge */}
+            <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase shadow-md flex items-center gap-1">
+              <Sparkles style={{ width: "10px", height: "10px" }} /> Full Access
+            </span>
+
+            {/* Plan Title & Desc */}
+            <div className="mb-6 text-center">
+              <h3 className="text-2xl font-black mb-2 text-white">{premiumTier.name}</h3>
+              <p className="text-gray-400 text-xs">{premiumTier.description}</p>
+            </div>
+
+            {/* Price Display */}
+            <div className="mb-8 flex items-baseline justify-center">
+              {loadingPrices ? (
+                <div className="flex items-center gap-2 text-2xl font-black text-gray-500 animate-pulse">
+                  <RefreshCw className="animate-spin" style={{ width: "16px", height: "16px" }} /> Loading...
+                </div>
+              ) : displayPrice ? (
+                <>
+                  <span className="text-5xl font-extrabold text-white tracking-tight">{displayPrice}</span>
+                  <span className="text-gray-500 text-xs font-semibold ml-1">
+                    /{frequency === "month" ? "mo" : "yr"}
                   </span>
-                )}
+                </>
+              ) : (
+                <div className="text-xs text-gray-500 italic">Price ID configuration missing</div>
+              )}
+            </div>
 
-                {/* Card Title & Desc */}
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold mb-2 text-white">{tier.name}</h3>
-                  <p className="text-gray-400 text-xs min-h-[36px]">{tier.description}</p>
-                </div>
+            {/* Subscribe Button */}
+            <button
+              onClick={() => handleSubscribe(premiumTier)}
+              disabled={loadingPrices || hasConfigError || !displayPrice}
+              className="w-full py-4 px-6 rounded-2xl text-xs font-bold transition-all mb-8 bg-[#3b82f6] text-white hover:bg-blue-600 shadow-lg shadow-blue-500/20 disabled:opacity-40"
+            >
+              {loadingPrices ? "Loading Plan..." : "Start 7-Day Free Trial"}
+            </button>
 
-                {/* Price Display */}
-                <div className="mb-8 flex items-baseline">
-                  {loadingPrices ? (
-                    <div className="flex items-center gap-2 text-2xl font-black text-gray-500 animate-pulse">
-                      <RefreshCw className="animate-spin" style={{ width: "16px", height: "16px" }} /> Loading...
-                    </div>
-                  ) : displayPrice ? (
-                    <>
-                      <span className="text-4xl font-extrabold text-white tracking-tight">{displayPrice}</span>
-                      <span className="text-gray-500 text-xs font-semibold ml-1">
-                        /{frequency === "month" ? "mo" : "yr"}
-                      </span>
-                    </>
-                  ) : (
-                    <div className="text-xs text-gray-500 italic">Price unavailable</div>
-                  )}
-                </div>
+            {/* Features List */}
+            <div>
+              <h4 className="text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-4 text-center">Included Privileges</h4>
+              <ul className="space-y-3.5 text-xs text-gray-300">
+                {premiumTier.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-3">
+                    <Check style={{ width: "14px", height: "14px", color: "var(--accent-success)", flexShrink: 0, marginTop: "2px" }} />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-                {/* Subscribe Button */}
-                <button
-                  onClick={() => handleSubscribe(tier)}
-                  disabled={loadingPrices || hasConfigError || !displayPrice}
-                  className={`w-full py-3.5 px-6 rounded-2xl text-xs font-bold transition-all mb-8 ${
-                    tier.featured
-                      ? "bg-[#3b82f6] text-white hover:bg-blue-600 shadow-lg shadow-blue-500/20 disabled:opacity-40"
-                      : "bg-gray-800 text-gray-200 hover:bg-gray-700 disabled:opacity-40"
-                  }`}
-                >
-                  {loadingPrices ? "Loading Plan..." : "Subscribe Now"}
-                </button>
-
-                {/* Features List */}
-                <div className="flex-grow">
-                  <h4 className="text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-4">Included Features</h4>
-                  <ul className="space-y-3.5 text-xs text-gray-300">
-                    {tier.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-3">
-                        <Check style={{ width: "14px", height: "14px", color: "var(--accent-success)", flexShrink: 0, marginTop: "2px" }} />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            );
-          })}
+          </div>
         </div>
 
         {/* Legal & Notice footer */}
-        <div className="text-center text-[11px] text-gray-600 max-w-lg mx-auto leading-relaxed border-t border-gray-900/60 pt-8">
-          All subscriptions include a <strong>7-day free trial</strong>. You can cancel at any time directly from your billing portal dashboard. 
-          Default payment link must be configured in your Paddle Dashboard settings.
+        <div className="text-center text-[10px] text-gray-600 max-w-sm mx-auto leading-relaxed mt-12">
+          Your <strong>7-day free trial</strong> will automatically convert to a paid subscription. 
+          Cancel anytime via your account dropdown settings.
         </div>
 
       </div>
