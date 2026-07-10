@@ -133,10 +133,10 @@ export default function Home() {
 
   const LOCAL_TRANSLATIONS = {
     en: {
-      ai_screener: "AI Market Screener",
+      ai_screener: "100% Bullish Assets",
       news_sentiment: "News Sentiment Analysis",
       news_gauge: "Overall Sentiment",
-      screener_title: "AI Market Screener",
+      screener_title: "Assets with 100% Bullish AI Consensus",
       screener_all: "All Assets",
       screener_bullish: "AI: Bullish",
       screener_bearish: "AI: Bearish",
@@ -154,10 +154,10 @@ export default function Home() {
       rating_neutral: "Neutral"
     },
     tr: {
-      ai_screener: "AI Market Tarayıcı",
+      ai_screener: "100% Boğa Varlıklar",
       news_sentiment: "Haber Duyarlılık Analizi",
       news_gauge: "Genel Duyarlılık",
-      screener_title: "AI Market Tarayıcı",
+      screener_title: "Tüm Modellerin Boğa Öngördüğü Varlıklar",
       screener_all: "Tüm Varlıklar",
       screener_bullish: "AI: Boğa",
       screener_bearish: "AI: Ayı",
@@ -1515,17 +1515,17 @@ export default function Home() {
     }
   };
 
-  // API Call: Fetch Market Screener Data
+  // API Call: Fetch All-Model Bullish Assets (100% Bullish page)
   const fetchScreenerData = async () => {
     setScreenerLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/screener`);
+      const res = await fetch(`${API_BASE_URL}/api/all-bullish`);
       if (res.ok) {
         const data = await res.json();
         setScreenerData(Array.isArray(data) ? data : []);
       }
     } catch (err) {
-      console.error("Error fetching screener data:", err);
+      console.error("Error fetching all-bullish assets:", err);
     } finally {
       setScreenerLoading(false);
     }
@@ -2964,102 +2964,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Filtering Controls */}
-              <div style={{ 
-                display: "flex", 
-                background: "rgba(0, 0, 0, 0.25)", 
-                padding: "4px", 
-                borderRadius: "30px", 
-                border: "1px solid rgba(255, 255, 255, 0.05)",
-                width: "fit-content",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "4px"
-              }}>
-                <button 
-                  onClick={() => setScreenerFilter("all")} 
-                  style={{
-                    background: screenerFilter === "all" ? "var(--accent-primary)" : "transparent",
-                    color: screenerFilter === "all" ? "#fff" : "var(--text-muted)",
-                    border: "none",
-                    padding: "6px 14px",
-                    borderRadius: "20px",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    transition: "var(--transition-smooth)"
-                  }}
-                >
-                  {t("screener_all")}
-                </button>
-                <button 
-                  onClick={() => setScreenerFilter("bullish")} 
-                  style={{
-                    background: screenerFilter === "bullish" ? "var(--accent-success)" : "transparent",
-                    color: screenerFilter === "bullish" ? "#fff" : "var(--text-muted)",
-                    border: "none",
-                    padding: "6px 14px",
-                    borderRadius: "20px",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    transition: "var(--transition-smooth)"
-                  }}
-                >
-                  {t("screener_bullish")}
-                </button>
-                <button 
-                  onClick={() => setScreenerFilter("bearish")} 
-                  style={{
-                    background: screenerFilter === "bearish" ? "var(--accent-danger)" : "transparent",
-                    color: screenerFilter === "bearish" ? "#fff" : "var(--text-muted)",
-                    border: "none",
-                    padding: "6px 14px",
-                    borderRadius: "20px",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    transition: "var(--transition-smooth)"
-                  }}
-                >
-                  {t("screener_bearish")}
-                </button>
-                <button 
-                  onClick={() => setScreenerFilter("oversold")} 
-                  style={{
-                    background: screenerFilter === "oversold" ? "rgba(16, 185, 129, 0.2)" : "transparent",
-                    color: screenerFilter === "oversold" ? "var(--accent-success)" : "var(--text-muted)",
-                    border: "none",
-                    padding: "6px 14px",
-                    borderRadius: "20px",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    transition: "var(--transition-smooth)",
-                    boxShadow: screenerFilter === "oversold" ? "inset 0 0 0 1px rgba(16, 185, 129, 0.4)" : "none"
-                  }}
-                >
-                  {t("screener_oversold")}
-                </button>
-                <button 
-                  onClick={() => setScreenerFilter("overbought")} 
-                  style={{
-                    background: screenerFilter === "overbought" ? "rgba(239, 68, 68, 0.2)" : "transparent",
-                    color: screenerFilter === "overbought" ? "var(--accent-danger)" : "var(--text-muted)",
-                    border: "none",
-                    padding: "6px 14px",
-                    borderRadius: "20px",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    transition: "var(--transition-smooth)",
-                    boxShadow: screenerFilter === "overbought" ? "inset 0 0 0 1px rgba(239, 68, 68, 0.4)" : "none"
-                  }}
-                >
-                  {t("screener_overbought")}
-                </button>
-              </div>
-
               {/* Asset Type Tabs */}
               <div style={{ display: "flex", gap: "15px", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "10px", fontSize: "13px" }}>
                 <span 
@@ -3101,11 +3005,14 @@ export default function Home() {
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13.5px", textAlign: "left" }}>
                     <thead>
                       <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", color: "var(--text-muted)", fontWeight: "600" }}>
-                        <th style={{ padding: "12px 16px" }}>{t("screener_asset")}</th>
-                        <th style={{ padding: "12px 16px" }}>{t("screener_price")}</th>
-                        <th style={{ padding: "12px 16px" }}>{t("screener_pred_change")}</th>
-                        <th style={{ padding: "12px 16px" }}>{t("screener_rsi")}</th>
-                        <th style={{ padding: "12px 16px" }}>{t("screener_macd")}</th>
+                        <th style={{ padding: "12px 16px" }}>{lang === "tr" ? "Varlık" : "Asset"}</th>
+                        <th style={{ padding: "12px 16px" }}>{lang === "tr" ? "Fiyat" : "Price"}</th>
+                        <th style={{ padding: "12px 16px" }}>XGBoost</th>
+                        <th style={{ padding: "12px 16px" }}>LSTM</th>
+                        <th style={{ padding: "12px 16px" }}>{lang === "tr" ? "Lineer Reg." : "Linear Reg."}</th>
+                        <th style={{ padding: "12px 16px" }}>PatchTST</th>
+                        <th style={{ padding: "12px 16px" }}>{lang === "tr" ? "Destek/Direnç" : "S/R Model"}</th>
+                        <th style={{ padding: "12px 16px", color: "var(--accent-primary)" }}>{lang === "tr" ? "Kolektif Sinyal" : "Ensemble Avg."}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -3128,20 +3035,10 @@ export default function Home() {
                           filtered = filtered.filter(item => !item.symbol.endsWith("-USD") && !item.symbol.includes("=F"));
                         }
 
-                        if (screenerFilter === "bullish") {
-                          filtered = filtered.filter(item => item.predicted_change >= 0.2);
-                        } else if (screenerFilter === "bearish") {
-                          filtered = filtered.filter(item => item.predicted_change <= -0.2);
-                        } else if (screenerFilter === "oversold") {
-                          filtered = filtered.filter(item => item.rsi < 35);
-                        } else if (screenerFilter === "overbought") {
-                          filtered = filtered.filter(item => item.rsi > 65);
-                        }
-
                         if (filtered.length === 0) {
                           return (
                             <tr>
-                              <td colSpan={5} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
+                              <td colSpan={8} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
                                 {lang === "tr" ? "Eşleşen varlık bulunamadı." : "No matching assets found."}
                               </td>
                             </tr>
@@ -3149,35 +3046,9 @@ export default function Home() {
                         }
 
                         return filtered.map(item => {
-                          const isBullish = item.predicted_change >= 0.2;
-                          const isBearish = item.predicted_change <= -0.2;
-                          
-                          let sentimentBadge;
-                          if (isBullish) {
-                            sentimentBadge = <span style={{ color: "var(--accent-success)", fontWeight: "700" }}>▲ +{item.predicted_change.toFixed(2)}%</span>;
-                          } else if (isBearish) {
-                            sentimentBadge = <span style={{ color: "var(--accent-danger)", fontWeight: "700" }}>▼ {item.predicted_change.toFixed(2)}%</span>;
-                          } else {
-                            sentimentBadge = <span style={{ color: "var(--text-muted)" }}>~ {item.predicted_change?.toFixed(2)}%</span>;
-                          }
-
-                          let rsiBadge;
-                          if (item.rsi < 35) {
-                            rsiBadge = <span className="badge badge-success" style={{ padding: "2px 6px" }}>{item.rsi.toFixed(1)} ({t("oversold")})</span>;
-                          } else if (item.rsi > 65) {
-                            rsiBadge = <span className="badge badge-danger" style={{ padding: "2px 6px" }}>{item.rsi.toFixed(1)} ({t("overbought")})</span>;
-                          } else {
-                            rsiBadge = <span className="badge badge-warning" style={{ padding: "2px 6px" }}>{item.rsi.toFixed(1)}</span>;
-                          }
-
-                          const isMacdBullish = item.macd_signal === "BULLISH";
-                          const macdBadge = isMacdBullish 
-                            ? <span style={{ color: "var(--accent-success)" }}>▲ {t("macd_status_bullish")}</span> 
-                            : <span style={{ color: "var(--accent-danger)" }}>▼ {t("macd_status_bearish")}</span>;
-
                           return (
                             <tr 
-                              key={item.id} 
+                              key={item.symbol} 
                               onClick={() => {
                                 selectSymbol(item.symbol);
                                 setShowScreener(false);
@@ -3194,14 +3065,23 @@ export default function Home() {
                               <td style={{ padding: "12px 16px", fontWeight: "600", color: "var(--text-main)" }}>
                                 {item.price > 0 ? `$${item.price.toLocaleString()}` : "N/A"}
                               </td>
-                              <td style={{ padding: "12px 16px" }}>
-                                {sentimentBadge}
+                              <td style={{ padding: "12px 16px", color: "var(--accent-success)", fontWeight: "600" }}>
+                                {item.xgb ? `${(item.xgb * 100).toFixed(1)}%` : "---"}
                               </td>
-                              <td style={{ padding: "12px 16px" }}>
-                                {rsiBadge}
+                              <td style={{ padding: "12px 16px", color: "var(--accent-success)", fontWeight: "600" }}>
+                                {item.lstm ? `${(item.lstm * 100).toFixed(1)}%` : "---"}
                               </td>
-                              <td style={{ padding: "12px 16px", fontSize: "12.5px" }}>
-                                {macdBadge}
+                              <td style={{ padding: "12px 16px", color: "var(--accent-success)", fontWeight: "600" }}>
+                                {item.lr ? `${(item.lr * 100).toFixed(1)}%` : "---"}
+                              </td>
+                              <td style={{ padding: "12px 16px", color: "var(--accent-success)", fontWeight: "600" }}>
+                                {item.patchtst ? `${(item.patchtst * 100).toFixed(1)}%` : "---"}
+                              </td>
+                              <td style={{ padding: "12px 16px", color: "var(--accent-success)", fontWeight: "600" }}>
+                                {item.sr ? `${(item.sr * 100).toFixed(1)}%` : "---"}
+                              </td>
+                              <td style={{ padding: "12px 16px", color: "#10b981", fontWeight: "700" }}>
+                                {item.ensemble ? `${(item.ensemble * 100).toFixed(1)}%` : "---"}
                               </td>
                             </tr>
                           );
