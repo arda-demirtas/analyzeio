@@ -27,7 +27,8 @@ import {
   Minimize2,
   LogIn,
   UserPlus,
-  Zap
+  Zap,
+  Sparkles
 } from "lucide-react";
 import { Chart, registerables } from "chart.js";
 import { TRANSLATIONS } from "./translations";
@@ -1528,7 +1529,8 @@ export default function Home() {
   const fetchScreenerData = async () => {
     setScreenerLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/all-bullish`);
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/api/all-bullish`, { headers });
       if (res.ok) {
         const data = await res.json();
         setScreenerData(Array.isArray(data) ? data : []);
@@ -1543,7 +1545,8 @@ export default function Home() {
   // API Call: Fetch All-Model Bullish Assets
   const fetchAllBullishAssets = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/all-bullish`);
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/api/all-bullish`, { headers });
       if (res.ok) {
         const data = await res.json();
         setAllBullishAssets(Array.isArray(data) ? data : []);
@@ -3003,8 +3006,42 @@ export default function Home() {
             </div>
 
             {/* Screener Results Table */}
-            <div className="glass-panel" style={{ flexGrow: 1, padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-              {screenerLoading ? (
+            <div className="glass-panel" style={{ flexGrow: 1, padding: "0", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: "350px", position: "relative" }}>
+              {!(user && user.is_premium) ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "60px 20px",
+                  textAlign: "center",
+                  flexGrow: 1,
+                  background: "radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 80%)"
+                }}>
+                  <div style={{
+                    width: "48px",
+                    height: "48px",
+                    background: "rgba(139, 92, 246, 0.1)",
+                    border: "1px solid rgba(139, 92, 246, 0.3)",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: "20px"
+                  }}>
+                    <Lock style={{ color: "#a78bfa", width: "20px", height: "20px" }} />
+                  </div>
+                  <h3 style={{ fontSize: "18px", fontWeight: "800", color: "white", marginBottom: "8px" }}>
+                    {lang === "tr" ? "100% Boğa Tarayıcısı Premium Bir Özelliktir" : "100% Bullish Screener is a Premium Feature"}
+                  </h3>
+                  <p style={{ fontSize: "12px", color: "var(--text-muted)", maxWidth: "340px", lineHeight: "1.5", marginBottom: "24px" }}>
+                    {lang === "tr" ? "Tüm 5 AI modelinin eş zamanlı olarak yükseliş sinyali verdiği varlıkları taramak için Premium'a yükseltin." : "Upgrade to Premium to scan and filter assets where all 5 AI models forecast simultaneous bullish trends."}
+                  </p>
+                  <Link href="/pricing" className="btn-primary" style={{ padding: "10px 24px", fontSize: "13px", fontWeight: "700", width: "auto" }}>
+                    <Sparkles style={{ width: "14px", height: "14px" }} /> {lang === "tr" ? "Premium'a Yükselt" : "Upgrade to Premium"}
+                  </Link>
+                </div>
+              ) : screenerLoading ? (
                 <div style={{ display: "flex", flexDirection: "column", padding: "40px", alignItems: "center", justifyContent: "center", gap: "10px", flexGrow: 1 }}>
                   <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "30px" }} />
                   <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>{t("loading")}</span>
@@ -4458,7 +4495,20 @@ export default function Home() {
                     {lang === "tr" ? "Tüm Modellerin Boğa Öngördüğü Varlıklar" : "All-Model Bullish Assets"}
                   </h3>
                   
-                  {allBullishAssets.length === 0 ? (
+                  {!(user && user.is_premium) ? (
+                    <div style={{ padding: "20px 10px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <Lock style={{ color: "#a78bfa", width: "20px", height: "20px", marginBottom: "12px" }} />
+                      <span style={{ fontSize: "13px", fontWeight: "700", color: "#fff", marginBottom: "6px" }}>
+                        {lang === "tr" ? "Kolektif Boğa Varlıkları" : "Ensemble Bullish Assets"}
+                      </span>
+                      <p style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4", marginBottom: "16px", maxWidth: "220px" }}>
+                        {lang === "tr" ? "5 modelin birden aynı anda boğa sinyali verdiği kripto ve hisseleri görmek için kilidi açın." : "Unlock the list of assets with active bullish consensus across all 5 models."}
+                      </p>
+                      <Link href="/pricing" className="btn-primary" style={{ padding: "8px 16px", fontSize: "11.5px", width: "auto" }}>
+                        <Sparkles style={{ width: "12px", height: "12px" }} /> {lang === "tr" ? "Kilidi Aç" : "Unlock Now"}
+                      </Link>
+                    </div>
+                  ) : allBullishAssets.length === 0 ? (
                     <div style={{ fontSize: "12.5px", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", padding: "10px 0" }}>
                       {lang === "tr" ? "Şu an 4 modelin birden Boğa (Bullish) sinyali verdiği bir varlık bulunmamaktadır." : "No assets currently show Bullish signals across all 4 models."}
                     </div>
