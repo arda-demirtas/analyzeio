@@ -4900,13 +4900,13 @@ export default function Home() {
             <div style={{ fontSize: "14px", lineHeight: "1.6", color: "var(--text-main)", display: "flex", flexDirection: "column", gap: "12px" }}>
               <p>
                 {lang === "tr" 
-                  ? "analyzeio, hisse senetleri ve kripto para birimleri için gelişmiş XGBoost ve LSTM tabanlı makine öğrenimi tahmin modelleri sunan gelişmiş bir piyasa tahmin ve teknik analiz platformudur."
-                  : "analyzeio is an advanced market prediction and technical analysis platform offering optimized XGBoost and LSTM machine learning models for stocks and cryptocurrencies."}
+                  ? "analyzeio; hisse senetleri, emtialar ve kripto para birimleri için XGBoost, LSTM, Lineer Regresyon, PatchTST ve Destek/Direnç (S/R) olmak üzere 5 farklı makine ve derin öğrenim tahmin modelini birleştiren gelişmiş bir kolektif analiz platformudur."
+                  : "analyzeio is an advanced market prediction platform offering ensemble consensus over 5 different machine learning and deep learning models (XGBoost, LSTM, Linear Regression, PatchTST, and Support/Resistance) for stocks, commodities, and cryptocurrencies."}
               </p>
               <p>
                 {lang === "tr"
-                  ? "Sistemimiz, her bir varlık için son verileri indirir, RSI, MACD, Bollinger Bantları ve EMA gibi 19 temel teknik göstergeyi gerçek zamanlı hesaplar, tahmin modellerini optimize ederek bir sonraki işlem periyodunun kapanış fiyatını tahmin eder."
-                  : "Our system downloads the latest price action for each asset, computes 19 key technical indicators (including RSI, MACD, Bollinger Bands, and EMAs) in real-time, and optimizes prediction models to estimate the next period's close price."}
+                  ? "Sistemimiz, her bir varlık için son verileri indirir, RSI, MACD, Bollinger Bantları ve EMA gibi 11 temel teknik ve istatistiksel göstergeyi gerçek zamanlı hesaplar, tahmin modellerini optimize ederek bir sonraki işlem periyodunun kapanış fiyatını tahmin eder."
+                  : "Our system downloads the latest price action for each asset, computes 11 key technical and statistical indicators (including RSI, MACD, Bollinger Bands, and EMAs) in real-time, and optimizes prediction models to estimate the next period's close price."}
               </p>
               <p>
                 {lang === "tr"
