@@ -5,8 +5,8 @@ export const TRANSLATIONS = {
     premium_downgrade: "Switch to Free Account",
     premium_only_msg: "Intervals other than 1d are restricted to Premium members.",
 
-    loading: "Fetching Market Data & Training AI Models...",
-    loading_desc: "Downloading historical {interval} prices, computing 19 indicators, and optimizing the prediction model cache for {symbol}.",
+    loading: "Fetching Market Data & Training 5 AI Models...",
+    loading_desc: "Downloading historical {interval} prices, computing 11 indicators, and optimizing 5 prediction models for {symbol}.",
     error_title: "Error Loading Data",
     try_again: "Try Again",
     live_price: "Live Market Price",
@@ -92,8 +92,8 @@ export const TRANSLATIONS = {
     premium_downgrade: "Ücretsiz Hesaba Geç",
     premium_only_msg: "1 günlük dışındaki grafik tahminleri sadece Premium üyelere açıktır.",
 
-    loading: "Piyasa Verileri Alınıyor & Yapay Zeka Modeli Eğitiliyor...",
-    loading_desc: "Geçmiş {interval} fiyatları indiriliyor, 19 gösterge hesaplanıyor ve {symbol} için tahmin modeli önbelleği optimize ediliyor.",
+    loading: "Piyasa Verileri Alınıyor & 5 Yapay Zeka Modeli Eğitiliyor...",
+    loading_desc: "Geçmiş {interval} fiyatları indiriliyor, 11 temel gösterge hesaplanıyor ve {symbol} için 5 tahmin modeli optimize ediliyor.",
     error_title: "Veri Yükleme Hatası",
     try_again: "Tekrar Dene",
     live_price: "Canlı Piyasa Fiyatı",
