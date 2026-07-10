@@ -1475,28 +1475,37 @@ export default function Home() {
     };
   };
 
-  // API Call: Toggle Premium Status
+  // API Call: Toggle Premium Status (Now redirects to Pricing or Customer Portal)
   const handlePremiumToggle = async () => {
     if (!token) {
       setAuthError(lang === "tr" ? "Premium avantajlarından yararlanmak için lütfen giriş yapın veya kayıt olun." : "Please sign in or create an account to get premium benefits.");
       setShowAuthModal(true);
       return;
     }
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/premium/toggle`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`
+    
+    if (user && user.is_premium) {
+      // User is premium, redirect to Customer Portal
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/billing/portal-session`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        const data = await res.json();
+        if (res.ok && data.url) {
+          window.location.href = data.url;
+        } else {
+          // Fallback to pricing page if portal call fails
+          window.location.href = "/pricing";
         }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setUser(data);
-      } else {
-        alert(data.detail || "Could not toggle premium status.");
+      } catch (err) {
+        console.error("Manage subscription failed:", err);
+        window.location.href = "/pricing";
       }
-    } catch (err) {
-      console.error("Premium toggle failed:", err);
+    } else {
+      // User is free, send to pricing plans page
+      window.location.href = "/pricing";
     }
   };
 
@@ -2870,7 +2879,7 @@ export default function Home() {
                         }}
                       >
                         <span style={{ color: user.is_premium ? "#f59e0b" : "var(--text-muted)", marginRight: "8px", fontWeight: "700" }}>★</span>
-                        {user.is_premium ? t("premium_downgrade") : t("premium_upgrade")}
+                        {user.is_premium ? (lang === "tr" ? "Aboneliği Yönet" : "Manage Subscription") : t("premium_upgrade")}
                       </button>
 
                       {user.email === "arda.demirtas2002@gmail.com" && (
