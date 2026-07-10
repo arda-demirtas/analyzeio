@@ -5,6 +5,12 @@ import { initializePaddle } from "@paddle/paddle-js";
 import { ArrowLeft, Check, Sparkles, AlertTriangle, RefreshCw, Shield, HelpCircle } from "lucide-react";
 import Link from "next/link";
 
+const API_BASE_URL = typeof window !== "undefined" 
+  ? (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+      ? "http://127.0.0.1:8000" 
+      : window.location.origin) 
+  : "http://127.0.0.1:8000";
+
 // Single-Tier Premium Pricing Definition
 export const PricingTiers = [
   {
@@ -51,7 +57,7 @@ export function PricingClient({ initialCountry }) {
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        const res = await fetch("http://46.225.59.232/api/auth/me", {
+        const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
         if (res.ok) {
