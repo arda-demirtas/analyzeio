@@ -1,0 +1,502 @@
+Match found at char 1562:
+oveTo(x, highY);
+      ctx.lineTo(x, lowY);
+      ctx.stroke();
+    });
+    
+    ctx.restore();
+  }
+};
+
+// Register all Chart.js components
+Chart.register(...registerables, candlestickPlugin);
+
+const API_BASE_URL = typeof window !== "undefined" 
+  ? (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+      ? "http://127.0.0.1:8000" 
+      : window.location.origin
+--------------------------------------------------
+Match found at char 21386:
+chNoResults(false);
+    } else {
+      setShowSuggestions(false);
+    }
+    setSuggestionIndex(-1);
+
+    // 2. Fetch dynamic matches from API and merge them
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(q)}`);
+      if (res.ok) {
+        const dynamicMatches = await res.json();
+        const merged = [...staticMatches];
+        dynamicMatches.forEach(it
+--------------------------------------------------
+Match found at char 50638:
+h (err) {
+      console.error("Error inside renderCharts:", err);
+    }
+  };
+
+  // API Call: Fetch Watchlist
+  const fetchWatchlist = async (authToken) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/watchlist`, {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      const data =
+--------------------------------------------------
+Match found at char 51464:
+atchlist = async (authToken) => {
+    const defaults = ["BTC-USD", "AAPL", "GC=F", "TSLA"];
+    const addedItems = [];
+    for (const sym of defaults) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/watchlist`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`
+          },
+         
+--------------------------------------------------
+Match found at char 52189:
+ogs = async (symbol, interval = chartInterval) => {
+    setAccuracyLoading(true);
+    try {
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/api/predictions/accuracy/${symbol}?interval=${interval}`, {
+        headers
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAccuracyLogs(Array.isArray(dat
+--------------------------------------------------
+Match found at char 52984:
+dictionData(null); // Clear old prediction data to trigger loading UI immediately
+    try {
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}&lang=${lang}&model_type=${mType}&force_retrain=${forceRetrain}`, {
+        headers
+      });
+      if (res.status === 401 && token) {
+  
+--------------------------------------------------
+Match found at char 53979:
+   setPredictLoading(false);
+    }
+  };
+
+  // API Call: Fetch Market Info (market cap, P/E, 52w range, sector)
+  const fetchMarketInfo = async (symbol) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/market-info/${encodeURIComponent(symbol)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMarketInfo(data);
+      } else {
+        setMarketInfo(null);
+     
+--------------------------------------------------
+Match found at char 54362:
+Info(null);
+      }
+    } catch {
+      setMarketInfo(null);
+    }
+  };
+
+  // API Call: Fetch User Profile
+  const fetchCurrentUser = async (authToken) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data);
+      } else if (r
+--------------------------------------------------
+Match found at char 55242:
+
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      const base64String = reader.result;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+   
+--------------------------------------------------
+Match found at char 56177:
+in lütfen giriş yapın veya kayıt olun." : "Please sign in or create an account to get premium benefits.");
+      setShowAuthModal(true);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/premium/toggle`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (res
+--------------------------------------------------
+Match found at char 56786:
+PI Call: Fetch Comments
+  const fetchComments = async (symbol) => {
+    try {
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const res = await fetch(`${API_BASE_URL}/api/comments/${symbol}`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setComments(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      
+--------------------------------------------------
+Match found at char 57203:
+ror fetching comments:", err);
+    }
+  };
+
+  // API Call: Fetch Market Screener Data
+  const fetchScreenerData = async () => {
+    setScreenerLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/screener`);
+      if (res.ok) {
+        const data = await res.json();
+        setScreenerData(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error("Erro
+--------------------------------------------------
+Match found at char 57675:
+ng(false);
+    }
+  };
+
+  // API Call: Fetch News Sentiment
+  const fetchNewsSentiment = async (symbol) => {
+    setNewsLoading(true);
+    setNewsData(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/news/${symbol}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNewsData(data);
+      }
+    } catch (err) {
+      console.error("Error fetching news sentiment
+--------------------------------------------------
+Match found at char 58428:
+ies.");
+      setShowAuthModal(true);
+      return;
+    }
+    const content = parentId ? replyContent : newCommentContent;
+    if (!content.trim()) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.strin
+--------------------------------------------------
+Match found at char 59362:
+ // API Call: Delete Comment
+  const handleDeleteComment = async (commentId) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/comments/${commentId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        await fetchComments(activeSymbol);
+ 
+--------------------------------------------------
+Match found at char 60109:
+ror(lang === "tr" ? "Tepki verebilmek için lütfen giriş yapın." : "Please sign in to react to comments.");
+      setShowAuthModal(true);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/comments/${commentId}/react`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+     
+--------------------------------------------------
+Match found at char 61418:
+
+    }
+  };
+
+  // API Call: Register Request
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password })
+      });
+     
+--------------------------------------------------
+Match found at char 62181:
+
+  // API Call: Register Confirmation
+  const handleConfirmRegister = async (e) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: registeredEmail, code: verificationCo
+--------------------------------------------------
+Match found at char 63294:
+false);
+    }
+  };
+
+  // API Call: Login
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault();
+    setAuthError("");
+    setAuthLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = awai
+--------------------------------------------------
+Match found at char 64813:
+symbol === sym)) {
+      selectSymbol(sym);
+      setSearchQuery("");
+      setShowSuggestions(false);
+      setSidebarOpen(false);
+      return;
+    }
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/watchlist`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stri
+--------------------------------------------------
+Match found at char 66143:
+or(lang === "tr" ? "Takip listesinden kaldırmak için giriş yapın." : "Sign in to modify your watchlist.");
+      setShowAuthModal(true);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/watchlist/${symbolToRemove}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const filtered = watchlist.fil
+--------------------------------------------------
+Match found at char 66823:
+: Change Password Request
+  const handleChangePasswordRequest = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/change-password/request`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+    
+--------------------------------------------------
+Match found at char 67680:
+: Confirm Password Change
+  const handleConfirmPasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/change-password/confirm`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+    
+--------------------------------------------------
+Match found at char 71653:
+"Hisse Senedi" : "Stock"
+    };
+  };
+
+  const fetchMockTradingState = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/mock-trading`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMockTradingState(data);
+ 
+--------------------------------------------------
+Match found at char 72334:
+lamak istediğinize emin misiniz? Bakiye $2,000.00 olacaktır." : "Are you sure you want to reset the simulation? Balance will return to $2,000.00.")) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/mock-trading/reset`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+      
+--------------------------------------------------
+Match found at char 72849:
+
+    }
+  };
+
+  const fetchAdminData = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setAdminLoading(true);
+    try {
+      const usersRes = await fetch(`${API_BASE_URL}/api/admin/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (usersRes.ok) {
+        const usersData = await usersRes.json();
+        setAdminUsers(usersD
+--------------------------------------------------
+Match found at char 73108:
+ization: `Bearer ${token}` }
+      });
+      if (usersRes.ok) {
+        const usersData = await usersRes.json();
+        setAdminUsers(usersData);
+      }
+      
+      const statsRes = await fetch(`${API_BASE_URL}/api/admin/system-stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setAdminStats
+--------------------------------------------------
+Match found at char 73376:
+ation: `Bearer ${token}` }
+      });
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setAdminStats(statsData);
+      }
+      
+      const symbolsRes = await fetch(`${API_BASE_URL}/api/admin/auto-train-symbols`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (symbolsRes.ok) {
+        const symbolsData = await symbolsRes.json();
+        s
+--------------------------------------------------
+Match found at char 73695:
+ (symbolsRes.ok) {
+        const symbolsData = await symbolsRes.json();
+        setAutoTrainSymbols(Array.isArray(symbolsData) ? symbolsData : []);
+      }
+      
+      const logsRes = await fetch(`${API_BASE_URL}/api/temp-logs`);
+      if (logsRes.ok) {
+        const logsData = await logsRes.json();
+        setDaemonLogs(logsData);
+      }
+      
+      await fetchMockTradingState();
+    } catch (
+--------------------------------------------------
+Match found at char 74236:
+oTrainSymbol = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token || !newAutoTrainSymbol.trim()) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/auto-train-symbols`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        
+--------------------------------------------------
+Match found at char 75172:
+en = localStorage.getItem("token");
+    if (!token) return;
+    if (!confirm(`Are you sure you want to remove ${symbol} from the auto-train list?`)) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/auto-train-symbols/${symbol}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setAutoTrainSymbols(prev 
+--------------------------------------------------
+Match found at char 75793:
+ symbol:", err);
+    }
+  };
+
+  const handleAdminTogglePremium = async (userId) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/toggle-premium`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        fetchAdminData();
+      }
+--------------------------------------------------
+Match found at char 76419:
+tely sure you want to permanently close your account? This action deletes all your saved symbols and settings and cannot be undone.")) {
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/delete-account`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        alert("Account successfully deleted.")
+--------------------------------------------------
