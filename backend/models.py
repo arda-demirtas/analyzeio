@@ -104,4 +104,9 @@ class MarketScreener(Base):
     predicted_change = Column(Float, nullable=True)  # Percent change
     rsi = Column(Float, nullable=True)
     macd_signal = Column(String, nullable=True)     # "BULLISH", "BEARISH", "NEUTRAL"
+    xgb_pred = Column(Float, nullable=True)
+    lstm_pred = Column(Float, nullable=True)
+    lr_pred = Column(Float, nullable=True)
+    patchtst_pred = Column(Float, nullable=True)
+    sr_pred = Column(Float, nullable=True)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
