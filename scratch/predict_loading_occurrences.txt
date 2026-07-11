@@ -1,0 +1,46 @@
+Match found at char 7497:
+   { id: "anon-sol", symbol: "SOL-USD" },
+    { id: "anon-aapl", symbol: "AAPL" },
+    { id: "anon-tsla", symbol: "TSLA" }
+  ]);
+  const [predictionData, setPredictionData] = useState(null);
+  const [predictLoading, setPredictLoading] = useState(false);
+  const [predictError, setPredictError] = useState("");
+
+  const [chartInterval, setChartInterval] = useState("1d");
+  const [chartHistory, setCha
+--------------------------------------------------
+Match found at char 130824:
+                        });
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : predictLoading || (!predictionData && !predictError) || (predictionData && predictionData.symbol !== activeSymbol) ? (
+          <div style={{ display: "flex", flexDirection: "column", height: "100%",
+--------------------------------------------------
+Match found at char 148428:
+         border: "none",
+                              fontWeight: "600",
+                              textTransform: "uppercase"
+                            }}
+                            disabled={predictLoading}
+                          >
+                            {interval}
+                          </button>
+                        ))}
+                      </div>
+
+                      {
+--------------------------------------------------
+Match found at char 186135:
+rediction-card" style={{ minHeight: "220px", display: "flex", flexDirection: "column", justifyContent: "flex-start", position: "relative", overflow: "hidden", padding: "20px" }}>
+
+
+                  {predictLoading ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, minHeight: "120px" }}>
+                      <di
+--------------------------------------------------
