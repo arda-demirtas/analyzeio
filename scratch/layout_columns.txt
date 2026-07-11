@@ -1,0 +1,59 @@
+Match found at char 104807:
+ormudur." 
+              : "Not Investment Advice. This site is an AI-backed graphical analysis platform."}
+          </p>
+        </div>
+
+      </aside>
+
+      {/* Main Panel Content */}
+      <main className="main-content" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        
+        {/* Global Top Navbar */}
+        <div className="glass-panel navbar-container" style={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center", 
+          padding: "10px 20px", 
+          borderRadius: "var(--border-radius-lg)",
+          zIndex: 100
+        }}>
+          {/* Left side: Terminal Logo / Welcome */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Briefcase style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} />
+            <span className="hide-mobile" style={{ fontSize: "16px", fontWeight: "700", display: "flex", alignItems: "center" }}>
+              {lang === "tr" ? "Piyasa Terminali" : "Market Terminal"}
+            </span>
+          </div>
+          
+          {/* Right side: Language selection & Profile */}
+          <div className="navbar-right"
+--------------------------------------------------
+Match found at char 138434:
+st_date})
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Dashboard Grid (Charts and Predictions) */}
+            <div className="dashboard-grid">
+              {/* Column 1: Charts */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
+                {(!user || !user.is_premium) && activeSymbol !== "BTC-USD" && (
+                  <div className="glass-panel" style={{
+                    padding: "20px",
+                    background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.03) 100%)",
+                    border: "1px solid rgba(245, 158, 11, 0.25)",
+                    borderRadius: "var(--border-radius-lg)",
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "20px",
+                    flexWrap: "wrap"
+                  }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1, minWidth: "280px" }}>
+                      <h4 style={{ fontSize:
+--------------------------------------------------
