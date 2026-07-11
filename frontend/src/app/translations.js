@@ -6,7 +6,7 @@ export const TRANSLATIONS = {
     premium_only_msg: "Intervals other than 1d are restricted to Premium members.",
 
     loading: "Fetching Market Data & Training AI Models...",
-    loading_desc: "Downloading historical {interval} prices, computing 19 indicators, and optimizing the prediction model cache for {symbol}.",
+    loading_desc: "Downloading historical {interval} prices, computing 11 key features, and optimizing prediction models (XGBoost, LSTM, PatchTST, LR, SR) for {symbol}.",
     error_title: "Error Loading Data",
     try_again: "Try Again",
     live_price: "Live Market Price",
@@ -92,8 +92,8 @@ export const TRANSLATIONS = {
     premium_downgrade: "Ücretsiz Hesaba Geç",
     premium_only_msg: "1 günlük dışındaki grafik tahminleri sadece Premium üyelere açıktır.",
 
-    loading: "Piyasa Verileri Alınıyor & Yapay Zeka Modeli Eğitiliyor...",
-    loading_desc: "Geçmiş {interval} fiyatları indiriliyor, 19 gösterge hesaplanıyor ve {symbol} için tahmin modeli önbelleği optimize ediliyor.",
+    loading: "Piyasa Verileri Alınıyor & Yapay Zeka Modelleri Eğitiliyor...",
+    loading_desc: "Geçmiş {interval} fiyatları indiriliyor, 11 temel öznitelik hesaplanıyor ve {symbol} için tahmin modelleri (XGBoost, LSTM, PatchTST, LR, SR) optimize ediliyor.",
     error_title: "Veri Yükleme Hatası",
     try_again: "Tekrar Dene",
     live_price: "Canlı Piyasa Fiyatı",
@@ -180,7 +180,7 @@ export const TRANSLATIONS = {
     premium_only_msg: "Intervalle außer 1d sind Premium-Mitgliedern vorbehalten.",
 
     loading: "Marktdaten abrufen & KI-Modelle trainieren...",
-    loading_desc: "Historische {interval}-Preise werden heruntergeladen, 19 Indikatoren berechnet und der Vorhersagemodell-Cache für {symbol} optimiert.",
+    loading_desc: "Historische {interval}-Preise werden heruntergeladen, 11 Hauptmerkmale berechnet und die Vorhersagemodelle (XGBoost, LSTM, PatchTST, LR, SR) für {symbol} optimiert.",
     error_title: "Fehler beim Laden der Daten",
     try_again: "Erneut versuchen",
     live_price: "Aktueller Marktpreis",
@@ -267,7 +267,7 @@ export const TRANSLATIONS = {
     premium_only_msg: "Интервалы, отличные от 1d, доступны только премиум-пользователям.",
 
     loading: "Получение рыночных данных и обучение моделей ИИ...",
-    loading_desc: "Загрузка исторических цен за {interval}, вычисление 19 индикаторов и оптимизация кэша прогнозной модели для {symbol}.",
+    loading_desc: "Загрузка исторических цен за {interval}, вычисление 11 основных признаков и оптимизация моделей прогнозирования (XGBoost, LSTM, PatchTST, LR, SR) для {symbol}.",
     error_title: "Ошибка загрузки данных",
     try_again: "Повторить попытку",
     live_price: "Текущая рыночная цена",
@@ -354,7 +354,7 @@ export const TRANSLATIONS = {
     premium_only_msg: "除1d之外的预测仅限高级会员使用。",
 
     loading: "正在获取市场数据并训练 AI 预测模型...",
-    loading_desc: "正在下载历史 {interval} 价格，计算 19 个指标，并优化 {symbol} 的预测模型缓存。",
+    loading_desc: "正在下载历史 {interval} 价格，计算 11 个核心特征，并优化 {symbol} 的预测模型（XGBoost, LSTM, PatchTST, LR, SR）。",
     error_title: "数据加载出错",
     try_again: "重试",
     live_price: "实时市场价格",
@@ -441,7 +441,7 @@ export const TRANSLATIONS = {
     premium_only_msg: "Los intervalos que no sean 1d están restringidos a miembros Premium.",
 
     loading: "Obteniendo datos de mercado y entrenando modelos de IA...",
-    loading_desc: "Descargando precios históricos de {interval}, calculando 19 indicadores y optimizando la caché del modelo de predicción para {symbol}.",
+    loading_desc: "Descargando precios históricos de {interval}, calculando 11 características clave y optimizando los modelos de predicción (XGBoost, LSTM, PatchTST, LR, SR) para {symbol}.",
     error_title: "Error al cargar los datos",
     try_again: "Intentar de nuevo",
     live_price: "Precio de mercado en vivo",
