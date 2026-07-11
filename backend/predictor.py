@@ -17,6 +17,7 @@ from backend.model_xgb_handler import get_xgb_prediction
 from backend.model_lstm_handler import get_lstm_prediction
 from backend.model_lr_handler import get_lr_prediction
 from backend.model_patchtst_handler import get_patchtst_prediction
+from backend.model_sr_handler import get_sr_prediction
 from backend.prediction_engine import train_lr_model
 
 
@@ -50,11 +51,13 @@ def get_prediction(
     lstm_predicted_close = None
     lr_predicted_close = None
     patchtst_predicted_close = None
+    sr_predicted_close = None
 
     xgb_metrics = None
     lstm_metrics = None
     lr_metrics = None
     patchtst_metrics = None
+    sr_metrics = None
 
     if not is_pending_data:
         split_idx = int(len(df) * 0.8)
@@ -101,6 +104,15 @@ def get_prediction(
             print(f"Error in PatchTST flow: {e}")
             patchtst_predicted_close, patchtst_metrics = None, None
 
+        # E. Support/Resistance Flow
+        try:
+            sr_predicted_close, sr_metrics = get_sr_prediction(
+                symbol, interval, df, df_train, df_test, seq_length, force_retrain, is_daemon, max_ret, min_ret
+            )
+        except Exception as e:
+            print(f"Error in S/R flow: {e}")
+            sr_predicted_close, sr_metrics = None, None
+
     # Details of the last available candle
     last_row = df.iloc[-1]
     last_close = float(last_row["Close"])
@@ -108,25 +120,29 @@ def get_prediction(
     is_pending_prediction = (xgb_predicted_close is None or 
                              lstm_predicted_close is None or 
                              lr_predicted_close is None or 
-                             patchtst_predicted_close is None)
+                             patchtst_predicted_close is None or
+                             sr_predicted_close is None)
 
     if not is_pending_data and not is_pending_prediction:
-        # "analyzeio" is the average of all 4 models!
-        analyzeio_predicted_close = (xgb_predicted_close + lstm_predicted_close + lr_predicted_close + patchtst_predicted_close) / 4.0
+        # "analyzeio" is the average of all 5 models!
+        analyzeio_predicted_close = (xgb_predicted_close + lstm_predicted_close + lr_predicted_close + patchtst_predicted_close + sr_predicted_close) / 5.0
             
         # Average performance metrics
-        valid_metrics_list = [xgb_metrics, lstm_metrics, lr_metrics, patchtst_metrics]
-        avg_logloss = sum(m.get("logloss", 0.693) for m in valid_metrics_list) / 4.0
-        avg_da = sum(m.get("directional_accuracy", 50.0) for m in valid_metrics_list) / 4.0
+        valid_metrics_list = [xgb_metrics, lstm_metrics, lr_metrics, patchtst_metrics, sr_metrics]
+        avg_logloss = sum(m.get("logloss", 0.693) for m in valid_metrics_list) / 5.0
+        avg_da = sum(m.get("directional_accuracy", 50.0) for m in valid_metrics_list) / 5.0
         analyzeio_metrics = {
             "logloss": avg_logloss,
             "directional_accuracy": avg_da,
-            "training_status": "Average of 4 models (Analyzeio)"
+            "training_status": "Average of 5 models (Analyzeio)"
         }
 
         if model_type == "lstm":
             predicted_close = lstm_predicted_close
             metrics = lstm_metrics
+        elif model_type == "support_resistance":
+            predicted_close = sr_predicted_close
+            metrics = sr_metrics
         elif model_type == "linear_regression":
             predicted_close = lr_predicted_close
             metrics = lr_metrics
@@ -437,11 +453,13 @@ def get_prediction(
         "lstm_predicted_close": lstm_predicted_close,
         "lr_predicted_close": lr_predicted_close,
         "patchtst_predicted_close": patchtst_predicted_close,
+        "sr_predicted_close": sr_predicted_close,
         "analyzeio_predicted_close": analyzeio_predicted_close,
         "xgb_metrics": xgb_metrics,
         "lstm_metrics": lstm_metrics,
         "lr_metrics": lr_metrics,
         "patchtst_metrics": patchtst_metrics,
+        "sr_metrics": sr_metrics,
         "analyzeio_metrics": analyzeio_metrics
     }
 
