@@ -424,6 +424,47 @@ def get_prediction(
                     )
                     db_session.add(new_log)
                 db_session.commit()
+
+            # C. Update MarketScreener entry for consensus sorting
+            if interval == "1d":
+                from backend.models import MarketScreener
+                screener_entry = db_session.query(MarketScreener).filter(MarketScreener.symbol == symbol).first()
+                rsi_val = float(last_row["RSI"]) if "RSI" in last_row and not pd.isna(last_row["RSI"]) else 50.0
+                macd_hist_val = float(last_row["MACD_Hist"]) if "MACD_Hist" in last_row and not pd.isna(last_row["MACD_Hist"]) else 0.0
+                macd_signal_val = "BULLISH" if macd_hist_val > 0 else "BEARISH" if macd_hist_val < 0 else "NEUTRAL"
+                
+                # Percent change from best model
+                predicted_change = 0.0
+                if best_model_predicted_close is not None and last_close > 0:
+                    predicted_change = ((best_model_predicted_close - last_close) / last_close) * 100
+                
+                if screener_entry:
+                    screener_entry.price = last_close
+                    screener_entry.predicted_change = predicted_change
+                    screener_entry.rsi = rsi_val
+                    screener_entry.macd_signal = macd_signal_val
+                    screener_entry.xgb_pred = xgb_predicted_close
+                    screener_entry.lstm_pred = lstm_predicted_close
+                    screener_entry.lr_pred = lr_predicted_close
+                    screener_entry.patchtst_pred = patchtst_predicted_close
+                    screener_entry.sr_pred = sr_predicted_close
+                    screener_entry.updated_at = datetime.datetime.utcnow()
+                else:
+                    screener_entry = MarketScreener(
+                        symbol=symbol,
+                        name=asset_name,
+                        price=last_close,
+                        predicted_change=predicted_change,
+                        rsi=rsi_val,
+                        macd_signal=macd_signal_val,
+                        xgb_pred=xgb_predicted_close,
+                        lstm_pred=lstm_predicted_close,
+                        lr_pred=lr_predicted_close,
+                        patchtst_pred=patchtst_predicted_close,
+                        sr_pred=sr_predicted_close
+                    )
+                    db_session.add(screener_entry)
+                db_session.commit()
     except Exception as db_err:
         print(f"Database logging error in get_prediction: {db_err}")
     finally:
