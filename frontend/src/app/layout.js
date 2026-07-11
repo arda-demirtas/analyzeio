@@ -12,11 +12,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Analyzeio - Market Predictions & Price Trends Dashboard",
-  description: "Track and forecast daily price trends for your favorite stocks and cryptocurrencies. Analyzeio helps you make smarter market decisions with clear, easy-to-understand insights.",
+  title: "Analyzeio - AI-Backed Graphic & Technical Analysis Platform",
+  description: "Analyzeio is an AI-Backed Graphical and Technical Analysis SaaS Platform. Analyze market data and charts for stocks and cryptocurrencies with algorithmic insights.",
   openGraph: {
-    title: "Analyzeio - Market Predictions & Price Trends Dashboard",
-    description: "Track and forecast daily price trends for your favorite stocks and cryptocurrencies. Analyzeio helps you make smarter market decisions with clear, easy-to-understand insights.",
+    title: "Analyzeio - AI-Backed Graphic & Technical Analysis Platform",
+    description: "Analyzeio is an AI-Backed Graphical and Technical Analysis SaaS Platform. Analyze market data and charts for stocks and cryptocurrencies with algorithmic insights.",
     url: "http://analyze-io.com",
     siteName: "Analyzeio",
     images: [
@@ -31,8 +31,8 @@ export const metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Analyzeio - Price Predictions & Trends",
-    description: "Track and forecast daily price trends for your favorite stocks and cryptocurrencies with clear, easy-to-understand insights.",
+    title: "Analyzeio - AI-Backed Graphic & Technical Analysis Platform",
+    description: "Analyzeio is an AI-Backed Graphical and Technical Analysis SaaS Platform. Analyze market data and charts for stocks and cryptocurrencies with algorithmic insights.",
     images: ["http://analyze-io.com/icon.svg"],
   },
 };
@@ -43,7 +43,7 @@ const jsonLd = {
   "name": "Analyzeio",
   "operatingSystem": "All",
   "applicationCategory": "FinanceApplication",
-  "description": "Track and forecast daily price trends for your favorite stocks and cryptocurrencies with clear, easy-to-understand insights.",
+  "description": "Analyzeio is an AI-Backed Graphical and Technical Analysis SaaS Platform. Analyze market data and charts for stocks and cryptocurrencies with algorithmic insights.",
   "offers": {
     "@type": "Offer",
     "price": "0",
