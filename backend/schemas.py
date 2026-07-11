@@ -214,6 +214,11 @@ class MarketScreenerResponse(BaseModel):
     predicted_change: Optional[float] = None
     rsi: Optional[float] = None
     macd_signal: Optional[str] = None
+    xgb_pred: Optional[float] = None
+    lstm_pred: Optional[float] = None
+    lr_pred: Optional[float] = None
+    patchtst_pred: Optional[float] = None
+    sr_pred: Optional[float] = None
     updated_at: datetime.datetime
 
     class Config:
