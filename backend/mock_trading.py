@@ -132,18 +132,39 @@ def score_symbol_for_trading(symbol: str) -> float:
     return score
 
 def select_best_symbol_to_buy() -> Tuple[str, float]:
-    """Finds the symbol with the highest score from the top 10 popular cryptos."""
-    best_symbol = ""
-    best_score = -999.0
+    """
+    Finds the symbol with 5/5 bullish consensus (all 5 predictions >= 0.5)
+    that has the highest average prediction score across all 5 models.
+    Queries the database directly for performance and up-to-date values.
+    """
+    from backend.database import SessionLocal
+    from backend.models import MarketScreener
     
-    # Scan the top 10 popular cryptos
-    for symbol in POPULAR_CRYPTOS[:10]:
-        score = score_symbol_for_trading(symbol)
-        if score > best_score:
-            best_score = score
-            best_symbol = symbol
-            
-    return best_symbol, best_score
+    db = SessionLocal()
+    try:
+        entries = db.query(MarketScreener).all()
+        best_symbol = ""
+        best_avg = -999.0
+        
+        for entry in entries:
+            # Check if all 5 model predictions are bullish (>= 0.5)
+            if (entry.xgb_pred is not None and entry.xgb_pred >= 0.5 and
+                entry.lstm_pred is not None and entry.lstm_pred >= 0.5 and
+                entry.lr_pred is not None and entry.lr_pred >= 0.5 and
+                entry.patchtst_pred is not None and entry.patchtst_pred >= 0.5 and
+                entry.sr_pred is not None and entry.sr_pred >= 0.5):
+                
+                avg_score = (entry.xgb_pred + entry.lstm_pred + entry.lr_pred + entry.patchtst_pred + entry.sr_pred) / 5.0
+                if avg_score > best_avg:
+                    best_avg = avg_score
+                    best_symbol = entry.symbol
+                    
+        return best_symbol, best_avg
+    except Exception as e:
+        print(f"[Mock Trading] Error selecting best symbol from DB: {e}")
+        return "", -999.0
+    finally:
+        db.close()
 
 def run_mock_trading_daily_buy(state=None) -> bool:
     """Tries to select and purchase the most bullish asset at the start of a daily candle."""
