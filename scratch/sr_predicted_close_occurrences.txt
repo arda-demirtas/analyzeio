@@ -1,0 +1,147 @@
+Match found at char 25184:
+ lrChangeVal = (predictionData && predictionData.lr_predicted_close !== null)
+    ? (predictionData.lr_predicted_close - 0.5) * 100
+    : null;
+  const srChangeVal = (predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined)
+    ? (predictionData.sr_predicted_close - 0.5) * 100
+    : null;
+
+
+  const getPredictionHeader = () => {
+    if (chartInterval === "1d") {
+      return t("prediction_header");
+    }
+    if (lang === "tr") {
+      if (ch
+--------------------------------------------------
+Match found at char 25230:
+ta.lr_predicted_close !== null)
+    ? (predictionData.lr_predicted_close - 0.5) * 100
+    : null;
+  const srChangeVal = (predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined)
+    ? (predictionData.sr_predicted_close - 0.5) * 100
+    : null;
+
+
+  const getPredictionHeader = () => {
+    if (chartInterval === "1d") {
+      return t("prediction_header");
+    }
+    if (lang === "tr") {
+      if (chartInterval === "15m") return "Sonraki 15 Daki
+--------------------------------------------------
+Match found at char 25286:
+_predicted_close - 0.5) * 100
+    : null;
+  const srChangeVal = (predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined)
+    ? (predictionData.sr_predicted_close - 0.5) * 100
+    : null;
+
+
+  const getPredictionHeader = () => {
+    if (chartInterval === "1d") {
+      return t("prediction_header");
+    }
+    if (lang === "tr") {
+      if (chartInterval === "15m") return "Sonraki 15 Dakikalık Tahmini Kapanış";
+      if (chartInterval === "1h"
+--------------------------------------------------
+Match found at char 92579:
+.patchtst_predicted_close },
+      { key: "support_resistance", name: lang === "tr" ? "Destek/Direnç" : "Support/Resistance", da: predictionData.sr_metrics?.directional_accuracy, pred: predictionData.sr_predicted_close }
+    ];
+    
+    // Do not select a best model if any model is still training/pending (shows ---)
+    const hasAnyNull = models.some(m => m.pred === null || m.pred === undefined);
+    if (hasAnyNull) return null;
+
+    const validModels = models.filter(m => m.da !== null && m.da !
+--------------------------------------------------
+Match found at char 203843:
+                      </span>
+                                )}
+                              </span>
+                            </div>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined ? (() => {
+                              const prob = predictionData.sr_predicted_close;
+                              const isBullish = prob >= 0.5;
+                              const conf = isBullish ? prob * 100 : (1 
+--------------------------------------------------
+Match found at char 203889:
+                )}
+                              </span>
+                            </div>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined ? (() => {
+                              const prob = predictionData.sr_predicted_close;
+                              const isBullish = prob >= 0.5;
+                              const conf = isBullish ? prob * 100 : (1 - prob) * 100;
+                              c
+--------------------------------------------------
+Match found at char 203991:
+                  {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined ? (() => {
+                              const prob = predictionData.sr_predicted_close;
+                              const isBullish = prob >= 0.5;
+                              const conf = isBullish ? prob * 100 : (1 - prob) * 100;
+                              const label = lang === "tr" ? "Olasılık" : "Probability";
+                              return (
+      
+--------------------------------------------------
+Match found at char 241551:
+"Support/Resistance"}</span>
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700", color: predictionData && predictionData.sr_predicted_close >= 0.5 ? "var(--accent-success)" : "var(--accent-danger)" }}>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined
+                              ? (predictionData.sr_predicted_close >= 0.5 ? "▲
+--------------------------------------------------
+Match found at char 241694:
+ntWeight: "700", color: predictionData && predictionData.sr_predicted_close >= 0.5 ? "var(--accent-success)" : "var(--accent-danger)" }}>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined
+                              ? (predictionData.sr_predicted_close >= 0.5 ? "▲ BULLISH" : "▼ BEARISH")
+                              : "---"}
+                          </td>
+                          <td style={{ padding:
+--------------------------------------------------
+Match found at char 241740:
+ictionData.sr_predicted_close >= 0.5 ? "var(--accent-success)" : "var(--accent-danger)" }}>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined
+                              ? (predictionData.sr_predicted_close >= 0.5 ? "▲ BULLISH" : "▼ BEARISH")
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(-
+--------------------------------------------------
+Match found at char 241821:
+nger)" }}>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined
+                              ? (predictionData.sr_predicted_close >= 0.5 ? "▲ BULLISH" : "▼ BEARISH")
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
+                            {predictionData && predictionData.sr_pred
+--------------------------------------------------
+Match found at char 242114:
+
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined
+                              ? `${(predictionData.sr_predicted_close * 100).toFixed(1)}%`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px",
+--------------------------------------------------
+Match found at char 242160:
+             <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined
+                              ? `${(predictionData.sr_predicted_close * 100).toFixed(1)}%`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)
+--------------------------------------------------
+Match found at char 242244:
+t)" }}>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined
+                              ? `${(predictionData.sr_predicted_close * 100).toFixed(1)}%`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.sr_metrics && pr
+--------------------------------------------------
