@@ -1,0 +1,36 @@
+Match found at char 52693:
+    } finally {
+      setAccuracyLoading(false);
+    }
+  };
+
+  // API Call: Load LSTM Prediction (timeframe-aware)
+  const loadPrediction = async (symbol, interval = chartInterval, mType = modelType, forceRetrain = false) => {
+    setPredictLoading(true);
+    setPredictError("");
+    setPredictionData(null); // Clear old prediction data to trigger loading UI immediately
+    try {
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}&lang=${lang}&model_type=${mType}&force_retrain=${forceRetrain}`, {
+        headers
+      });
+      if (res.status === 401 && token) {
+        handleLogout();
+        return;
+      }
+      const data = await res.json();
+      if (res.ok) {
+        setPredictionData(data);
+        setChartHistory(data.history);
+        fetchMarketInfo(symbol);
+        if (AUTO_TRAINED_SYMBOLS.includes(symbol) && interval === "1d") {
+          fetchAccuracyLogs(symbol, interval);
+        } else {
+          setAccuracyLogs([]);
+        }
+      } else {
+        setPredictError(data.detail || "Failed to load prediction model.");
+      }
+    } catch (err) {
+   
+--------------------------------------------------
