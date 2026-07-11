@@ -1,0 +1,120 @@
+Match found at char 51975:
+);
+          addedItems.push(item);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setWatchlist(addedItems);
+  };
+
+  // API Call: Fetch Prediction Accuracy Logs
+  const fetchAccuracyLogs = async (symbol, interval = chartInterval) => {
+    setAccuracyLoading(true);
+    try {
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/api/predictions/accuracy/${symbol}?interval=${interval}`, {
+        headers
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAccuracyLogs(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error("Error fetching accuracy logs:", err);
+    } finally {
+      setAccuracyLoading(false);
+    }
+  };
+
+  // API Call: Load L
+--------------------------------------------------
+Match found at char 53367:
+01 && token) {
+        handleLogout();
+        return;
+      }
+      const data = await res.json();
+      if (res.ok) {
+        setPredictionData(data);
+        setChartHistory(data.history);
+        fetchMarketInfo(symbol);
+        if (AUTO_TRAINED_SYMBOLS.includes(symbol) && interval === "1d") {
+          fetchAccuracyLogs(symbol, interval);
+        } else {
+          setAccuracyLogs([]);
+        }
+      } else {
+        setPredictError(data.detail || "Failed to load prediction model.");
+      }
+    } catch (err) {
+      setPredictError("Connection failed to Python FastAPI server.");
+    } finally {
+      setPredictLoading(false);
+    }
+  };
+
+  // API Call: Fetch Market Info (market cap, P/E, 52w range, sector)
+  const fetchMarketInfo = async (symbol) => {
+    try {
+      const res = awa
+--------------------------------------------------
+Match found at char 53476:
+(res.ok) {
+        setPredictionData(data);
+        setChartHistory(data.history);
+        fetchMarketInfo(symbol);
+        if (AUTO_TRAINED_SYMBOLS.includes(symbol) && interval === "1d") {
+          fetchAccuracyLogs(symbol, interval);
+        } else {
+          setAccuracyLogs([]);
+        }
+      } else {
+        setPredictError(data.detail || "Failed to load prediction model.");
+      }
+    } catch (err) {
+      setPredictError("Connection failed to Python FastAPI server.");
+    } finally {
+      setPredictLoading(false);
+    }
+  };
+
+  // API Call: Fetch Market Info (market cap, P/E, 52w range, sector)
+  const fetchMarketInfo = async (symbol) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/market-info/${encodeURIComponent(symbol)}`);
+      if (res.ok) {
+        const 
+--------------------------------------------------
+Match found at char 53898:
+tPredictError("Connection failed to Python FastAPI server.");
+    } finally {
+      setPredictLoading(false);
+    }
+  };
+
+  // API Call: Fetch Market Info (market cap, P/E, 52w range, sector)
+  const fetchMarketInfo = async (symbol) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/market-info/${encodeURIComponent(symbol)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMarketInfo(data);
+      } else {
+        setMarketInfo(null);
+      }
+    } catch {
+      setMarketInfo(null);
+    }
+  };
+
+  // API Call: Fetch User Profile
+  const fetchCurrentUser = async (authToken) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+      if (res.ok) {
+        const da
+--------------------------------------------------
