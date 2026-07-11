@@ -4483,6 +4483,7 @@ export default function Home() {
                       </div>
                     );
                   })()}
+                </div>
 
                 {/* Fundamental Analysis Card */}
                 {predictionData && predictionData.fundamental_analysis && (
