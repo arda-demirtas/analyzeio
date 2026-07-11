@@ -1,5 +1,10 @@
 import os
 import sys
+
+# Force stdout/stderr to flush immediately after every line print
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
 import time
 import datetime
 import traceback
