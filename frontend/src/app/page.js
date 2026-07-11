@@ -4840,6 +4840,7 @@ export default function Home() {
                   </div>
                 )}
               </div>
+            </div>
             {/* Legal Disclaimer Box */}
             <div className="glass-panel" style={{ 
               marginTop: "20px", 
