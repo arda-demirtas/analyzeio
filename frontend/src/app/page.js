@@ -1396,6 +1396,7 @@ export default function Home() {
         setPredictionData(data);
         setChartHistory(data.history);
         fetchMarketInfo(symbol);
+        fetchScreenerData(); // Refresh the screener list to display consensus changes immediately
         if (AUTO_TRAINED_SYMBOLS.includes(symbol) && interval === "1d") {
           fetchAccuracyLogs(symbol, interval);
         } else {
@@ -1524,7 +1525,7 @@ export default function Home() {
   const fetchScreenerData = async () => {
     setScreenerLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/screener`);
+      const res = await fetch(`${API_BASE_URL}/api/screener?t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
         setScreenerData(Array.isArray(data) ? data : []);
