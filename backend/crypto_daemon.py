@@ -84,7 +84,11 @@ def check_and_train_assets():
 
             # 3. Decision
             if cache_valid:
-                print(f"  -> Cache is up-to-date (Current Candle: {current_candle_start}). Skipping training.")
+                print(f"  -> Cache is up-to-date (Current Candle: {current_candle_start}). Loading from cache to sync database...")
+                try:
+                    get_prediction(symbol, interval="1d", force_retrain=False, is_daemon=True)
+                except Exception as sync_err:
+                    print(f"     Failed to load prediction from cache to sync DB: {sync_err}")
                 skipped_count += 1
                 continue
             
