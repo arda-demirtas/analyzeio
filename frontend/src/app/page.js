@@ -529,6 +529,9 @@ export default function Home() {
   const lrChangeVal = (predictionData && predictionData.lr_predicted_close !== null)
     ? (predictionData.lr_predicted_close - 0.5) * 100
     : null;
+  const srChangeVal = (predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined)
+    ? (predictionData.sr_predicted_close - 0.5) * 100
+    : null;
 
 
   const getPredictionHeader = () => {
@@ -2437,7 +2440,8 @@ export default function Home() {
       { key: "xgboost", name: "XGBoost", da: predictionData.xgb_metrics?.directional_accuracy, pred: predictionData.xgb_predicted_close },
       { key: "lstm", name: "LSTM", da: predictionData.lstm_metrics?.directional_accuracy, pred: predictionData.lstm_predicted_close },
       { key: "linear_regression", name: lang === "tr" ? "Lineer Regresyon" : "Linear Regression", da: predictionData.lr_metrics?.directional_accuracy, pred: predictionData.lr_predicted_close },
-      { key: "patchtst", name: "PatchTST", da: predictionData.patchtst_metrics?.directional_accuracy, pred: predictionData.patchtst_predicted_close }
+      { key: "patchtst", name: "PatchTST", da: predictionData.patchtst_metrics?.directional_accuracy, pred: predictionData.patchtst_predicted_close },
+      { key: "support_resistance", name: lang === "tr" ? "Destek/Direnç" : "Support/Resistance", da: predictionData.sr_metrics?.directional_accuracy, pred: predictionData.sr_predicted_close }
     ];
     
     // Do not select a best model if any model is still training/pending (shows ---)
@@ -4169,6 +4173,43 @@ export default function Home() {
                             })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
                           </div>
                         )}
+
+                        {/* Support/Resistance Box */}
+                        {true && (
+                          <div style={getBoxStyle("support_resistance", "rgba(20, 184, 166, 0.04)", "1px solid rgba(20, 184, 166, 0.2)")}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#14b8a6", boxShadow: "0 0 8px #14b8a6" }}></span>
+                              <span style={{ fontSize: "13px", fontWeight: "600", color: "#ccfbf1" }}>
+                                {lang === "tr" ? "Destek/Direnç" : "Support/Resistance"}
+                                {getBestModel()?.key === "support_resistance" && (
+                                  <span style={{
+                                    marginLeft: "6px",
+                                    padding: "2px 6px",
+                                    background: "#f59e0b",
+                                    color: "#000",
+                                    borderRadius: "10px",
+                                    fontSize: "9px",
+                                    fontWeight: "900",
+                                    textTransform: "uppercase"
+                                  }}>
+                                    {lang === "tr" ? "👑 EN BAŞARILI" : "👑 BEST MODEL"}
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined ? (() => {
+                              const prob = predictionData.sr_predicted_close;
+                              const isBullish = prob >= 0.5;
+                              const conf = isBullish ? prob * 100 : (1 - prob) * 100;
+                              const label = lang === "tr" ? "Olasılık" : "Probability";
+                              return (
+                                <span style={{ fontSize: "14px", fontWeight: "800", color: isBullish ? "#10b981" : "#ef4444" }}>
+                                  {isBullish ? "▲" : "▼"} {isBullish ? "BULLISH" : "BEARISH"} ({label}: {conf.toFixed(1)}%)
+                                </span>
+                              );
+                            })() : <span style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-muted)" }}>---</span>}
+                          </div>
+                        )}
                       </div>
 
                       <div style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", width: "100%" }}>
@@ -4300,6 +4341,33 @@ export default function Home() {
                                 <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
                                   <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#f59e0b" }}></span>
                                   PatchTST:
+                                </span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+                                  {isBullish ? (
+                                    <>
+                                      <TrendingUp style={{ color: "var(--accent-success)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-success)" }}>{confidence.toFixed(1)}% ({t("bullish")})</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <TrendingDown style={{ color: "var(--accent-danger)", width: "14px", height: "14px" }} />
+                                      <span style={{ color: "var(--accent-danger)" }}>{confidence.toFixed(1)}% ({t("bearish")})</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
+
+                          {/* Support/Resistance Signal */}
+                          {srChangeVal !== null && (() => {
+                            const isBullish = srChangeVal >= 0;
+                            const confidence = isBullish ? (srChangeVal + 50) : (50 - srChangeVal);
+                            return (
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                                <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#14b8a6" }}></span>
+                                  {lang === "tr" ? "Destek/Direnç" : "Support/Resistance"}:
                                 </span>
                                 <div style={{ display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
                                   {isBullish ? (
@@ -4612,6 +4680,30 @@ export default function Home() {
                           </td>
                           <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
                             {predictionData && predictionData.patchtst_metrics && predictionData.patchtst_metrics.directional_accuracy !== null ? `${predictionData.patchtst_metrics.directional_accuracy.toFixed(1)}%` : "---"}
+                          </td>
+                        </tr>
+
+                        {/* Support/Resistance row */}
+                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                          <td style={{ padding: "10px 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#14b8a6" }}></span>
+                            <span style={{ fontWeight: "600", color: "#ccfbf1" }}>{lang === "tr" ? "Destek/Direnç" : "Support/Resistance"}</span>
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "700", color: predictionData && predictionData.sr_predicted_close >= 0.5 ? "var(--accent-success)" : "var(--accent-danger)" }}>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined
+                              ? (predictionData.sr_predicted_close >= 0.5 ? "▲ BULLISH" : "▼ BEARISH")
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text)" }}>
+                            {predictionData && predictionData.sr_predicted_close !== null && predictionData.sr_predicted_close !== undefined
+                              ? `${(predictionData.sr_predicted_close * 100).toFixed(1)}%`
+                              : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", color: "var(--text-muted)" }}>
+                            {predictionData && predictionData.sr_metrics && predictionData.sr_metrics.logloss !== undefined && predictionData.sr_metrics.logloss !== null ? predictionData.sr_metrics.logloss.toFixed(3) : "---"}
+                          </td>
+                          <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: "600", color: "var(--accent-success)" }}>
+                            {predictionData && predictionData.sr_metrics && predictionData.sr_metrics.directional_accuracy !== null ? `${predictionData.sr_metrics.directional_accuracy.toFixed(1)}%` : "---"}
                           </td>
                         </tr>
                       </tbody>
