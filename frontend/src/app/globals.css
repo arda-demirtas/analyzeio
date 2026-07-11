@@ -657,3 +657,10 @@ body {
 .footer-link-item:hover {
   color: var(--accent-primary);
 }
+
+.all-bullish-item:hover {
+  transform: translateY(-2px);
+  background: rgba(20, 184, 166, 0.08) !important;
+  border-color: rgba(20, 184, 166, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.1);
+}
