@@ -2169,8 +2169,10 @@ export default function Home() {
           
           <div className="auth-header">
             <h1 className="logo-text" style={{ fontSize: "36px", marginBottom: "10px" }}>analyzeio</h1>
-            <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>
-              Secure & Professional AI Stock & Crypto Predictor
+            <p style={{ color: "var(--text-muted)", fontSize: "12px", lineHeight: "1.4" }}>
+              {lang === "tr" 
+                ? "Yapay Zeka Destekli Grafik ve Teknik Analiz Platformu (SaaS)" 
+                : "AI-Backed Graphic & Technical Analysis Platform (SaaS)"}
             </p>
           </div>
           
@@ -2703,6 +2705,11 @@ export default function Home() {
           <span style={{ fontSize: "9px", color: "var(--text-dark)", textAlign: "center" }}>
             &copy; {new Date().getFullYear()} analyzeio
           </span>
+          <p style={{ fontSize: "8px", color: "var(--text-dark)", textAlign: "center", margin: "6px 0 0 0", lineHeight: "1.3" }}>
+            {lang === "tr" 
+              ? "Yatırım Tavsiyesi Değildir. Bu site yapay zeka destekli grafik analiz platformudur." 
+              : "Not Investment Advice. This site is an AI-backed graphical analysis platform."}
+          </p>
         </div>
 
       </aside>
@@ -4833,6 +4840,25 @@ export default function Home() {
                   </div>
                 )}
               </div>
+            {/* Legal Disclaimer Box */}
+            <div className="glass-panel" style={{ 
+              marginTop: "20px", 
+              padding: "15px 20px", 
+              borderRadius: "var(--border-radius-md)", 
+              border: "1px solid rgba(255, 255, 255, 0.05)",
+              background: "rgba(0, 0, 0, 0.2)"
+            }}>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "8px" }}>
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#ef4444" }}></span>
+                <h4 style={{ fontSize: "12px", fontWeight: "700", color: "#fca5a5", margin: 0, textTransform: "uppercase" }}>
+                  {lang === "tr" ? "Yasal Uyarı & Bilgilendirme" : "Legal Disclaimer & Information"}
+                </h4>
+              </div>
+              <p style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.6", margin: 0 }}>
+                {lang === "tr" 
+                  ? "analyzeio, yapay zeka destekli grafik ve teknik analiz hizmeti sunan bir SaaS (yazılım) platformudur. Bu web sitesinde yer alan tüm tahminler, analizler, göstergeler ve algoritmik modelleme sonuçları sadece teknik veri analizi ve bilgilendirme amaçlı olup, kesinlikle yatırım danışmanlığı, finansal tavsiye veya al-sat sinyali niteliği taşımamaktadır. Kullanıcıların bu verilere dayanarak alacağı tüm yatırım kararları ve doğabilecek finansal sonuçlar tamamen kendi sorumluluklarındadır." 
+                  : "analyzeio is an AI-backed graphical and technical analysis SaaS (software) platform. All predictions, analyses, indicators, and algorithmic modeling results on this website are for technical data analysis and informational purposes only, and absolutely do not constitute investment advice, financial advisory, or buy/sell signals. Any investment decisions made by users based on this data and any resulting financial outcomes are entirely their own responsibility."}
+              </p>
             </div>
           </>
         )}
