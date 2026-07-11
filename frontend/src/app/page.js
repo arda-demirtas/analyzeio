@@ -648,7 +648,15 @@ export default function Home() {
     }
   }, [activeSymbol]);
 
-  // Fetch market screener data when screener view is opened
+  // Fetch market screener data on mount, periodically, and when opened
+  useEffect(() => {
+    fetchScreenerData();
+    const interval = setInterval(() => {
+      fetchScreenerData();
+    }, 60000); // refresh every 60 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     if (showScreener) {
       fetchScreenerData();
@@ -4399,6 +4407,82 @@ export default function Home() {
                     </>
                   )}
                 </div>
+
+                {/* All-Bullish Consensus Card */}
+                <div className="glass-panel" style={{ display: "flex", flexDirection: "column", padding: "20px" }}>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "10px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <TrendingUp style={{ color: "var(--accent-success)", width: "18px", height: "18px" }} />
+                    {lang === "tr" ? "Boğa Konsensüsü (5/5) Varlıklar" : "All-Bullish Consensus Assets"}
+                  </h3>
+                  <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: "0 0 15px 0", lineHeight: "1.4" }}>
+                    {lang === "tr" 
+                      ? "Tüm 5 yapay zeka modelinin (XGBoost, LSTM, LR, PatchTST, S&R) yükseliş yönlü (>=%50 olasılık) tahmin ürettiği varlıklar." 
+                      : "Assets where all 5 AI models (XGBoost, LSTM, LR, PatchTST, S&R) predict bullish direction (>=50% probability)."}
+                  </p>
+                  
+                  {screenerLoading ? (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "10px 0" }}>
+                      <div className="spinner" style={{ width: "16px", height: "16px", marginRight: "8px" }}></div>
+                      <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                        {lang === "tr" ? "Yükleniyor..." : "Loading..."}
+                      </span>
+                    </div>
+                  ) : (() => {
+                    const allBullish = screenerData.filter(item => {
+                      return item.xgb_pred !== null && item.xgb_pred !== undefined && item.xgb_pred >= 0.5 &&
+                             item.lstm_pred !== null && item.lstm_pred !== undefined && item.lstm_pred >= 0.5 &&
+                             item.lr_pred !== null && item.lr_pred !== undefined && item.lr_pred >= 0.5 &&
+                             item.patchtst_pred !== null && item.patchtst_pred !== undefined && item.patchtst_pred >= 0.5 &&
+                             item.sr_pred !== null && item.sr_pred !== undefined && item.sr_pred >= 0.5;
+                    });
+                    
+                    if (allBullish.length === 0) {
+                      return (
+                        <div style={{ padding: "10px 0", textAlign: "center", color: "var(--text-muted)", fontSize: "13px" }}>
+                          {lang === "tr" ? "Şu anda 5/5 boğa konsensüsüne sahip varlık bulunmuyor." : "No assets currently have a 5/5 bullish consensus."}
+                        </div>
+                      );
+                    }
+                    
+                    return (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        {allBullish.map(item => {
+                          const avgProb = ((item.xgb_pred + item.lstm_pred + item.lr_pred + item.patchtst_pred + item.sr_pred) / 5.0) * 100;
+                          return (
+                            <div 
+                              key={item.id}
+                              onClick={() => selectSymbol(item.symbol)}
+                              style={{ 
+                                display: "flex", 
+                                justifyContent: "space-between", 
+                                alignItems: "center", 
+                                padding: "10px 14px", 
+                                background: "rgba(20, 184, 166, 0.04)", 
+                                border: "1px solid rgba(20, 184, 166, 0.15)",
+                                borderRadius: "var(--border-radius-md)",
+                                cursor: "pointer",
+                                transition: "all 0.2s"
+                              }}
+                              className="all-bullish-item"
+                            >
+                              <div style={{ display: "flex", flexDirection: "column" }}>
+                                <span style={{ fontWeight: "700", color: "#ccfbf1", fontSize: "14px" }}>{item.symbol}</span>
+                                <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{item.name || item.symbol}</span>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                                  {lang === "tr" ? "Ort. Olasılık" : "Avg Prob"}:
+                                </span>
+                                <span style={{ fontSize: "13px", fontWeight: "800", color: "#10b981" }}>
+                                  ▲ {avgProb.toFixed(1)}%
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
 
                 {/* Fundamental Analysis Card */}
                 {predictionData && predictionData.fundamental_analysis && (
