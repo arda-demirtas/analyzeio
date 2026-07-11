@@ -39,10 +39,10 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_typ
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported interval. Allowed: 15m, 1h, 4h, 1d"
         )
-    if model_type not in ["xgboost", "lstm", "linear_regression", "patchtst", "analyzeio"]:
+    if model_type not in ["xgboost", "lstm", "linear_regression", "patchtst", "support_resistance", "analyzeio"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Unsupported model_type. Allowed: xgboost, lstm, linear_regression, patchtst, analyzeio"
+            detail="Unsupported model_type. Allowed: xgboost, lstm, linear_regression, patchtst, support_resistance, analyzeio"
         )
     is_btc = symbol_upper == "BTC-USD"
     is_premium = current_user.is_premium if current_user else False
