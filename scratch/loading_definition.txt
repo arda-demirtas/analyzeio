@@ -1,0 +1,23 @@
+Match found at char 52843:
+forceRetrain = false) => {
+    setPredictLoading(true);
+    setPredictError("");
+    setPredictionData(null); // Clear old prediction data to trigger loading UI immediately
+    try {
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_
+--------------------------------------------------
+Match found at char 123833:
+in" style={{ color: "var(--accent-primary)", width: "30px" }} />
+                  <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>{t("loading")}</span>
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto", flexGrow: 1 }}>
+                  <table
+--------------------------------------------------
+Match found at char 131328:
+-accent-primary)", width: "48px", height: "48px" }} />
+            <h3 style={{ fontSize: "18px", color: "var(--text-main)", fontWeight: "600" }}>{t("loading")}</h3>
+            <p style={{ fontSize: "14px", color: "var(--text-muted)", textAlign: "center", maxWidth: "400px" }}>
+              {t("loa
+--------------------------------------------------
