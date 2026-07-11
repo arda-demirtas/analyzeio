@@ -1,0 +1,6 @@
+Match found at char 131474:
+, color: "var(--text-main)", fontWeight: "600" }}>{t("loading")}</h3>
+            <p style={{ fontSize: "14px", color: "var(--text-muted)", textAlign: "center", maxWidth: "400px" }}>
+              {t("loading_desc")
+                .replace("{interval}", chartInterval === "1d" ? (lang === "tr" ? "günlük" : (lang === "de" ? "tägliche" : (lang === "ru" ? "дневные" : (lang === "zh" ? "日线" : (lang ===
+--------------------------------------------------
