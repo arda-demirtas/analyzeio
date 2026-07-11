@@ -1,0 +1,103 @@
+Match found at char 23053:
+actEmail, setContactEmail] = useState("");
+  const [contactStatus, setContactStatus] = useState("");
+
+  // AI Market Screener State
+  const [showScreener, setShowScreener] = useState(false);
+  const [screenerData, setScreenerData] = useState([]);
+  const [screenerFilter, setScreenerFilter] = useState("all");
+  const [screenerSearch, setScreenerSearch] = useState("");
+  const [screenerType, setScreenerType] = useState("all");
+  const [screenerLoading, setScreenerLoading] = useState(false);
+
+  // News Sentiment State
+  const [newsData, setNewsData] = useState(null);
+  const [newsLoading, setNewsLoading] = useState(false);
+
+  // Market Info State (market cap, 52w range, etc.)
+  const [marketInfo, setMarketInfo] = useState(null);
+
+  const [oldPassword, setOldPassword] = useState("");
+  const [
+--------------------------------------------------
+Match found at char 29702:
+ents(activeSymbol);
+      fetchNewsSentiment(activeSymbol);
+    }
+  }, [activeSymbol]);
+
+  // Fetch market screener data when screener view is opened
+  useEffect(() => {
+    if (showScreener) {
+      fetchScreenerData();
+    }
+  }, [showScreener]);
+
+  // 2. Fetch Prediction data when activeSymbol, chartInterval, modelType, or lang changes
+  useEffect(() => {
+    if (activeSymbol) {
+      let currentModelType = modelType;
+      // Enforce Linear Regression only for BTC-USD
+      if (modelType === "linear_regression" && activeSymbol !== "BTC-USD") {
+        currentModelType = "xgboost";
+        setModelType("xgboost");
+        return;
+      }
+      loadPrediction(activeSymbol, chartInterval, currentModelType);
+    }
+  }, [activeSymbol, chartInterval, modelType, token, lang]);
+
+  // 3. Render
+--------------------------------------------------
+Match found at char 57096:
+;
+        setComments(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+    }
+  };
+
+  // API Call: Fetch Market Screener Data
+  const fetchScreenerData = async () => {
+    setScreenerLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/screener`);
+      if (res.ok) {
+        const data = await res.json();
+        setScreenerData(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error("Error fetching screener data:", err);
+    } finally {
+      setScreenerLoading(false);
+    }
+  };
+
+  // API Call: Fetch News Sentiment
+  const fetchNewsSentiment = async (symbol) => {
+    setNewsLoading(true);
+    setNewsData(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/new
+--------------------------------------------------
+Match found at char 124840:
+g: "12px 16px" }}>{t("screener_macd")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        let filtered = screenerData;
+                        
+                        if (screenerSearch.trim()) {
+                          const q = screenerSearch.toLowerCase().trim();
+                          filtered = filtered.filter(item => 
+                            item.symbol.toLowerCase().includes(q) || 
+                            (item.name && item.name.toLowerCase().includes(q))
+                          );
+                        }
+
+                        if (screenerType === "crypto") {
+                          filtered = filtered.filter(item => item.symbol.endsWith("-USD"));
+                   
+--------------------------------------------------
