@@ -1,5 +1,6 @@
 import requests
 import datetime
+import time
 import pandas as pd
 import numpy as np
 from typing import Tuple, List, Dict, Any, Optional
@@ -87,41 +88,57 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
         else:
             raise ValueError(f"Unsupported interval: {interval}")
 
-        url = f"https://query2.finance.yahoo.com/v8/finance/chart/{symbol}?range={range_param}&interval={api_interval}"
+        hosts = ["query2.finance.yahoo.com", "query1.finance.yahoo.com"]
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
         
-        try:
-            r = requests.get(url, headers=headers, timeout=15)
-            if r.status_code != 200:
-                raise ValueError(f"Failed to fetch data from Yahoo Finance: {r.status_code}")
+        success = False
+        last_error = None
+        
+        for host in hosts:
+            url = f"https://{host}/v8/finance/chart/{symbol}?range={range_param}&interval={api_interval}"
+            for attempt in range(3):
+                try:
+                    r = requests.get(url, headers=headers, timeout=10)
+                    if r.status_code == 200:
+                        data = r.json()
+                        result = data["chart"]["result"][0]
+                        timestamps = result.get("timestamp", [])
+                        quote = result["indicators"]["quote"][0]
+                        meta = result.get("meta", {})
+                        current_price = meta.get("regularMarketPrice")
+                        
+                        if timestamps:
+                            dates = [datetime.datetime.fromtimestamp(ts) for ts in timestamps]
+                            df = pd.DataFrame({
+                                "Open": quote["open"],
+                                "High": quote["high"],
+                                "Low": quote["low"],
+                                "Close": quote["close"],
+                                "Volume": quote["volume"]
+                            }, index=dates)
+                            df.index.name = "Date"
+                            df["Volume"] = df["Volume"].fillna(0)
+                            df = df.dropna(subset=["Open", "High", "Low", "Close"])
+                            success = True
+                            break
+                        else:
+                            raise ValueError(f"No historical data returned for symbol: {symbol}")
+                    elif r.status_code == 404:
+                        raise ValueError(f"Symbol not found (404): {symbol}")
+                    else:
+                        raise ValueError(f"Failed to fetch data from Yahoo Finance ({host}): HTTP {r.status_code}")
+                except Exception as e:
+                    last_error = e
+                    if "Symbol not found (404)" in str(e):
+                        break
+                    time.sleep(0.5 * (attempt + 1))
+            if success:
+                break
                 
-            data = r.json()
-            result = data["chart"]["result"][0]
-            timestamps = result.get("timestamp", [])
-            quote = result["indicators"]["quote"][0]
-            meta = result.get("meta", {})
-            current_price = meta.get("regularMarketPrice")
-            
-            if not timestamps:
-                raise ValueError(f"No historical data returned for symbol: {symbol}")
-                
-            dates = [datetime.datetime.fromtimestamp(ts) for ts in timestamps]
-            df = pd.DataFrame({
-                "Open": quote["open"],
-                "High": quote["high"],
-                "Low": quote["low"],
-                "Close": quote["close"],
-                "Volume": quote["volume"]
-            }, index=dates)
-            df.index.name = "Date"
-            # Safely fill missing volume with 0
-            df["Volume"] = df["Volume"].fillna(0)
-            # Drop rows where core price information is missing
-            df = df.dropna(subset=["Open", "High", "Low", "Close"])
-        except Exception as e:
-            raise ValueError(f"No historical data found or failed to parse for symbol: {symbol}. Error: {e}")
+        if not success:
+            raise ValueError(f"No historical data found or failed to parse for symbol: {symbol}. Error: {last_error}")
             
     if df.empty:
         raise ValueError(f"No historical data found for symbol: {symbol}")
