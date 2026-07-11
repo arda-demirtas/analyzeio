@@ -127,11 +127,13 @@ class PredictionResponse(BaseModel):
     lstm_predicted_close: Optional[float] = None
     lr_predicted_close: Optional[float] = None
     patchtst_predicted_close: Optional[float] = None
+    sr_predicted_close: Optional[float] = None
     analyzeio_predicted_close: Optional[float] = None
     xgb_metrics: Optional[PredictionMetrics] = None
     lstm_metrics: Optional[PredictionMetrics] = None
     lr_metrics: Optional[PredictionMetrics] = None
     patchtst_metrics: Optional[PredictionMetrics] = None
+    sr_metrics: Optional[PredictionMetrics] = None
     analyzeio_metrics: Optional[PredictionMetrics] = None
     fundamental_analysis: Optional[FundamentalAnalysisResult] = None
     technical_recommendation: Optional[TechnicalRecommendation] = None
