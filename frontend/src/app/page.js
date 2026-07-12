@@ -4446,7 +4446,7 @@ export default function Home() {
                     }
                     
                     return (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "325px", overflowY: "auto", paddingRight: "4px" }}>
                         {allBullish.map(item => {
                           const avgProb = ((item.xgb_pred + item.lstm_pred + item.lr_pred + item.patchtst_pred + item.sr_pred) / 5.0) * 100;
                           return (
