@@ -12,7 +12,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
     profile_picture = Column(String, nullable=True)
-    is_premium = Column(Boolean, default=False)
+    is_premium = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships
