@@ -518,6 +518,10 @@ export default function Home() {
   const [mockTradingState, setMockTradingState] = useState(null);
   const [modelType, setModelType] = useState("xgboost");
   const [daemonLogs, setDaemonLogs] = useState({ out: [], error: [], daemon_out: [], daemon_err: [] });
+  const [adminPerformance, setAdminPerformance] = useState(null);
+  const [adminPerfSearch, setAdminPerfSearch] = useState("");
+  const [adminPerfFilter, setAdminPerfFilter] = useState("all");
+
 
   const lastCloseVal = predictionData ? predictionData.last_close : null;
   const xgbChangeVal = (predictionData && predictionData.xgb_predicted_close !== null)
@@ -2036,6 +2040,14 @@ export default function Home() {
       if (logsRes.ok) {
         const logsData = await logsRes.json();
         setDaemonLogs(logsData);
+      }
+      
+      const perfRes = await fetch(`${API_BASE_URL}/api/admin/predictions-performance`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (perfRes.ok) {
+        const perfData = await perfRes.json();
+        setAdminPerformance(perfData);
       }
       
       await fetchMockTradingState();
@@ -4811,120 +4823,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Prediction Accuracy Logs */}
-                {AUTO_TRAINED_SYMBOLS.includes(activeSymbol) && chartInterval === "1d" && (
-                  <div className="glass-panel" style={{ marginTop: "20px" }}>
-                    <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <LineChart style={{ color: "var(--accent-primary)", width: "18px", height: "18px" }} /> {t("accuracy_title")}
-                    </h3>
-                    
-                    {accuracyLoading ? (
-                      <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
-                        <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)" }} />
-                      </div>
-                                        ) : (() => {
-                      const filteredAccuracyLogs = accuracyLogs.filter((log) => {
-                        // Hide pending predictions; only show completed history with actual outcomes
-                        if (log.actual_close === null || log.actual_close === undefined) {
-                          return false;
-                        }
-                        return true;
-                      });
 
-                      return filteredAccuracyLogs.length === 0 ? (
-                        <div style={{ fontSize: "13px", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", padding: "15px" }}>
-                          {t("table_no_logs")}
-                        </div>
-                      ) : (
-                        <div style={{ overflowX: "auto" }}>
-                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
-                            <thead>
-                              <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)", textAlign: "left" }}>
-                                <th style={{ padding: "8px 4px" }}>{t("table_target_date")}</th>
-                                <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_predicted")}</th>
-                                <th style={{ padding: "8px 4px", textAlign: "right" }}>{t("table_actual")}</th>
-                                <th style={{ padding: "8px 4px", textAlign: "right" }}>{lang === "tr" ? "Olasılık" : "Probability"}</th>
-                                <th style={{ padding: "8px 4px", textAlign: "center" }}>{lang === "tr" ? "Sonuç" : "Result"}</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {filteredAccuracyLogs.map(log => {
-                                const actualVal = log.actual_close;
-                                const predVal = log.predicted_close;
-                                const lastVal = log.last_close;
-
-                                let predictedText = "---";
-                                let predictedColor = "var(--text-muted)";
-                                let actualText = "---";
-                                let actualColor = "var(--text-muted)";
-                                let probText = "---";
-                                let dirCorr = "---";
-                                let dirBadgeClass = "badge-secondary";
-
-                                if (predVal !== null && predVal !== undefined) {
-                                  const isBullish = predVal >= 0.5;
-                                  const conf = isBullish ? predVal * 100 : (1 - predVal) * 100;
-                                  probText = `${conf.toFixed(1)}%`;
-                                  
-                                  if (isBullish) {
-                                    predictedText = lang === "tr" ? "▲ BULLISH" : "▲ BULLISH";
-                                    predictedColor = "#10b981";
-                                  } else {
-                                    predictedText = lang === "tr" ? "▼ BEARISH" : "▼ BEARISH";
-                                    predictedColor = "#ef4444";
-                                  }
-                                }
-
-                                if (actualVal !== null && actualVal !== undefined) {
-                                  const actualUp = actualVal > lastVal;
-                                  const formattedPrice = `$${actualVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                                  if (actualUp) {
-                                    actualText = `${formattedPrice} (▲)`;
-                                    actualColor = "#10b981";
-                                  } else {
-                                    actualText = `${formattedPrice} (▼)`;
-                                    actualColor = "#ef4444";
-                                  }
-
-                                  const predUp = predVal >= 0.5;
-                                  const matched = predUp === actualUp;
-                                  dirCorr = matched ? (lang === "tr" ? "✓ Doğru" : "✓ Correct") : (lang === "tr" ? "✗ Yanlış" : "✗ Wrong");
-                                  dirBadgeClass = matched ? "badge-success" : "badge-danger";
-                                } else {
-                                  actualText = lang === "tr" ? "Bekliyor..." : "Pending...";
-                                }
-
-                                return (
-                                  <tr key={log.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.03)" }}>
-                                    <td style={{ padding: "8px 4px", whiteSpace: "nowrap" }}>
-                                      {log.prediction_date}
-                                    </td>
-                                    <td style={{ padding: "8px 4px", textAlign: "right", fontWeight: "700", color: predictedColor }}>
-                                      {predictedText}
-                                    </td>
-                                    <td style={{ padding: "8px 4px", textAlign: "right", fontWeight: "600", color: actualColor }}>
-                                      {actualText}
-                                    </td>
-                                    <td style={{ padding: "8px 4px", textAlign: "right", fontWeight: "600" }}>
-                                      {probText}
-                                    </td>
-                                    <td style={{ padding: "8px 4px", textAlign: "center" }}>
-                                      {actualVal !== null && actualVal !== undefined ? (
-                                        <span className={`badge ${dirBadgeClass}`} style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "12px", fontWeight: "700" }}>
-                                          {dirCorr}
-                                        </span>
-                                      ) : "---"}
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
               </div>
             </div>
             {/* Legal Disclaimer Box */}
@@ -5297,6 +5196,18 @@ export default function Home() {
               >
                 📋 System Logs
               </button>
+              <button 
+                onClick={() => setAdminActiveTab("performance")} 
+                className={adminActiveTab === "performance" ? "btn-primary" : "btn-secondary"}
+                style={{ 
+                  flex: 1, 
+                  background: adminActiveTab === "performance" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
+                  border: "none",
+                  fontWeight: "600"
+                }}
+              >
+                📈 Performance
+              </button>
             </div>
             
             {/* Main Content Area (Scrollable) */}
@@ -5527,6 +5438,154 @@ export default function Home() {
                       ? daemonLogs.out.join("") 
                       : "Loading API logs or log file is empty..."}
                   </div>
+                </div>
+              ) : adminActiveTab === "performance" ? (
+                <div>
+                  {!adminPerformance ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "50px 0", gap: "15px" }}>
+                      <RefreshCw className="animate-spin" style={{ color: "#f59e0b", width: "32px", height: "32px" }} />
+                      <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>
+                        {lang === "tr" ? "Performans verileri yükleniyor..." : "Loading performance statistics..."}
+                      </span>
+                    </div>
+                  ) : (
+                    <div>
+                      {/* Summary Statistics Dashboard */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "15px", marginBottom: "20px" }}>
+                        <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                          <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>
+                            {lang === "tr" ? "Yön Tutarlılık Oranı" : "Directional Accuracy"}
+                          </span>
+                          <strong style={{ fontSize: "20px", color: "#10b981" }}>
+                            {adminPerformance.stats.accuracy_percent}%
+                          </strong>
+                          <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginTop: "2px" }}>
+                            {lang === "tr" 
+                              ? `${adminPerformance.stats.correct_count} / ${adminPerformance.stats.total_evaluated} Doğru Tahmin`
+                              : `${adminPerformance.stats.correct_count} / ${adminPerformance.stats.total_evaluated} Correct Predictions`}
+                          </span>
+                        </div>
+                        <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                          <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>
+                            {lang === "tr" ? "Değerlendirilen Sembol Sayısı" : "Total Evaluated Assets"}
+                          </span>
+                          <strong style={{ fontSize: "20px", color: "var(--text-main)" }}>
+                            {adminPerformance.stats.total_evaluated}
+                          </strong>
+                          <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginTop: "2px" }}>
+                            {lang === "tr" ? "En son kapanışı tamamlanmış olanlar" : "Symbols with completed predictions"}
+                          </span>
+                        </div>
+                        <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                          <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>
+                            {lang === "tr" ? "Boğa / Ayı Dağılımı" : "Predicted Outlook Split"}
+                          </span>
+                          <strong style={{ fontSize: "18px", color: "#f59e0b" }}>
+                            ▲ {adminPerformance.stats.bullish_pred_count} / ▼ {adminPerformance.stats.bearish_pred_count}
+                          </strong>
+                          <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginTop: "2px" }}>
+                            {lang === "tr" ? "Model Tahmin Dağılımları" : "Bullish vs Bearish forecasts"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Filter Bar */}
+                      <div style={{ display: "flex", gap: "10px", marginBottom: "15px", alignItems: "center" }}>
+                        <input 
+                          type="text"
+                          placeholder={lang === "tr" ? "Sembol Ara (örn: BTC)..." : "Search Symbol (e.g. BTC)..."}
+                          value={adminPerfSearch}
+                          onChange={(e) => setAdminPerfSearch(e.target.value)}
+                          className="input-field"
+                          style={{ flex: 1, margin: 0, padding: "8px 12px", fontSize: "13px" }}
+                        />
+                        <select
+                          value={adminPerfFilter}
+                          onChange={(e) => setAdminPerfFilter(e.target.value)}
+                          className="input-field"
+                          style={{ width: "180px", margin: 0, padding: "8px 12px", fontSize: "13px", background: "var(--bg-dark)" }}
+                        >
+                          <option value="all">{lang === "tr" ? "Tüm Tahminler" : "All Predictions"}</option>
+                          <option value="correct">{lang === "tr" ? "✓ Doğru Tahminler" : "✓ Correct Predictions"}</option>
+                          <option value="wrong">{lang === "tr" ? "✗ Yanlış Tahminler" : "✗ Wrong Predictions"}</option>
+                          <option value="bullish">{lang === "tr" ? "▲ Boğa Tahminleri" : "▲ Bullish Predictions"}</option>
+                          <option value="bearish">{lang === "tr" ? "▼ Ayı Tahminleri" : "▼ Bearish Predictions"}</option>
+                        </select>
+                      </div>
+
+                      {/* Details Table */}
+                      <div style={{ overflowX: "auto", maxHeight: "400px", background: "rgba(0,0,0,0.15)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                        {(() => {
+                          const filteredDetails = adminPerformance.details.filter(item => {
+                            const matchesSearch = item.symbol.toLowerCase().includes(adminPerfSearch.toLowerCase());
+                            if (!matchesSearch) return false;
+                            
+                            if (adminPerfFilter === "correct") return item.is_correct;
+                            if (adminPerfFilter === "wrong") return !item.is_correct;
+                            if (adminPerfFilter === "bullish") return item.predicted_direction === "UP";
+                            if (adminPerfFilter === "bearish") return item.predicted_direction === "DOWN";
+                            return true;
+                          });
+
+                          if (filteredDetails.length === 0) {
+                            return (
+                              <div style={{ padding: "30px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic", fontSize: "13px" }}>
+                                {lang === "tr" ? "Filtrelere uygun veri bulunamadı." : "No records match the selected filters."}
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", textAlign: "left" }}>
+                              <thead>
+                                <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)", background: "rgba(255,255,255,0.02)" }}>
+                                  <th style={{ padding: "10px" }}>{lang === "tr" ? "Sembol" : "Symbol"}</th>
+                                  <th style={{ padding: "10px" }}>{lang === "tr" ? "Hedef Tarih" : "Target Date"}</th>
+                                  <th style={{ padding: "10px", textAlign: "right" }}>{lang === "tr" ? "Model Tahmini" : "Predicted Direction"}</th>
+                                  <th style={{ padding: "10px", textAlign: "right" }}>{lang === "tr" ? "Önceki Kapanış" : "Prev Close"}</th>
+                                  <th style={{ padding: "10px", textAlign: "right" }}>{lang === "tr" ? "Gerçekleşen Kapanış" : "Actual Close"}</th>
+                                  <th style={{ padding: "10px", textAlign: "center" }}>{lang === "tr" ? "Sonuç" : "Result"}</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {filteredDetails.map((item, index) => {
+                                  const predUp = item.predicted_direction === "UP";
+                                  const actualUp = item.actual_direction === "UP";
+                                  const isBullish = item.predicted_close >= 0.5;
+                                  const conf = isBullish ? item.predicted_close * 100 : (1 - item.predicted_close) * 100;
+                                  
+                                  return (
+                                    <tr key={index} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.03)" }}>
+                                      <td style={{ padding: "10px", fontWeight: "700", color: "#fef3c7" }}>
+                                        {item.symbol}
+                                      </td>
+                                      <td style={{ padding: "10px", color: "var(--text-muted)" }}>
+                                        {item.prediction_date}
+                                      </td>
+                                      <td style={{ padding: "10px", textAlign: "right", fontWeight: "700", color: predUp ? "#10b981" : "#ef4444" }}>
+                                        {predUp ? "▲ BULLISH" : "▼ BEARISH"} ({conf.toFixed(1)}%)
+                                      </td>
+                                      <td style={{ padding: "10px", textAlign: "right", color: "var(--text-muted)" }}>
+                                        ${item.last_close.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </td>
+                                      <td style={{ padding: "10px", textAlign: "right", fontWeight: "600", color: actualUp ? "#10b981" : "#ef4444" }}>
+                                        ${item.actual_close.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({actualUp ? "▲" : "▼"})
+                                      </td>
+                                      <td style={{ padding: "10px", textAlign: "center" }}>
+                                        <span className={`badge ${item.is_correct ? "badge-success" : "badge-danger"}`} style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "12px", fontWeight: "700" }}>
+                                          {item.is_correct ? (lang === "tr" ? "✓ Doğru" : "✓ Correct") : (lang === "tr" ? "✗ Yanlış" : "✗ Wrong")}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div>
