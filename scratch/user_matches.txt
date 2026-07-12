@@ -1,0 +1,24 @@
+922: const canShowSR = (activeSymbol === "BTC-USD") || (user && user.is_premium);
+2309: const isOwner = user && user.id === comment.user.id;
+2315: if (parent) parentUsername = parent.user.username;
+2323: {comment.user.profile_picture ? (
+2325: src={comment.user.profile_picture}
+2326: alt={comment.user.username}
+2334: <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-main)" }}>{comment.user.username}</span>
+2406: placeholder={lang === "tr" ? `${comment.user.username} kullanıcısına yanıt ver...` : (lang === "de" ? `Antworten an ${comment.user.username}...` : (lang === "ru" ? `Ответить ${comment.user.username}...` : (lang === "zh" ? `回复 ${comment.user.username}...` : (lang === "es" ? `Responder a ${comment.user.username}...` : `Reply to ${comment.user.username}...`))))}
+2791: {user.profile_picture ? (
+2793: src={user.profile_picture}
+2803: {user.username}
+2805: {user.is_premium && (
+2868: border: user.is_premium ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid rgba(255, 255, 255, 0.08)",
+2869: background: user.is_premium ? "rgba(245, 158, 11, 0.05)" : "rgba(255, 255, 255, 0.02)"
+2872: <span style={{ color: user.is_premium ? "#f59e0b" : "var(--text-muted)", marginRight: "8px", fontWeight: "700" }}>★</span>
+2873: {user.is_premium ? t("premium_downgrade") : t("premium_upgrade")}
+2876: {user.email === "arda.demirtas2002@gmail.com" && (
+3315: {(!user || !user.is_premium) && activeSymbol !== "BTC-USD" && (
+3801: const canShowSR = (activeSymbol === "BTC-USD") || (user && user.is_premium);
+3984: const hasAccess = (activeSymbol === "BTC-USD") || (user && user.is_premium);
+5328: {u.is_premium ? (
+5346: borderColor: u.is_premium ? "rgba(239, 68, 68, 0.4)" : "rgba(245, 158, 11, 0.4)",
+5347: color: u.is_premium ? "var(--accent-danger)" : "#f59e0b"
+5350: {u.is_premium ? "Revoke Premium" : "Grant Premium"}
