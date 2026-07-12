@@ -124,17 +124,52 @@ def get_prediction(
                              sr_predicted_close is None)
 
     if not is_pending_data and not is_pending_prediction:
-        # "analyzeio" is the average of all 5 models!
-        analyzeio_predicted_close = (xgb_predicted_close + lstm_predicted_close + lr_predicted_close + patchtst_predicted_close + sr_predicted_close) / 5.0
+        # Get directional accuracies, default to 50.0 if not present
+        da_xgb = xgb_metrics.get("directional_accuracy", 50.0) if xgb_metrics else 50.0
+        da_lstm = lstm_metrics.get("directional_accuracy", 50.0) if lstm_metrics else 50.0
+        da_lr = lr_metrics.get("directional_accuracy", 50.0) if lr_metrics else 50.0
+        da_patchtst = patchtst_metrics.get("directional_accuracy", 50.0) if patchtst_metrics else 50.0
+        da_sr = sr_metrics.get("directional_accuracy", 50.0) if sr_metrics else 50.0
+        
+        # Calculate weights based on directional accuracy relative to 45% baseline
+        w_xgb = max(1.0, da_xgb - 45.0)
+        w_lstm = max(1.0, da_lstm - 45.0)
+        w_lr = max(1.0, da_lr - 45.0)
+        w_patchtst = max(1.0, da_patchtst - 45.0)
+        w_sr = max(1.0, da_sr - 45.0)
+        
+        total_w = w_xgb + w_lstm + w_lr + w_patchtst + w_sr
+        
+        # Accuracy-weighted prediction probability
+        analyzeio_predicted_close = (
+            w_xgb * xgb_predicted_close +
+            w_lstm * lstm_predicted_close +
+            w_lr * lr_predicted_close +
+            w_patchtst * patchtst_predicted_close +
+            w_sr * sr_predicted_close
+        ) / total_w
             
-        # Average performance metrics
-        valid_metrics_list = [xgb_metrics, lstm_metrics, lr_metrics, patchtst_metrics, sr_metrics]
-        avg_logloss = sum(m.get("logloss", 0.693) for m in valid_metrics_list) / 5.0
-        avg_da = sum(m.get("directional_accuracy", 50.0) for m in valid_metrics_list) / 5.0
+        # Accuracy-weighted performance metrics
+        weighted_logloss = (
+            w_xgb * (xgb_metrics.get("logloss") if xgb_metrics and xgb_metrics.get("logloss") is not None else 0.693) +
+            w_lstm * (lstm_metrics.get("logloss") if lstm_metrics and lstm_metrics.get("logloss") is not None else 0.693) +
+            w_lr * (lr_metrics.get("logloss") if lr_metrics and lr_metrics.get("logloss") is not None else 0.693) +
+            w_patchtst * (patchtst_metrics.get("logloss") if patchtst_metrics and patchtst_metrics.get("logloss") is not None else 0.693) +
+            w_sr * (sr_metrics.get("logloss") if sr_metrics and sr_metrics.get("logloss") is not None else 0.693)
+        ) / total_w
+        
+        weighted_da = (
+            w_xgb * da_xgb +
+            w_lstm * da_lstm +
+            w_lr * da_lr +
+            w_patchtst * da_patchtst +
+            w_sr * da_sr
+        ) / total_w
+        
         analyzeio_metrics = {
-            "logloss": avg_logloss,
-            "directional_accuracy": avg_da,
-            "training_status": "Average of 5 models (Analyzeio)"
+            "logloss": weighted_logloss,
+            "directional_accuracy": weighted_da,
+            "training_status": "Accuracy-Weighted Ensemble (Analyzeio)"
         }
 
         if model_type == "lstm":
