@@ -37,7 +37,7 @@ def get_lr_prediction(
         x_lr_train, y_lr_train = make_raw_lr_sequences_bg(df_train_lr[FEATURES].values, df_train_lr["Daily_Return"].values)
         x_lr_test, y_lr_test = make_raw_lr_sequences_bg(df_test[FEATURES].values, df_test["Daily_Return"].values)
         
-        cache_path_lr = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model_lr.pkl")
+        cache_path_lr = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_seq{seq_length}_model_lr.pkl")
         lr_model_loaded = False
         lr_status = "Trained LR model"
         
