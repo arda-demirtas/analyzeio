@@ -213,6 +213,7 @@ def fetch_market_data(symbol: str, interval: str = "1d") -> Tuple[pd.DataFrame, 
     
     # New Indicators
     df["ATR"] = calculate_atr(df["High"], df["Low"], df["Close"])
+    df["ATR_Percent"] = df["ATR"] / (df["Close"] + 1e-10)
     
     # Calculate StochRSI, OBV, CCI, and Williams %R
     stoch_k, stoch_d = calculate_stoch_rsi(df["RSI"])
