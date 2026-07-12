@@ -113,7 +113,7 @@ def get_sr_prediction(
         x_sr_train, y_sr_train = make_sequences_local(df_train_clean[sr_features].values, y_train_dir)
         x_sr_test, y_sr_test = make_sequences_local(df_test_clean[sr_features].values, y_test_dir)
         
-        cache_path_sr = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model_sr.pkl")
+        cache_path_sr = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_seq{seq_length}_model_sr.pkl")
         sr_model_loaded = False
         sr_status = "Trained S/R model"
         
