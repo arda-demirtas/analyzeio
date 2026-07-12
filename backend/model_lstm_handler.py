@@ -32,7 +32,7 @@ def get_lstm_prediction(
         x_lstm_val, y_lstm_val, _, _ = prepare_lstm_data(df_val, seq_length, scaler_x_train, scaler_y_train)
         x_lstm_test, y_lstm_test, _, _ = prepare_lstm_data(df_test, seq_length, scaler_x_train, scaler_y_train)
         
-        cache_path_lstm = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.keras")
+        cache_path_lstm = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_seq{seq_length}_model.keras")
         lstm_loaded = False
         lstm_status = "Trained LSTM model"
         
