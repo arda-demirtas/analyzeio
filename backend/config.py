@@ -21,7 +21,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.abspath(os.path.join(os.path.dirname(__file__), 'analyzeio.db'))}")
 
 # Prediction settings
-DEFAULT_SEQUENCE_LENGTH = 15
+DEFAULT_SEQUENCE_LENGTH = 60
 MODEL_CACHE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "model_cache"))
 
 # Create directories if they do not exist
