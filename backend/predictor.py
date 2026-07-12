@@ -62,6 +62,12 @@ def get_prediction(
     if not is_pending_data:
         split_idx = int(len(df) * 0.8)
         df_train = df.iloc[:split_idx]
+        
+        # Limit training data to the most recent 730 rows to capture recent market dynamics
+        max_train_rows = 730
+        if len(df_train) > max_train_rows:
+            df_train = df_train.iloc[-max_train_rows:]
+            
         df_test = df.iloc[split_idx - seq_length:]
 
         # Max/min return bounds
@@ -131,14 +137,18 @@ def get_prediction(
         da_patchtst = patchtst_metrics.get("directional_accuracy", 50.0) if patchtst_metrics else 50.0
         da_sr = sr_metrics.get("directional_accuracy", 50.0) if sr_metrics else 50.0
         
-        # Calculate weights based on directional accuracy relative to 45% baseline
-        w_xgb = max(1.0, da_xgb - 45.0)
-        w_lstm = max(1.0, da_lstm - 45.0)
-        w_lr = max(1.0, da_lr - 45.0)
-        w_patchtst = max(1.0, da_patchtst - 45.0)
-        w_sr = max(1.0, da_sr - 45.0)
+        # Calculate weights based on directional accuracy with Hard Thresholding (exclude < 50.0%)
+        w_xgb = max(0.0, da_xgb - 50.0) if da_xgb >= 50.0 else 0.0
+        w_lstm = max(0.0, da_lstm - 50.0) if da_lstm >= 50.0 else 0.0
+        w_lr = max(0.0, da_lr - 50.0) if da_lr >= 50.0 else 0.0
+        w_patchtst = max(0.0, da_patchtst - 50.0) if da_patchtst >= 50.0 else 0.0
+        w_sr = max(0.0, da_sr - 50.0) if da_sr >= 50.0 else 0.0
         
         total_w = w_xgb + w_lstm + w_lr + w_patchtst + w_sr
+        if total_w == 0.0:
+            # Fallback to equal weighting if all models fail to exceed 50.0%
+            w_xgb = w_lstm = w_lr = w_patchtst = w_sr = 1.0
+            total_w = 5.0
         
         # Accuracy-weighted prediction probability
         analyzeio_predicted_close = (
