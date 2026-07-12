@@ -262,13 +262,8 @@ def get_prediction(
         candle_close_time = expected_close_time
         
     if not is_pending_data and not is_pending_prediction:
-        valid_predictions = [
-            v for v in [xgb_predicted_close, lstm_predicted_close, lr_predicted_close, patchtst_predicted_close]
-            if v is not None
-        ]
-        if valid_predictions:
-            avg_predicted_prob = sum(valid_predictions) / len(valid_predictions)
-            change_percent = (avg_predicted_prob - 0.5) * 100
+        if analyzeio_predicted_close is not None:
+            change_percent = (analyzeio_predicted_close - 0.5) * 100
         else:
             change_percent = 0.0
     else:
