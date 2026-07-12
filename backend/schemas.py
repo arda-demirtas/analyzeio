@@ -29,7 +29,7 @@ class UserResponse(BaseModel):
     email: str
     is_active: bool
     profile_picture: Optional[str] = None
-    is_premium: bool = False
+    is_premium: bool = True
     created_at: datetime.datetime
 
     class Config:
