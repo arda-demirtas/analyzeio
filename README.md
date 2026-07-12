@@ -4,6 +4,23 @@
 Analyzeio is an end-to-end quantitative forecasting platform that downloads real-time financial market data, engineers robust technical indicators, trains five distinct machine learning models in parallel, and combines their forecasts using a custom **Accuracy-Weighted Ensemble with Hard Thresholding**. 
 
 The platform features a modern, glassmorphic Next.js web interface alongside an automated, background training daemon orchestrated via PM2.
+---
+
+## 📷 Screenshots & UI Walkthrough
+
+### 🖥️ Main Dashboard Interface
+![Main Dashboard](photos/dash.png)
+*The main user interface featuring real-time interactive technical analysis charts (Chart.js), dynamic asset selection lists, and active model prediction indicators.*
+
+### 🔑 Authentication Screens
+| 🔐 Sign In | 📝 Register |
+|---|---|
+| ![Login Page](photos/login.png) | ![Register Page](photos/register.png) |
+| *Secure user authentication panel utilizing bcrypt hashing.* | *Registration portal to create new user profiles.* |
+
+### 📈 Admin Control Modal & Performance Analytics
+![Admin Performance Control](photos/admin.png)
+*Secure admin panel showing out-of-sample directional accuracy statistics, dynamic filters (All, Correct, Wrong, Bullish, Bearish), search filters, and prediction execution status logs.*
 
 ---
 
