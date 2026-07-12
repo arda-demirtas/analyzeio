@@ -41,7 +41,7 @@ def get_patchtst_prediction(
         X_test_tst = df_test_tst[existing_tst_features].iloc[:-1].values
         y_test_tst = (df_test_tst["Daily_Return"].iloc[1:].values > 0).astype(int)
 
-        cache_path_tst = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model_patchtst.pkl")
+        cache_path_tst = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_seq{seq_length}_model_patchtst.pkl")
         tst_model_loaded = False
         tst_status = "Trained PatchTST model"
         
