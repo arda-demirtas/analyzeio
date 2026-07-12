@@ -1,6 +1,8 @@
 # Analyzeio 📈
 > **Advanced AI-Powered Multi-Model Crypto & Stock Forecasting Dashboard**
 
+🔗 **Live Website:** [analyze-io.com](https://analyze-io.com)
+
 Analyzeio is an end-to-end quantitative forecasting platform that downloads real-time financial market data, engineers robust technical indicators, trains five distinct machine learning models in parallel, and combines their forecasts using a custom **Accuracy-Weighted Ensemble with Hard Thresholding**. 
 
 The platform features a modern, glassmorphic Next.js web interface alongside an automated, background training daemon orchestrated via PM2.
