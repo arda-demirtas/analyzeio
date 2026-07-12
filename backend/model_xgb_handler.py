@@ -43,7 +43,7 @@ def get_xgb_prediction(
         x_xgb_val, y_xgb_val = make_raw_xgb_sequences(df_val[FEATURES].values, y_val_dir)
         x_xgb_test, y_xgb_test = make_raw_xgb_sequences(df_test[FEATURES].values, y_test_dir)
         
-        cache_path_xgb = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_model.json")
+        cache_path_xgb = os.path.join(MODEL_CACHE_DIR, f"{symbol}_{interval}_seq{seq_length}_model.json")
         xgb_loaded = False
         xgb_status = "Trained XGBoost model"
         
