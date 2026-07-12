@@ -145,3 +145,60 @@ def reset_admin_mock_trading(admin: User = Depends(check_admin)):
     save_mock_trading_state(reset_state)
     return reset_state
 
+
+@router.get("/predictions-performance")
+def get_predictions_performance(db: Session = Depends(get_db), admin: User = Depends(check_admin)):
+    """Returns the latest resolved prediction performance for all auto-trained symbols."""
+    from backend.models import PredictionLog, AutoTrainSymbol
+    from backend.config import AUTO_TRAINED_SYMBOLS
+    
+    db_symbols = [s.symbol for s in db.query(AutoTrainSymbol).all()]
+    symbols = db_symbols if db_symbols else AUTO_TRAINED_SYMBOLS
+    
+    results = []
+    for sym in symbols:
+        latest_log = (
+            db.query(PredictionLog)
+            .filter(
+                PredictionLog.symbol == sym,
+                PredictionLog.interval == "1d",
+                PredictionLog.actual_close != None
+            )
+            .order_by(PredictionLog.prediction_date.desc())
+            .first()
+        )
+        if latest_log:
+            pred_up = latest_log.predicted_close >= 0.5
+            actual_up = latest_log.actual_close > latest_log.last_close
+            is_correct = pred_up == actual_up
+            
+            results.append({
+                "symbol": latest_log.symbol,
+                "prediction_date": latest_log.prediction_date,
+                "predicted_close": latest_log.predicted_close,
+                "last_close": latest_log.last_close,
+                "actual_close": latest_log.actual_close,
+                "is_correct": is_correct,
+                "predicted_direction": "UP" if pred_up else "DOWN",
+                "actual_direction": "UP" if actual_up else "DOWN"
+            })
+            
+    # Calculate stats
+    total_evaluated = len(results)
+    correct_count = sum(1 for r in results if r["is_correct"])
+    accuracy_percent = (correct_count / total_evaluated * 100) if total_evaluated > 0 else 0.0
+    bullish_pred_count = sum(1 for r in results if r["predicted_direction"] == "UP")
+    bearish_pred_count = sum(1 for r in results if r["predicted_direction"] == "DOWN")
+    
+    return {
+        "stats": {
+            "total_evaluated": total_evaluated,
+            "correct_count": correct_count,
+            "accuracy_percent": round(accuracy_percent, 2),
+            "bullish_pred_count": bullish_pred_count,
+            "bearish_pred_count": bearish_pred_count
+        },
+        "details": sorted(results, key=lambda x: x["symbol"])
+    }
+
+
