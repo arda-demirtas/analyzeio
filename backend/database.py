@@ -44,6 +44,10 @@ def run_migrations():
         # Ensure all tables are created
         Base.metadata.create_all(bind=engine)
         
+        # Force all existing users to be premium for portfolio showcase
+        db.execute(text("UPDATE users SET is_premium = TRUE"))
+        db.commit()
+        
         # Populate default and missing auto-train symbols
         from backend.models import AutoTrainSymbol, MarketScreener
         from backend.config import AUTO_TRAINED_SYMBOLS
