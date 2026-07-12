@@ -188,8 +188,3 @@ npm install
 npm run dev
 ```
 Open `http://localhost:3000` to view the dashboard!
-
----
-
-## 📄 License
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
