@@ -45,7 +45,7 @@ def predict_asset(symbol: str, interval: str = "1d", lang: str = "en", model_typ
             detail="Unsupported model_type. Allowed: xgboost, lstm, linear_regression, patchtst, support_resistance, analyzeio"
         )
     is_btc = symbol_upper == "BTC-USD"
-    is_premium = current_user.is_premium if current_user else False
+    is_premium = True
     if not is_premium and not is_btc:
         try:
             history_points = fetch_interval_history(symbol_upper, interval=interval)
