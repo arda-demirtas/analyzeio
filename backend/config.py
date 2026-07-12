@@ -21,7 +21,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.abspath(os.path.join(os.path.dirname(__file__), 'analyzeio.db'))}")
 
 # Prediction settings
-DEFAULT_SEQUENCE_LENGTH = 60
+DEFAULT_SEQUENCE_LENGTH = 15
 MODEL_CACHE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "model_cache"))
 
 # Create directories if they do not exist
@@ -61,7 +61,7 @@ AUTO_TRAINED_SYMBOLS = POPULAR_CRYPTOS + POPULAR_COMMODITIES + POPULAR_STOCKS
 
 FEATURES = [
     "Return_Lag1", "Return_Lag3", "Return_Lag5",
-    "RSI", "MACD_Hist", "EMA_Diff", "BB_Position", "ATR",
+    "RSI", "MACD_Hist", "EMA_Diff", "BB_Position", "ATR_Percent",
     "SPY_Return_1d", "SPY_Return_5d", "VIX_Close"
 ]
 
