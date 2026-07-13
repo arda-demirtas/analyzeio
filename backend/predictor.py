@@ -509,7 +509,15 @@ def get_prediction(
         print(f"Database logging error in get_prediction: {db_err}")
     finally:
         db_session.close()
-        
+    # Clear Keras session and force garbage collection to release RAM on low-spec VPS
+    try:
+        import tensorflow as tf
+        tf.keras.backend.clear_session()
+    except Exception:
+        pass
+    import gc
+    gc.collect()
+
     return {
         "symbol": symbol,
         "name": asset_name,
