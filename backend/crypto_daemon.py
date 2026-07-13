@@ -115,10 +115,14 @@ def check_and_train_assets():
                 
             print(f"  -> Training successful for {symbol} (Candle: {current_candle_start})")
             success_count += 1
+            import time
+            time.sleep(2)
         except Exception as e:
             print(f"  -> Error training {symbol}: {e}")
             traceback.print_exc()
             fail_count += 1
+            import time
+            time.sleep(1)
             
     print(f"\n[{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC] Auto-training cycle completed.")
     print(f"Summary -> Success: {success_count}, Skipped (Up-to-date): {skipped_count}, Failed: {fail_count}")
