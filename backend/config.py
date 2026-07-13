@@ -1,4 +1,18 @@
 import os
+# Throttle CPU usage of mathematical/ML libraries to prevent VPS lockup
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
+try:
+    import tensorflow as tf
+    tf.config.threading.set_intra_op_parallelism_threads(1)
+    tf.config.threading.set_inter_op_parallelism_threads(1)
+except ImportError:
+    pass
+
 import secrets
 
 # Load environment variables from .env file in the root project folder without external dependencies
