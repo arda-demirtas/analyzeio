@@ -86,7 +86,7 @@ def get_xgb_prediction(
                 model_xgb = xgb.XGBClassifier(
                     n_estimators=30, max_depth=3, learning_rate=0.05,
                     subsample=0.8, colsample_bytree=0.8, reg_alpha=0.1, reg_lambda=1,
-                    early_stopping_rounds=15, random_state=42, n_jobs=-1, eval_metric="logloss"
+                    early_stopping_rounds=15, random_state=42, n_jobs=1, eval_metric="logloss"
                 )
                 model_xgb.fit(
                     x_xgb_train, y_xgb_train,
