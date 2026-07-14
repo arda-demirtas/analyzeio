@@ -1,3 +1,4 @@
+<img width="1917" height="852" alt="ss" src="https://github.com/user-attachments/assets/d8e4ee69-1696-43ea-b8db-4f7a80bb2a28" />
 # Analyzeio 📈
 > **Advanced AI-Powered Multi-Model Crypto & Stock Forecasting Dashboard**
 
