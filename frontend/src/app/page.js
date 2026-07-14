@@ -4826,6 +4826,58 @@ export default function Home() {
 
               </div>
             </div>
+            
+            {/* AI Platform SEO Methodology & Overview Panel */}
+            <div className="glass-panel" style={{ 
+              marginTop: "20px", 
+              padding: "20px", 
+              borderRadius: "var(--border-radius-lg)", 
+              border: "1px solid rgba(255, 255, 255, 0.05)",
+              background: "rgba(255, 255, 255, 0.01)"
+            }}>
+              {lang === "tr" ? (
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", color: "var(--text-main)", display: "flex", alignItems: "center", gap: "8px" }}>
+                    🧠 Yapay Zeka Destekli Grafik ve Teknik Analiz Platformu
+                  </h3>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: "1.6", marginBottom: "15px" }}>
+                    <strong>Analyzeio</strong>, finansal piyasalardaki varlıkların (BIST Hisseleri, NASDAQ, Kripto Paralar ve Forex) fiyat yönünü tahmin etmek ve teknik analiz süreçlerini kolaylaştırmak amacıyla geliştirilmiş yapay zeka destekli bir SaaS platformudur.
+                  </p>
+                  <ul style={{ fontSize: "12.5px", color: "var(--text-muted)", lineHeight: "1.6", paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <li>
+                      <strong style={{ color: "var(--text-main)" }}>Makine ve Derin Öğrenme Modelleri:</strong> Platform; geçmiş fiyat hareketlerini, hacim verilerini ve teknik indikatörleri analiz etmek için <strong>LSTM (Uzun Kısa Vadeli Bellek)</strong>, <strong>PatchTST (Transformer)</strong>, <strong>XGBoost</strong>, <strong>Lojistik Regresyon</strong> ve <strong>Destek/Direnç</strong> modellerini kullanır.
+                    </li>
+                    <li>
+                      <strong style={{ color: "var(--text-main)" }}>Gelişmiş Ensemble (Topluluk) Algoritması:</strong> Tahmin motorumuz, canlı veriler üzerindeki başarı oranı %50'nin altına düşen zayıf modelleri otomatik olarak susturan <strong>Sert Baraj (Hard Thresholding)</strong> filtresini uygulayarak en yüksek tutarlılıkta yön kararı verir.
+                    </li>
+                    <li>
+                      <strong style={{ color: "var(--text-main)" }}>Otomatik Destek & Direnç:</strong> Grafik üzerinde anlık olarak hesaplanan 5 adet destek ve 5 adet direnç seviyesi, yatırımcılar için karar destek mekanizması oluşturur.
+                    </li>
+                  </ul>
+                </div>
+              ) : (
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", color: "var(--text-main)", display: "flex", alignItems: "center", gap: "8px" }}>
+                    🧠 AI-Backed Graphical & Technical Analysis Platform
+                  </h3>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: "1.6", marginBottom: "15px" }}>
+                    <strong>Analyzeio</strong> is an AI-backed graphical and technical analysis SaaS platform designed to forecast price directions and streamline technical analysis for financial assets including stocks (BIST, NASDAQ), cryptocurrencies, and forex pairs.
+                  </p>
+                  <ul style={{ fontSize: "12.5px", color: "var(--text-muted)", lineHeight: "1.6", paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <li>
+                      <strong style={{ color: "var(--text-main)" }}>Machine & Deep Learning Models:</strong> The platform leverages <strong>LSTM (Long Short-Term Memory)</strong>, <strong>PatchTST (Transformer)</strong>, <strong>XGBoost</strong>, <strong>Logistic Regression</strong>, and <strong>Support/Resistance</strong> models to analyze historical price action and technical indicators.
+                    </li>
+                    <li>
+                      <strong style={{ color: "var(--text-main)" }}>Advanced Ensemble Methodology:</strong> Our forecasting engine utilizes a **Hard Thresholding Ensemble** filter that silences underperforming models (below 50% accuracy on live tests) to deliver highly robust directional predictions.
+                    </li>
+                    <li>
+                      <strong style={{ color: "var(--text-main)" }}>Automatic Support & Resistance:</strong> Five support and five resistance overlay levels are dynamically calculated and rendered on the charts to provide robust decision support.
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+
             {/* Legal Disclaimer Box */}
             <div className="glass-panel" style={{ 
               marginTop: "20px", 
