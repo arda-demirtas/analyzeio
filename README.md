@@ -9,7 +9,8 @@ Analyzeio is an end-to-end quantitative forecasting platform that downloads real
 The platform features a modern, glassmorphic Next.js web interface alongside an automated, background training daemon orchestrated via PM2.
 ---
 
-## 📷 Screenshots & UI Walkthrough
+## 📷 Screenshots & UI Walkthrough<img width="1917" height="890" alt="ss2" src="https://github.com/user-attachments/assets/ba4fa5af-d436-49df-8410-63aeb19ead5c" />
+
 
 ### 🖥️ Main Dashboard Interface
 ![Main Dashboard](photos/dash.png)
