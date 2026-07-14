@@ -22,7 +22,7 @@ The platform features a modern, glassmorphic Next.js web interface alongside an 
 | *Secure user authentication panel utilizing bcrypt hashing.* | *Registration portal to create new user profiles.* |
 
 ### 📈 Admin Control Modal & Performance Analytics
-![Admin Performance Control](photos/admin.png)
+
 <img width="1917" height="852" alt="ss" src="https://github.com/user-attachments/assets/d8e4ee69-1696-43ea-b8db-4f7a80bb2a28" />
 *Secure admin panel showing out-of-sample directional accuracy statistics, dynamic filters (All, Correct, Wrong, Bullish, Bearish), search filters, and prediction execution status logs.*
 
