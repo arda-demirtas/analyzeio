@@ -5135,75 +5135,93 @@ export default function Home() {
             </div>
             
             {/* Tabs */}
-            <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "20px" }}>
               <button 
                 onClick={() => setAdminActiveTab("users")} 
                 className={adminActiveTab === "users" ? "btn-primary" : "btn-secondary"}
                 style={{ 
-                  flex: 1, 
+                  flex: "1 1 120px", 
                   background: adminActiveTab === "users" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
                   border: "none",
-                  fontWeight: "600"
+                  fontWeight: "600",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  whiteSpace: "nowrap"
                 }}
               >
-                👥 User Accounts ({adminUsers.length})
+                👥 Users ({adminUsers.length})
               </button>
               <button 
                 onClick={() => setAdminActiveTab("auto_train")} 
                 className={adminActiveTab === "auto_train" ? "btn-primary" : "btn-secondary"}
                 style={{ 
-                  flex: 1, 
+                  flex: "1 1 120px", 
                   background: adminActiveTab === "auto_train" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
                   border: "none",
-                  fontWeight: "600"
+                  fontWeight: "600",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  whiteSpace: "nowrap"
                 }}
               >
-                🤖 Auto-Train List ({autoTrainSymbols.length})
+                🤖 Auto-Train ({autoTrainSymbols.length})
               </button>
               <button 
                 onClick={() => setAdminActiveTab("models")} 
                 className={adminActiveTab === "models" ? "btn-primary" : "btn-secondary"}
                 style={{ 
-                  flex: 1, 
+                  flex: "1 1 120px", 
                   background: adminActiveTab === "models" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
                   border: "none",
-                  fontWeight: "600"
+                  fontWeight: "600",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  whiteSpace: "nowrap"
                 }}
               >
-                🧠 Model Cache ({adminStats ? adminStats.total_cached_models : 0})
+                🧠 Cache ({adminStats ? adminStats.total_cached_models : 0})
               </button>
               <button 
                 onClick={() => setAdminActiveTab("mock_trading")} 
                 className={adminActiveTab === "mock_trading" ? "btn-primary" : "btn-secondary"}
                 style={{ 
-                  flex: 1, 
+                  flex: "1 1 120px", 
                   background: adminActiveTab === "mock_trading" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
                   border: "none",
-                  fontWeight: "600"
+                  fontWeight: "600",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  whiteSpace: "nowrap"
                 }}
               >
-                💸 Mock Trading
+                💸 Trading
               </button>
               <button 
                 onClick={() => setAdminActiveTab("system_logs")} 
                 className={adminActiveTab === "system_logs" ? "btn-primary" : "btn-secondary"}
                 style={{ 
-                  flex: 1, 
+                  flex: "1 1 120px", 
                   background: adminActiveTab === "system_logs" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
                   border: "none",
-                  fontWeight: "600"
+                  fontWeight: "600",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  whiteSpace: "nowrap"
                 }}
               >
-                📋 System Logs
+                📋 Logs
               </button>
               <button 
                 onClick={() => setAdminActiveTab("performance")} 
                 className={adminActiveTab === "performance" ? "btn-primary" : "btn-secondary"}
                 style={{ 
-                  flex: 1, 
+                  flex: "1 1 120px", 
                   background: adminActiveTab === "performance" ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" : "rgba(255, 255, 255, 0.03)",
                   border: "none",
-                  fontWeight: "600"
+                  fontWeight: "600",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  whiteSpace: "nowrap"
                 }}
               >
                 📈 Performance
@@ -5218,8 +5236,8 @@ export default function Home() {
                   <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>Loading Admin Data...</span>
                 </div>
               ) : adminActiveTab === "users" ? (
-                <div>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", minWidth: "600px", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
                     <thead>
                       <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)" }}>
                         <th style={{ padding: "10px" }}>ID</th>
@@ -5367,12 +5385,12 @@ export default function Home() {
                 </div>
               ) : adminActiveTab === "models" ? (
                 <div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "20px" }}>
-                    <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "15px", marginBottom: "20px" }}>
+                    <div style={{ flex: "1 1 180px", background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
                       <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Total Users</span>
                       <strong style={{ fontSize: "20px", color: "var(--text-main)" }}>{adminStats ? adminStats.total_users : 0}</strong>
                     </div>
-                    <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                    <div style={{ flex: "1 1 180px", background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
                       <span style={{ fontSize: "12px", color: "#f59e0b", display: "block", marginBottom: "5px" }}>Premium Members</span>
                       <strong style={{ fontSize: "20px", color: "#f59e0b" }}>{adminStats ? adminStats.premium_users : 0}</strong>
                     </div>
@@ -5451,8 +5469,8 @@ export default function Home() {
                   ) : (
                     <div>
                       {/* Summary Statistics Dashboard */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "15px", marginBottom: "20px" }}>
-                        <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "15px", marginBottom: "20px" }}>
+                        <div style={{ flex: "1 1 180px", background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
                           <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>
                             {lang === "tr" ? "Yön Tutarlılık Oranı" : "Directional Accuracy"}
                           </span>
@@ -5465,7 +5483,7 @@ export default function Home() {
                               : `${adminPerformance.stats.correct_count} / ${adminPerformance.stats.total_evaluated} Correct Predictions`}
                           </span>
                         </div>
-                        <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                        <div style={{ flex: "1 1 180px", background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
                           <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>
                             {lang === "tr" ? "Değerlendirilen Sembol Sayısı" : "Total Evaluated Assets"}
                           </span>
@@ -5476,7 +5494,7 @@ export default function Home() {
                             {lang === "tr" ? "En son kapanışı tamamlanmış olanlar" : "Symbols with completed predictions"}
                           </span>
                         </div>
-                        <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                        <div style={{ flex: "1 1 180px", background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
                           <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>
                             {lang === "tr" ? "Boğa / Ayı Dağılımı" : "Predicted Outlook Split"}
                           </span>
@@ -5490,20 +5508,20 @@ export default function Home() {
                       </div>
 
                       {/* Filter Bar */}
-                      <div style={{ display: "flex", gap: "10px", marginBottom: "15px", alignItems: "center" }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "15px", alignItems: "center" }}>
                         <input 
                           type="text"
                           placeholder={lang === "tr" ? "Sembol Ara (örn: BTC)..." : "Search Symbol (e.g. BTC)..."}
                           value={adminPerfSearch}
                           onChange={(e) => setAdminPerfSearch(e.target.value)}
                           className="input-field"
-                          style={{ flex: 1, margin: 0, padding: "8px 12px", fontSize: "13px" }}
+                          style={{ flex: "1 1 180px", margin: 0, padding: "8px 12px", fontSize: "13px" }}
                         />
                         <select
                           value={adminPerfFilter}
                           onChange={(e) => setAdminPerfFilter(e.target.value)}
                           className="input-field"
-                          style={{ width: "180px", margin: 0, padding: "8px 12px", fontSize: "13px", background: "var(--bg-dark)" }}
+                          style={{ flex: "1 1 180px", margin: 0, padding: "8px 12px", fontSize: "13px", background: "var(--bg-dark)" }}
                         >
                           <option value="all">{lang === "tr" ? "Tüm Tahminler" : "All Predictions"}</option>
                           <option value="correct">{lang === "tr" ? "✓ Doğru Tahminler" : "✓ Correct Predictions"}</option>
@@ -5536,7 +5554,7 @@ export default function Home() {
                           }
 
                           return (
-                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", textAlign: "left" }}>
+                            <table style={{ width: "100%", minWidth: "700px", borderCollapse: "collapse", fontSize: "12px", textAlign: "left" }}>
                               <thead>
                                 <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "var(--text-muted)", background: "rgba(255,255,255,0.02)" }}>
                                   <th style={{ padding: "10px" }}>{lang === "tr" ? "Sembol" : "Symbol"}</th>
@@ -5590,14 +5608,14 @@ export default function Home() {
               ) : (
                 <div>
                   {/* Mock Trading Tab Contents */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "20px" }}>
-                    <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "15px", marginBottom: "20px" }}>
+                    <div style={{ flex: "1 1 180px", background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
                       <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Cash Balance</span>
                       <strong style={{ fontSize: "22px", color: "#10b981" }}>
                         ${mockTradingState ? mockTradingState.balance.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : "2,000.00"}
                       </strong>
                     </div>
-                    <div style={{ background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                    <div style={{ flex: "1 1 180px", background: "rgba(255, 255, 255, 0.02)", padding: "15px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
                       <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Active Position</span>
                       {mockTradingState && mockTradingState.position ? (
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
