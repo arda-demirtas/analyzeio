@@ -385,10 +385,13 @@ body {
 @media (max-width: 900px) {
   .main-content {
     height: auto;
-    padding: 80px 20px 20px 20px;
+    padding: 70px 10px 10px 10px;
     min-width: 0;
     max-width: 100vw;
     overflow-x: hidden;
+  }
+  .glass-panel {
+    padding: 12px 15px;
   }
 }
 
