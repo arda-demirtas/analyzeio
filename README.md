@@ -28,7 +28,8 @@ The platform features a modern, glassmorphic Next.js web interface alongside an 
 *Secure admin panel showing out-of-sample directional accuracy statistics, dynamic filters (All, Correct, Wrong, Bullish, Bearish), search filters, and prediction execution status logs.*
 <img width="1917" height="890" alt="ss2" src="https://github.com/user-attachments/assets/ba4fa5af-d436-49df-8410-63aeb19ead5c" />
 ---
-
+Implemented a performance evaluation system that compares predicted closing prices with actual market closing prices to measure model accuracy.
+Automatically validates forecasts using real historical market data and tracks prediction performance over time
 ## 🛠️ System Architecture
 
 The following diagram illustrates the flow of data from ingestion to model training, evaluation, voting, and database logging:
