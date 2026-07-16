@@ -71,9 +71,9 @@ Chart.register(...registerables, candlestickPlugin);
 
 const API_BASE_URL = typeof window !== "undefined" 
   ? (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
-      ? "http://127.0.0.1:8000" 
+      ? "http://127.0.0.1:8001" 
       : window.location.origin) 
-  : "http://127.0.0.1:8000";
+  : (process.env.NODE_ENV === "production" ? "http://127.0.0.1:8000" : "http://127.0.0.1:8001");
 
 const AUTO_TRAINED_SYMBOLS = [
   "BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD", "XRP-USD", "ADA-USD", "AVAX-USD", "DOGE-USD", 
@@ -216,6 +216,7 @@ export default function Home() {
   const [predictionData, setPredictionData] = useState(null);
   const [predictLoading, setPredictLoading] = useState(false);
   const [predictError, setPredictError] = useState("");
+  const [loadingStep, setLoadingStep] = useState(1);
 
   const [chartInterval, setChartInterval] = useState("1d");
   const [chartHistory, setChartHistory] = useState([]);
@@ -1386,6 +1387,10 @@ export default function Home() {
     setPredictLoading(true);
     setPredictError("");
     setPredictionData(null); // Clear old prediction data to trigger loading UI immediately
+    setLoadingStep(1);
+    const stepInterval = setInterval(() => {
+      setLoadingStep((prev) => (prev < 6 ? prev + 1 : prev));
+    }, 600);
     try {
       const headers = token ? { "Authorization": `Bearer ${token}` } : {};
       const res = await fetch(`${API_BASE_URL}/api/predict?symbol=${symbol}&interval=${interval}&lang=${lang}&model_type=${mType}&force_retrain=${forceRetrain}`, {
@@ -1412,6 +1417,7 @@ export default function Home() {
     } catch (err) {
       setPredictError("Connection failed to Python FastAPI server.");
     } finally {
+      clearInterval(stepInterval);
       setPredictLoading(false);
     }
   };
@@ -2522,7 +2528,7 @@ export default function Home() {
         >
           <Menu style={{ width: "22px", height: "22px" }} />
         </button>
-        <div className="mobile-navbar-logo">
+        <div onClick={() => { setShowScreener(false); setSidebarOpen(false); }} className="mobile-navbar-logo" style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
           <Briefcase style={{ color: "var(--accent-primary)", width: "20px", height: "20px" }} />
           <h1 className="logo-text" style={{ fontSize: "18px", margin: 0 }}>analyzeio</h1>
         </div>
@@ -2532,7 +2538,7 @@ export default function Home() {
       {/* Sidebar Panel */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="logo-container" style={{ justifyContent: "space-between", width: "100%" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div onClick={() => { setShowScreener(false); setSidebarOpen(false); }} style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
             <Briefcase style={{ color: "var(--accent-primary)", width: "28px", height: "28px" }} />
             <h1 className="logo-text" style={{ fontSize: "24px", margin: 0 }}>analyzeio</h1>
           </div>
@@ -3226,14 +3232,54 @@ export default function Home() {
             </div>
           </div>
         ) : predictLoading || (!predictionData && !predictError) || (predictionData && predictionData.symbol !== activeSymbol) ? (
-          <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: "60vh", alignItems: "center", justifyContent: "center", gap: "20px" }}>
+          <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: "60vh", alignItems: "center", justifyContent: "center", gap: "24px", padding: "20px" }}>
             <RefreshCw className="animate-spin" style={{ color: "var(--accent-primary)", width: "48px", height: "48px" }} />
-            <h3 style={{ fontSize: "18px", color: "var(--text-main)", fontWeight: "600" }}>{t("loading")}</h3>
-            <p style={{ fontSize: "14px", color: "var(--text-muted)", textAlign: "center", maxWidth: "400px" }}>
-              {t("loading_desc")
-                .replace("{interval}", chartInterval === "1d" ? (lang === "tr" ? "günlük" : (lang === "de" ? "tägliche" : (lang === "ru" ? "дневные" : (lang === "zh" ? "日线" : (lang === "es" ? "diarios" : "daily"))))) : chartInterval)
-                .replace("{symbol}", activeSymbol)}
-            </p>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", maxWidth: "380px", background: "rgba(255, 255, 255, 0.02)", padding: "20px", borderRadius: "12px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+              {[1, 2, 3, 4, 5, 6].map((s) => {
+                const isCompleted = loadingStep > s;
+                const isActive = loadingStep === s;
+                let statusIcon = "○";
+                let textColor = "var(--text-muted)";
+                let fontWeight = "normal";
+
+                if (isCompleted) {
+                  statusIcon = "✓";
+                  textColor = "#10B981";
+                } else if (isActive) {
+                  statusIcon = "⏳";
+                  textColor = "var(--accent-primary)";
+                  fontWeight = "600";
+                }
+
+                const getStepDesc = (stepIndex) => {
+                  const trDesc = [
+                    "Geçmiş piyasa verileri çekiliyor...",
+                    "Teknik indikatörler hesaplanıyor...",
+                    "Yapay zeka modelleri çalıştırılıyor...",
+                    "Ensemble konsensüsü hesaplanıyor...",
+                    "Haber ve duyarlılık analizi yapılıyor...",
+                    "Arayüz bileşenleri yükleniyor..."
+                  ];
+                  const enDesc = [
+                    "Fetching historical market data...",
+                    "Calculating technical indicators...",
+                    "Running machine learning models...",
+                    "Computing ensemble consensus...",
+                    "Analyzing news and sentiment...",
+                    "Loading interface components..."
+                  ];
+                  return lang === "tr" ? trDesc[stepIndex - 1] : enDesc[stepIndex - 1];
+                };
+
+                return (
+                  <div key={s} style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "13.5px", color: textColor, fontWeight: fontWeight, transition: "all 0.2s ease" }}>
+                    <span style={{ minWidth: "16px", display: "inline-block", textAlign: "center" }}>{statusIcon}</span>
+                    <span>{getStepDesc(s)}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ) : predictError ? (
           <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: "60vh", alignItems: "center", justifyContent: "center", gap: "15px" }}>
