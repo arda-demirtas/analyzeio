@@ -1,4 +1,3 @@
-
 # Analyzeio 📈
 > **Advanced AI-Powered Multi-Model Crypto & Stock Forecasting Dashboard**
 
@@ -11,7 +10,6 @@ The platform features a modern, glassmorphic Next.js web interface alongside an 
 
 ## 📷 Screenshots & UI Walkthrough
 
-
 ### 🖥️ Main Dashboard Interface
 ![Main Dashboard](photos/dash.png)
 *The main user interface featuring real-time interactive technical analysis charts (Chart.js), dynamic asset selection lists, and active model prediction indicators.*
@@ -23,13 +21,11 @@ The platform features a modern, glassmorphic Next.js web interface alongside an 
 | *Secure user authentication panel utilizing bcrypt hashing.* | *Registration portal to create new user profiles.* |
 
 ### 📈 Admin Control Modal & Performance Analytics
-
-<img width="1917" height="852" alt="ss" src="https://github.com/user-attachments/assets/d8e4ee69-1696-43ea-b8db-4f7a80bb2a28" />
+![Admin Performance Control](photos/admin.png)
 *Secure admin panel showing out-of-sample directional accuracy statistics, dynamic filters (All, Correct, Wrong, Bullish, Bearish), search filters, and prediction execution status logs.*
-<img width="1917" height="890" alt="ss2" src="https://github.com/user-attachments/assets/ba4fa5af-d436-49df-8410-63aeb19ead5c" />
+
 ---
-Implemented a performance evaluation system that compares predicted closing prices with actual market closing prices to measure model accuracy.
-Automatically validates forecasts using real historical market data and tracks prediction performance over time
+
 ## 🛠️ System Architecture
 
 The following diagram illustrates the flow of data from ingestion to model training, evaluation, voting, and database logging:
